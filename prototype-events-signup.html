@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KadaKareer — Event Form Builder Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F6F1E6;
+    --paper-dim:#EFE8D8;
+    --ink:#16213E;
+    --ink-soft:#3C4566;
+    --amber:#F2A93B;
+    --amber-deep:#C97F12;
+    --stamp:#C1432A;
+    --sage:#3F7D6C;
+    --line:#D8CFB8;
+    --line-strong:#B9AE8E;
+    --shadow: 0 18px 40px -22px rgba(22,33,62,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 1px 1px, rgba(22,33,62,0.05) 1px, transparent 0) 0 0/22px 22px,
+      var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--amber); color:var(--ink); }
+  :focus-visible{ outline:3px solid var(--sage); outline-offset:2px; }
+
+  .display{ font-family:'Big Shoulders Display',sans-serif; font-weight:800; letter-spacing:0.01em; }
+  .mono{ font-family:'Space Mono',monospace; }
+
+  .app-shell{ max-width:1080px; margin:0 auto; padding:28px 20px 80px; }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; flex-wrap:wrap; margin-bottom:28px;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{
+    width:38px; height:38px; border-radius:10px;
+    background:var(--ink); color:var(--amber);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Big Shoulders Display',sans-serif; font-weight:800; font-size:20px;
+    transform:rotate(-4deg);
+  }
+  .brand-text .eyebrow{ font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-soft); }
+  .brand-text .title{ font-family:'Big Shoulders Display',sans-serif; font-weight:800; font-size:22px; line-height:1; }
+
+  .tabs{ display:flex; gap:8px; background:var(--paper-dim); padding:4px; border-radius:999px; border:1px solid var(--line); }
+  .tab-btn{
+    appearance:none; border:none; background:transparent; cursor:pointer;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px; color:var(--ink-soft);
+    padding:9px 16px; border-radius:999px; transition:background .18s ease, color .18s ease;
+  }
+  .tab-btn.active{ background:var(--ink); color:var(--paper); }
+  .tab-btn:not(.active):hover{ color:var(--ink); }
+
+  /* ---------- Configurator ---------- */
+  .config-grid{ display:grid; grid-template-columns: 1.15fr 0.85fr; gap:22px; align-items:start; }
+  @media (max-width: 860px){ .config-grid{ grid-template-columns:1fr; } }
+
+  .card{
+    background:#FFFDF7; border:1px solid var(--line); border-radius:16px;
+    padding:24px; box-shadow:var(--shadow);
+  }
+  .card h2{ margin:0 0 4px; font-family:'Big Shoulders Display',sans-serif; font-size:26px; font-weight:800; }
+  .card .sub{ margin:0 0 20px; color:var(--ink-soft); font-size:14px; line-height:1.5; max-width:46ch; }
+
+  .control-group{ margin-bottom:22px; }
+  .control-group:last-child{ margin-bottom:0; }
+  .control-label{
+    display:block; font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--ink-soft); margin-bottom:10px;
+  }
+  .pill-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .pill{
+    appearance:none; cursor:pointer; border:1.5px solid var(--line-strong);
+    background:#fff; color:var(--ink); font-family:'Inter',sans-serif; font-weight:600; font-size:13px;
+    padding:9px 14px; border-radius:10px; transition:all .15s ease; text-align:left;
+  }
+  .pill:hover{ border-color:var(--ink); }
+  .pill.selected{ background:var(--ink); border-color:var(--ink); color:var(--paper); }
+  .pill.selected.partner-pill{ background:var(--sage); border-color:var(--sage); }
+  .pill.selected.theme-pill{ background:var(--stamp); border-color:var(--stamp); }
+
+  select.native{
+    width:100%; font-family:'Inter',sans-serif; font-weight:600; font-size:14px; color:var(--ink);
+    padding:11px 12px; border-radius:10px; border:1.5px solid var(--line-strong); background:#fff;
+  }
+
+  .toggle-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .toggle-row .toggle-copy{ font-size:13.5px; color:var(--ink-soft); max-width:34ch; line-height:1.4; }
+  .switch{ position:relative; width:46px; height:26px; flex:none; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .switch .track{ position:absolute; inset:0; background:var(--line-strong); border-radius:999px; cursor:pointer; transition:.18s; }
+  .switch .track:before{ content:""; position:absolute; height:20px; width:20px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.18s; }
+  .switch input:checked + .track{ background:var(--stamp); }
+  .switch input:checked + .track:before{ transform:translateX(20px); }
+
+  /* live schema preview */
+  .schema-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:0; }
+  .schema-item{
+    display:flex; align-items:baseline; gap:12px; padding:11px 0;
+    border-bottom:1px dashed var(--line);
+  }
+  .schema-item:last-child{ border-bottom:none; }
+  .schema-num{ font-family:'Space Mono',monospace; font-size:12px; color:var(--amber-deep); width:24px; flex:none; }
+  .schema-name{ font-weight:600; font-size:14px; }
+  .schema-tag{ font-family:'Space Mono',monospace; font-size:10.5px; color:var(--ink-soft); margin-left:auto; text-transform:uppercase; letter-spacing:.06em; white-space:nowrap; }
+  .schema-tag.core{ color:var(--sage); }
+  .schema-tag.gate{ color:var(--stamp); }
+
+  .cta-row{ margin-top:22px; display:flex; justify-content:flex-end; }
+  .btn-primary{
+    appearance:none; cursor:pointer; border:none; background:var(--ink); color:var(--amber);
+    font-family:'Inter',sans-serif; font-weight:700; font-size:14.5px; padding:13px 22px;
+    border-radius:10px; display:inline-flex; align-items:center; gap:8px; transition:transform .12s ease;
+  }
+  .btn-primary:hover{ transform:translateY(-1px); }
+  .btn-primary:active{ transform:translateY(0); }
+
+  /* ---------- Wizard (ticket) ---------- */
+  .ticket{
+    display:grid; grid-template-columns: 220px 1fr; background:#FFFDF7;
+    border:1px solid var(--line); border-radius:18px; overflow:hidden; box-shadow:var(--shadow);
+    min-height:520px;
+  }
+  @media (max-width: 760px){ .ticket{ grid-template-columns:1fr; } .stub{ flex-direction:row !important; overflow-x:auto; border-right:none !important; border-bottom:1px dashed var(--line-strong); } }
+
+  .stub{
+    background:var(--ink); color:var(--paper); padding:24px 18px;
+    display:flex; flex-direction:column; gap:4px; position:relative;
+    border-right:1px dashed transparent;
+  }
+  .stub:after{
+    content:""; position:absolute; top:0; right:-1px; bottom:0; width:1px;
+    background-image: radial-gradient(circle, var(--paper) 4px, transparent 4.5px);
+    background-size: 22px 22px; background-position: -7px -3px; background-repeat: repeat-y;
+  }
+  .stub-title{ font-family:'Space Mono',monospace; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; opacity:.6; margin-bottom:10px; }
+  .stub-item{
+    display:flex; align-items:center; gap:10px; padding:8px 6px; border-radius:8px;
+    font-size:12.5px; font-weight:600; opacity:.55; transition:opacity .15s ease;
+  }
+  .stub-item.done{ opacity:.85; }
+  .stub-item.current{ opacity:1; background:rgba(255,255,255,0.08); }
+  .stub-dot{
+    width:20px; height:20px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center;
+    font-family:'Space Mono',monospace; font-size:10px; border:1.5px solid currentColor;
+  }
+  .stub-item.done .stub-dot{ background:var(--amber); border-color:var(--amber); color:var(--ink); }
+  .stub-item.current .stub-dot{ background:transparent; border-color:var(--amber); color:var(--amber); }
+  .stub-item.gate .stub-dot{ border-color:var(--stamp); }
+  .stub-item.gate.done .stub-dot{ background:var(--stamp); border-color:var(--stamp); color:#fff; }
+
+  .stage{ padding:30px 34px; display:flex; flex-direction:column; min-height:520px; }
+  .stage-kicker{ font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--amber-deep); margin-bottom:6px; }
+  .stage-kicker.gate{ color:var(--stamp); }
+  .stage-title{ font-family:'Big Shoulders Display',sans-serif; font-weight:800; font-size:30px; margin:0 0 6px; line-height:1.05; }
+  .stage-desc{ color:var(--ink-soft); font-size:14px; line-height:1.5; margin:0 0 24px; max-width:54ch; }
+
+  .field{ margin-bottom:18px; }
+  .field label{ display:block; font-weight:600; font-size:13.5px; margin-bottom:7px; }
+  .field .hint{ font-size:12px; color:var(--ink-soft); margin-top:5px; line-height:1.4; }
+  .field input[type=text], .field input[type=email], .field input[type=tel], .field textarea{
+    width:100%; font-family:'Inter',sans-serif; font-size:14px; padding:11px 12px;
+    border:1.5px solid var(--line-strong); border-radius:9px; background:#fff; color:var(--ink);
+  }
+  .field textarea{ resize:vertical; min-height:90px; }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:560px){ .field-row{ grid-template-columns:1fr; } }
+
+  .choice-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .choice-btn{
+    appearance:none; cursor:pointer; border:1.5px solid var(--line-strong); background:#fff;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13px; padding:8px 14px; border-radius:8px;
+  }
+  .choice-btn.selected{ background:var(--sage); border-color:var(--sage); color:#fff; }
+
+  .scale-row{ display:flex; gap:8px; }
+  .scale-btn{
+    width:42px; height:42px; border-radius:50%; border:1.5px solid var(--line-strong); background:#fff;
+    font-family:'Space Mono',monospace; font-weight:700; cursor:pointer; color:var(--ink);
+  }
+  .scale-btn.selected{ background:var(--amber); border-color:var(--amber-deep); }
+
+  .upload-fake{
+    border:1.5px dashed var(--line-strong); border-radius:10px; padding:16px; text-align:center;
+    font-size:13px; color:var(--ink-soft); cursor:pointer; background:#FBF8F0;
+  }
+  .upload-fake:hover{ border-color:var(--ink); color:var(--ink); }
+
+  .gate-box{
+    margin-top:8px; padding:16px 18px; border:1.5px solid var(--stamp); border-radius:10px;
+    background:rgba(193,67,42,0.06); display:flex; gap:12px; align-items:flex-start;
+  }
+  .gate-box input{ margin-top:3px; }
+  .gate-box .gate-copy{ font-size:13.5px; line-height:1.5; color:var(--ink); }
+  .gate-warning{ color:var(--stamp); font-size:12.5px; font-weight:600; margin-top:8px; display:none; }
+  .gate-warning.show{ display:block; }
+
+  .consent-box{
+    margin-bottom:16px; padding:14px 16px; border:1.5px solid var(--line); border-radius:10px;
+    background:var(--paper-dim); display:flex; gap:12px; align-items:flex-start; font-size:13px; color:var(--ink-soft);
+  }
+  .consent-box input{ margin-top:3px; }
+
+  .stage-foot{ margin-top:auto; padding-top:22px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--line); }
+  .btn-ghost{
+    appearance:none; cursor:pointer; background:transparent; border:1.5px solid var(--line-strong);
+    color:var(--ink); font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px;
+    padding:11px 18px; border-radius:9px;
+  }
+  .btn-ghost:disabled{ opacity:.35; cursor:not-allowed; }
+  .progress-text{ font-family:'Space Mono',monospace; font-size:11.5px; color:var(--ink-soft); }
+
+  /* ---------- Boarding pass (final) ---------- */
+  .pass{
+    background:#FFFDF7; border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow);
+    overflow:hidden; display:grid; grid-template-columns: 1fr 200px;
+  }
+  @media (max-width:620px){ .pass{ grid-template-columns:1fr; } }
+  .pass-main{ padding:34px; }
+  .pass-eyebrow{ font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--sage); }
+  .pass-title{ font-family:'Big Shoulders Display',sans-serif; font-weight:800; font-size:34px; margin:6px 0 18px; }
+  .pass-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px 24px; margin-top:10px; }
+  .pass-field .k{ font-family:'Space Mono',monospace; font-size:10.5px; text-transform:uppercase; color:var(--ink-soft); letter-spacing:.08em; }
+  .pass-field .v{ font-weight:700; font-size:15px; margin-top:3px; }
+  .pass-stub{
+    background:var(--ink); color:var(--paper); padding:30px 22px; position:relative;
+    display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:8px;
+  }
+  .pass-stub:before{
+    content:""; position:absolute; top:0; left:-1px; bottom:0; width:1px;
+    background-image: radial-gradient(circle, var(--paper) 4px, transparent 4.5px);
+    background-size: 22px 22px; background-position: -7px -3px; background-repeat: repeat-y;
+  }
+  .pass-stub .gate-num{ font-family:'Big Shoulders Display',sans-serif; font-size:42px; font-weight:800; color:var(--amber); }
+  .pass-stub .gate-label{ font-family:'Space Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; opacity:.7; }
+  .pass-actions{ margin-top:26px; display:flex; gap:10px; flex-wrap:wrap; }
+
+  .json-toggle{ margin-top:18px; }
+  .json-toggle summary{ cursor:pointer; font-family:'Space Mono',monospace; font-size:11.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.06em; }
+  .json-box{ margin-top:10px; background:var(--ink); color:#CFE8DD; font-family:'Space Mono',monospace; font-size:11.5px; padding:16px; border-radius:10px; overflow:auto; max-height:240px; line-height:1.6; }
+
+  .footnote{ margin-top:22px; font-size:12.5px; color:var(--ink-soft); text-align:center; }
+
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="app-shell" id="app"></div>
+
+<script>
+/* ---------------------------------------------------------
+   DATA: field block definitions, derived from the cleaned-up
+   sign-up question audit (Part 1 core + Part 2 conditional blocks)
+--------------------------------------------------------- */
+
+const PARTNERS = {
+  none: "None",
+  canva: "Canva",
+  wadhwani: "Wadhwani Foundation",
+  tutorialsdojo: "Tutorials Dojo",
+  packetworx: "Packetworx"
+};
+
+function field(id, type, label, opts){ return Object.assign({ id, type, label }, opts||{}); }
+
+function coreSteps(){
+  return [
+    {
+      code:"G01", kicker:"Account & legal baseline", title:"Before we start",
+      desc:"A couple of housekeeping checks every KadaKareer sign-up needs.",
+      isConsent:true,
+      fields:[
+        field('consent','consent-pair',null,{
+          items:[
+            {id:'privacy', text:'I consent to my data being processed under the Data Privacy Act of 2012 (RA 10173).'},
+            {id:'accuracy', text:'Everything I\'m about to submit is complete and true to the best of my knowledge.'}
+          ]
+        }),
+        field('app_account','choice','Do you already have a KadaKareer app account?',{ options:['Yes','No, but I\'ll create one'] }),
+        field('past_programs','text','Which KadaKareer programs (if any) have you joined before?',{ placeholder:'e.g. None yet, or list past workshops' }),
+        field('email_optin','choice','Can we email you about future programs?',{ options:['Yes','No'] })
+      ]
+    },
+    {
+      code:"G02", kicker:"Demographics & contact", title:"Who's flying",
+      desc:"Standard contact details — kept as split fields so the database stays easy to sort later.",
+      fields:[
+        field('first_name','text','First name'),
+        field('last_name','text','Last name'),
+        field('sex','choice','Sex',{ options:['Female','Male'] }),
+        field('age','text','Age',{ placeholder:'e.g. 21' }),
+        field('email','email','Email address'),
+        field('phone','tel','Phone number'),
+        field('messenger','text','Messenger link',{ placeholder:'m.me/...' }),
+        field('location','text','Current province / area of residence')
+      ]
+    },
+    {
+      code:"G03", kicker:"Academic profile", title:"Flight record",
+      desc:"Where you're studying right now.",
+      fields:[
+        field('school','text','School / university'),
+        field('degree','text','Degree / program'),
+        field('year_level','text','Year level')
+      ]
+    },
+    {
+      code:"G04", kicker:"Socio-economic & impact tracking", title:"Background check",
+      desc:"Used the same way it was for Canva and Wadhwani cohorts — this keeps impact reporting consistent across programs.",
+      fields:[
+        field('income','select','Household income range',{ options:['Below ₱10,000','₱10,000–₱20,000','₱20,000–₱40,000','₱40,000–₱70,000','Above ₱70,000','Prefer not to say'] }),
+        field('household_size','text','Household member count'),
+        field('student_status','choice','Student status',{ options:['Full-time student','Working student','Scholar'] }),
+        field('dei','choice','Do you identify as part of an underrepresented or marginalized community?',{ options:['Yes','No','Prefer not to say'] })
+      ]
+    },
+    {
+      code:"G05", kicker:"Career & marketing inbound", title:"Carry-on",
+      desc:"Helps us understand where you are in your career journey, and where you found us.",
+      fields:[
+        field('resume','file','Resume / CV',{ hint:'Upload a file or paste a cloud link.' }),
+        field('job_stage','text','Where are you right now in your job search / career prep?'),
+        field('inbound','text','Where did you first hear about this? Which org referred you?')
+      ]
+    },
+    {
+      code:"G06", kicker:"Event benchmarks", title:"Pre-flight briefing",
+      desc:"A few quick questions we ask before every workshop, regardless of topic.",
+      fields:[
+        field('first_time','text','Is this your first time attending a workshop on this topic? If not, which ones have you joined?'),
+        field('expectations','textarea','What are your main expectations or hoped-for takeaways?'),
+        field('questions','textarea','Any questions or concerns before you join?',{ optional:true })
+      ]
+    }
+  ];
+}
+
+function blockA(track){
+  if(track === 'ai'){
+    return {
+      code:"G07", kicker:"Technical assessment · AI / software dev", title:"Skill check",
+      desc:"This block only appears for AI and software-development workshops.",
+      fields:[
+        field('ai_freq','text','How often do you use AI tools (Gemini, ChatGPT, Copilot)?'),
+        field('ai_appdev','scale','Knowledge rating: building apps with AI'),
+        field('ai_agents','scale','Understanding of AI agent integration'),
+        field('github','scale','Confidence using GitHub for repo management'),
+        field('ai_followup','textarea','What experiences or challenges shaped that rating?',{ optional:true })
+      ]
+    };
+  }
+  if(track === 'iot'){
+    return {
+      code:"G07", kicker:"Technical assessment · IoT / hardware", title:"Skill check",
+      desc:"This block only appears for IoT and hardware workshops.",
+      fields:[
+        field('iot_knowledge','scale','Knowledge rating: Internet of Things (IoT)'),
+        field('lorawan','scale','Confidence explaining \'LoRaWAN\' or \'smart technology\'')
+      ]
+    };
+  }
+  return null;
+}
+
+function blockBOnsite(){
+  return {
+    code:"G08", kicker:"Logistics & commitment · onsite", title:"Boarding gate — in person",
+    desc:"Onsite seats are limited, so we ask everyone to confirm they can actually make it.",
+    isGate:true,
+    fields:[
+      field('travel','choice','Can you travel to the physical venue on the event date?',{ options:['Yes','Need to check logistics first'] }),
+      field('hindrances','textarea','What could potentially keep you from attending, and how will you make sure you show up?')
+    ],
+    gateCopy:"I understand this is a 100%-attendance, on-time commitment, and that no-shows may affect future eligibility for KadaKareer events."
+  };
+}
+
+function blockBCohort(){
+  return {
+    code:"G08", kicker:"Logistics & commitment · multi-week cohort", title:"Boarding gate — full cohort",
+    desc:"Multi-week programs run self-paced and live sessions together, so we ask for a real commitment up front.",
+    isGate:true,
+    fields:[
+      field('motivation','textarea','In 150–200 words: what are your career goals, and why is now the right time for this program?'),
+      field('contingency','textarea','If something unexpected comes up mid-program, what\'s your plan to stay on track?')
+    ],
+    gateCopy:"I understand this program combines self-paced work with live synchronous sessions, and I'm signing up for the full run — not just part of it."
+  };
+}
+
+function blockCPartner(partnerKey){
+  const name = PARTNERS[partnerKey];
+  return {
+    code:"G09", kicker:"Partner specifics", title:"Partner lounge",
+    desc:`Shown because this event is run with ${name}.`,
+    fields:[
+      field('partner_familiarity','choice',`How familiar are you with ${name}?`,{ options:['Never heard of them','Heard of them','Used their tools/courses before'] }),
+      field('partner_interest','choice',`Would you be interested in interning at ${name}?`,{ options:['Yes','Maybe','No'] })
+    ]
+  };
+}
+
+function blockCThematic(){
+  return {
+    code:"G10", kicker:"Theme · Pride Month", title:"Community spotlight",
+    desc:"Shown for cause-driven events, like our Pride Month programming.",
+    fields:[
+      field('lgbtq_identity','choice','Do you identify as a member, ally, or advocate of the LGBTQIA+ community?',{ options:['Member','Ally','Advocate','Prefer not to say'] }),
+      field('lgbtq_impact','textarea','How will you use what you learn here to support or represent this community?')
+    ]
+  };
+}
+
+function buildSteps(cfg){
+  const steps = [...coreSteps()];
+  const a = blockA(cfg.track); if(a) steps.push(a);
+  if(cfg.format === 'onsite') steps.push(blockBOnsite());
+  if(cfg.format === 'cohort') steps.push(blockBCohort());
+  if(cfg.partner !== 'none') steps.push(blockCPartner(cfg.partner));
+  if(cfg.thematic) steps.push(blockCThematic());
+  steps.forEach((s,i)=>{ s.code = "G" + String(i+1).padStart(2,'0'); });
+  return steps;
+}
+
+/* ---------------------------------------------------------
+   STATE
+--------------------------------------------------------- */
+const state = {
+  screen: 'configurator', // configurator | wizard | pass
+  cfg: { format:'online', track:'none', partner:'none', thematic:false },
+  stepIndex: 0,
+  answers: {},
+  gateError: false
+};
+
+const FORMAT_OPTIONS = [
+  { key:'online', label:'Online workshop' },
+  { key:'onsite', label:'Onsite event' },
+  { key:'cohort', label:'Multi-week cohort' }
+];
+const TRACK_OPTIONS = [
+  { key:'none', label:'No technical track' },
+  { key:'ai', label:'AI / software dev' },
+  { key:'iot', label:'IoT / hardware' }
+];
+
+/* ---------------------------------------------------------
+   RENDER
+--------------------------------------------------------- */
+function el(html){ const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  app.appendChild(renderTopbar());
+  if(state.screen === 'configurator') app.appendChild(renderConfigurator());
+  if(state.screen === 'wizard') app.appendChild(renderWizard());
+  if(state.screen === 'pass') app.appendChild(renderPass());
+}
+
+function renderTopbar(){
+  return el(`
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-mark">K</div>
+        <div class="brand-text">
+          <div class="eyebrow">KadaKareer · registration prototype</div>
+          <div class="title">Event Form Builder</div>
+        </div>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn ${state.screen==='configurator'?'active':''}" id="tabConfig">Route Builder</button>
+        <button class="tab-btn ${state.screen!=='configurator'?'active':''}" id="tabPreview">Registrant Preview</button>
+      </div>
+    </div>
+  `).also(node=>{
+    node.querySelector('#tabConfig').onclick = ()=>{ state.screen='configurator'; render(); };
+    node.querySelector('#tabPreview').onclick = ()=>{
+      if(state.screen==='configurator'){ state.stepIndex=0; state.answers={}; state.gateError=false; }
+      state.screen='wizard'; render();
+    };
+  });
+}
+
+// tiny helper to allow chaining without losing readability
+Element.prototype.also = function(fn){ fn(this); return this; };
+
+function renderConfigurator(){
+  const steps = buildSteps(state.cfg);
+  const wrap = el(`<div class="config-grid"></div>`);
+
+  const left = el(`
+    <div class="card">
+      <h2>Set the route</h2>
+      <p class="sub">Pick the shape of the event. The registrant form on the right rebuilds itself from your cleaned-up question blocks — nothing here is hard-coded per event.</p>
+      <div class="control-group">
+        <span class="control-label">Format</span>
+        <div class="pill-row" id="formatRow"></div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">Technical track</span>
+        <div class="pill-row" id="trackRow"></div>
+      </div>
+      <div class="control-group">
+        <span class="control-label">Partner</span>
+        <select class="native" id="partnerSelect"></select>
+      </div>
+      <div class="control-group">
+        <div class="toggle-row">
+          <div>
+            <span class="control-label" style="margin-bottom:4px;">Cause-driven theme</span>
+            <div class="toggle-copy">e.g. Pride Month programming — adds the community-spotlight block.</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="thematicToggle" ${state.cfg.thematic?'checked':''}>
+            <span class="track"></span>
+          </label>
+        </div>
+      </div>
+      <div class="cta-row">
+        <button class="btn-primary" id="goPreview">Preview registrant form →</button>
+      </div>
+    </div>
+  `);
+
+  const formatRow = left.querySelector('#formatRow');
+  FORMAT_OPTIONS.forEach(opt=>{
+    const b = el(`<button class="pill ${state.cfg.format===opt.key?'selected':''}">${opt.label}</button>`);
+    b.onclick = ()=>{ state.cfg.format = opt.key; render(); };
+    formatRow.appendChild(b);
+  });
+
+  const trackRow = left.querySelector('#trackRow');
+  TRACK_OPTIONS.forEach(opt=>{
+    const b = el(`<button class="pill ${state.cfg.track===opt.key?'selected':''}">${opt.label}</button>`);
+    b.onclick = ()=>{ state.cfg.track = opt.key; render(); };
+    trackRow.appendChild(b);
+  });
+
+  const partnerSelect = left.querySelector('#partnerSelect');
+  Object.entries(PARTNERS).forEach(([key,label])=>{
+    const o = document.createElement('option'); o.value=key; o.textContent=label;
+    if(key===state.cfg.partner) o.selected = true;
+    partnerSelect.appendChild(o);
+  });
+  partnerSelect.onchange = (e)=>{ state.cfg.partner = e.target.value; render(); };
+
+  left.querySelector('#thematicToggle').onchange = (e)=>{ state.cfg.thematic = e.target.checked; render(); };
+  left.querySelector('#goPreview').onclick = ()=>{ state.stepIndex=0; state.answers={}; state.gateError=false; state.screen='wizard'; render(); };
+
+  // right: live schema preview
+  const right = el(`
+    <div class="card">
+      <h2>What gets asked</h2>
+      <p class="sub">${steps.length} gates · ${steps.reduce((n,s)=>n+s.fields.length,0)} questions for this configuration.</p>
+      <ul class="schema-list" id="schemaList"></ul>
+    </div>
+  `);
+  const list = right.querySelector('#schemaList');
+  steps.forEach((s,i)=>{
+    const isCore = i < 6;
+    const tag = isCore ? 'core' : (s.isGate ? 'gate' : 'added');
+    const li = el(`
+      <li class="schema-item">
+        <span class="schema-num mono">${s.code}</span>
+        <span class="schema-name">${s.title}</span>
+        <span class="schema-tag ${tag}">${isCore ? 'always on' : (s.isGate ? 'hard gate' : 'conditional')}</span>
+      </li>
+    `);
+    list.appendChild(li);
+  });
+
+  wrap.appendChild(left);
+  wrap.appendChild(right);
+  return wrap;
+}
+
+function renderWizard(){
+  const steps = buildSteps(state.cfg);
+  if(state.stepIndex >= steps.length){ state.screen='pass'; return renderPass(); }
+  const step = steps[state.stepIndex];
+
+  const ticket = el(`<div class="ticket"></div>`);
+
+  // stub
+  const stub = el(`<div class="stub"><div class="stub-title">Boarding stub</div></div>`);
+  steps.forEach((s,i)=>{
+    const cls = i < state.stepIndex ? 'done' : (i === state.stepIndex ? 'current' : '');
+    const gateCls = s.isGate ? 'gate' : '';
+    const dotContent = i < state.stepIndex ? '✓' : (i+1);
+    stub.appendChild(el(`
+      <div class="stub-item ${cls} ${gateCls}">
+        <span class="stub-dot">${dotContent}</span>
+        <span>${s.title}</span>
+      </div>
+    `));
+  });
+  ticket.appendChild(stub);
+
+  // stage
+  const stage = el(`
+    <div class="stage">
+      <div class="stage-kicker ${step.isGate?'gate':''}">${step.kicker}</div>
+      <div class="stage-title">${step.title}</div>
+      <p class="stage-desc">${step.desc}</p>
+      <div id="fieldsHost"></div>
+      <div class="stage-foot">
+        <button class="btn-ghost" id="backBtn" ${state.stepIndex===0?'disabled':''}>← Back</button>
+        <span class="progress-text">GATE ${state.stepIndex+1} / ${steps.length}</span>
+        <button class="btn-primary" id="nextBtn">${state.stepIndex===steps.length-1?'Get boarding pass →':'Next gate →'}</button>
+      </div>
+    </div>
+  `);
+
+  const host = stage.querySelector('#fieldsHost');
+  step.fields.forEach(f=> host.appendChild(renderField(f)));
+
+  if(step.isGate){
+    const gateBox = el(`
+      <div class="gate-box">
+        <input type="checkbox" id="gateCheck" ${state.answers['__gate_'+step.code]?'checked':''}>
+        <div class="gate-copy">${step.gateCopy}</div>
+      </div>
+    `);
+    gateBox.querySelector('#gateCheck').onchange = (e)=>{ state.answers['__gate_'+step.code] = e.target.checked; state.gateError=false; render(); };
+    host.appendChild(gateBox);
+    if(state.gateError){
+      host.appendChild(el(`<div class="gate-warning show">This gate needs that box checked before you can move on.</div>`));
+    }
+  }
+
+  stage.querySelector('#backBtn').onclick = ()=>{ if(state.stepIndex>0){ state.stepIndex--; state.gateError=false; render(); } };
+  stage.querySelector('#nextBtn').onclick = ()=>{
+    if(step.isGate && !state.answers['__gate_'+step.code]){ state.gateError = true; render(); return; }
+    state.gateError = false;
+    state.stepIndex++;
+    render();
+  };
+
+  ticket.appendChild(stage);
+  return ticket;
+}
+
+function renderField(f){
+  const wrap = el(`<div class="field"></div>`);
+  if(f.type === 'consent-pair'){
+    f.items.forEach(item=>{
+      const box = el(`
+        <div class="consent-box">
+          <input type="checkbox" id="c_${item.id}" ${state.answers[item.id]?'checked':''}>
+          <span>${item.text}</span>
+        </div>
+      `);
+      box.querySelector('input').onchange = (e)=>{ state.answers[item.id] = e.target.checked; };
+      wrap.appendChild(box);
+    });
+    return wrap;
+  }
+
+  const label = el(`<label>${f.label}${f.optional?' <span style="font-weight:400;color:var(--ink-soft);">(optional)</span>':''}</label>`);
+  wrap.appendChild(label);
+
+  if(f.type === 'text' || f.type === 'email' || f.type === 'tel'){
+    const input = el(`<input type="${f.type}" placeholder="${f.placeholder||''}" value="${state.answers[f.id]||''}">`);
+    input.oninput = (e)=>{ state.answers[f.id] = e.target.value; };
+    wrap.appendChild(input);
+  } else if(f.type === 'select'){
+    const select = el(`<select class="native"></select>`);
+    select.appendChild(el(`<option value="">Choose one…</option>`));
+    f.options.forEach(opt=>{
+      const o = document.createElement('option'); o.value=opt; o.textContent=opt;
+      if(state.answers[f.id]===opt) o.selected = true;
+      select.appendChild(o);
+    });
+    select.onchange = (e)=>{ state.answers[f.id] = e.target.value; };
+    wrap.appendChild(select);
+  } else if(f.type === 'choice'){
+    const row = el(`<div class="choice-row"></div>`);
+    f.options.forEach(opt=>{
+      const b = el(`<button type="button" class="choice-btn ${state.answers[f.id]===opt?'selected':''}">${opt}</button>`);
+      b.onclick = ()=>{ state.answers[f.id] = opt; render(); };
+      row.appendChild(b);
+    });
+    wrap.appendChild(row);
+  } else if(f.type === 'scale'){
+    const row = el(`<div class="scale-row"></div>`);
+    for(let n=1;n<=5;n++){
+      const b = el(`<button type="button" class="scale-btn ${state.answers[f.id]===n?'selected':''}">${n}</button>`);
+      b.onclick = ()=>{ state.answers[f.id] = n; render(); };
+      row.appendChild(b);
+    }
+    wrap.appendChild(row);
+    wrap.appendChild(el(`<div class="hint">1 = not at all confident · 5 = very confident</div>`));
+  } else if(f.type === 'textarea'){
+    const ta = el(`<textarea placeholder="${f.placeholder||'Type your answer…'}">${state.answers[f.id]||''}</textarea>`);
+    ta.oninput = (e)=>{ state.answers[f.id] = e.target.value; };
+    wrap.appendChild(ta);
+  } else if(f.type === 'file'){
+    const box = el(`<div class="upload-fake">📎 Attach a file, or paste a cloud link — click to simulate</div>`);
+    box.onclick = ()=>{ state.answers[f.id] = state.answers[f.id] ? '' : 'resume_demo.pdf'; render(); };
+    wrap.appendChild(box);
+    if(state.answers[f.id]) wrap.appendChild(el(`<div class="hint">Attached: ${state.answers[f.id]}</div>`));
+    if(f.hint) wrap.appendChild(el(`<div class="hint">${f.hint}</div>`));
+  }
+
+  return wrap;
+}
+
+function renderPass(){
+  const steps = buildSteps(state.cfg);
+  const formatLabel = FORMAT_OPTIONS.find(o=>o.key===state.cfg.format).label;
+  const trackLabel = TRACK_OPTIONS.find(o=>o.key===state.cfg.track).label;
+  const name = [state.answers.first_name, state.answers.last_name].filter(Boolean).join(' ') || 'Guest Registrant';
+  const seat = 'KK-' + Math.random().toString(36).slice(2,6).toUpperCase();
+
+  const wrap = el(`
+    <div class="pass">
+      <div class="pass-main">
+        <div class="pass-eyebrow">Boarding pass · sign-up complete</div>
+        <div class="pass-title">You're confirmed, ${name.split(' ')[0]}.</div>
+        <div class="pass-grid">
+          <div class="pass-field"><div class="k">Passenger</div><div class="v">${name}</div></div>
+          <div class="pass-field"><div class="k">Format</div><div class="v">${formatLabel}</div></div>
+          <div class="pass-field"><div class="k">Track</div><div class="v">${trackLabel}</div></div>
+          <div class="pass-field"><div class="k">Partner</div><div class="v">${PARTNERS[state.cfg.partner]}</div></div>
+          <div class="pass-field"><div class="k">Seat</div><div class="v mono">${seat}</div></div>
+          <div class="pass-field"><div class="k">Gates cleared</div><div class="v">${steps.length} / ${steps.length}</div></div>
+        </div>
+        <div class="pass-actions">
+          <button class="btn-primary" id="restartBtn">Run another route →</button>
+          <button class="btn-ghost" id="editBtn">Edit answers</button>
+        </div>
+        <details class="json-toggle">
+          <summary>View captured answers (JSON)</summary>
+          <div class="json-box">${JSON.stringify(state.answers, null, 2)}</div>
+        </details>
+      </div>
+      <div class="pass-stub">
+        <div class="gate-label">Total gates</div>
+        <div class="gate-num">${String(steps.length).padStart(2,'0')}</div>
+        <div class="gate-label">Route ${state.cfg.format}${state.cfg.partner!=='none' ? ' · '+PARTNERS[state.cfg.partner] : ''}</div>
+      </div>
+    </div>
+  `);
+
+  wrap.querySelector('#restartBtn').onclick = ()=>{ state.screen='configurator'; render(); };
+  wrap.querySelector('#editBtn').onclick = ()=>{ state.stepIndex = buildSteps(state.cfg).length - 1; state.screen='wizard'; render(); };
+
+  return wrap;
+}
+
+render();
+</script>
+</body>
+</html>
