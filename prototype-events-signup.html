@@ -151,7 +151,9 @@
   .stub-item{
     display:flex; align-items:center; gap:10px; padding:8px 6px; border-radius:8px;
     font-size:12.5px; font-weight:600; opacity:.55; transition:opacity .15s ease;
+    cursor:pointer;
   }
+  .stub-item:hover{ opacity:.75; }
   .stub-item.done{ opacity:.85; }
   .stub-item.current{ opacity:1; background:rgba(255,255,255,0.08); }
   .stub-dot{
@@ -224,7 +226,7 @@
   .btn-ghost:disabled{ opacity:.35; cursor:not-allowed; }
   .progress-text{ font-family:'Space Mono',monospace; font-size:11.5px; color:var(--ink-soft); }
 
-  /* ---------- Boarding pass (final) ---------- */
+  /* ---------- Confirmation screen (final) ---------- */
   .pass{
     background:#FFFDF7; border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow);
     overflow:hidden; display:grid; grid-template-columns: 1fr 200px;
@@ -280,7 +282,7 @@ function field(id, type, label, opts){ return Object.assign({ id, type, label },
 function coreSteps(){
   return [
     {
-      code:"G01", kicker:"Account & legal baseline", title:"Before we start",
+      code:"G01", kicker:"Account & legal baseline", title:"Account & legal baseline",
       desc:"A couple of housekeeping checks every KadaKareer sign-up needs.",
       isConsent:true,
       fields:[
@@ -296,7 +298,7 @@ function coreSteps(){
       ]
     },
     {
-      code:"G02", kicker:"Demographics & contact", title:"Who's flying",
+      code:"G02", kicker:"Demographics & contact", title:"Demographics & contact",
       desc:"Standard contact details — kept as split fields so the database stays easy to sort later.",
       fields:[
         field('first_name','text','First name'),
@@ -310,7 +312,7 @@ function coreSteps(){
       ]
     },
     {
-      code:"G03", kicker:"Academic profile", title:"Flight record",
+      code:"G03", kicker:"Academic profile", title:"Academic profile",
       desc:"Where you're studying right now.",
       fields:[
         field('school','text','School / university'),
@@ -319,7 +321,7 @@ function coreSteps(){
       ]
     },
     {
-      code:"G04", kicker:"Socio-economic & impact tracking", title:"Background check",
+      code:"G04", kicker:"Socio-economic & impact tracking", title:"Socio-economic & impact tracking",
       desc:"Used the same way it was for Canva and Wadhwani cohorts — this keeps impact reporting consistent across programs.",
       fields:[
         field('income','select','Household income range',{ options:['Below ₱10,000','₱10,000–₱20,000','₱20,000–₱40,000','₱40,000–₱70,000','Above ₱70,000','Prefer not to say'] }),
@@ -329,7 +331,7 @@ function coreSteps(){
       ]
     },
     {
-      code:"G05", kicker:"Career & marketing inbound", title:"Carry-on",
+      code:"G05", kicker:"Career & marketing inbound", title:"Career & marketing inbound",
       desc:"Helps us understand where you are in your career journey, and where you found us.",
       fields:[
         field('resume','file','Resume / CV',{ hint:'Upload a file or paste a cloud link.' }),
@@ -338,7 +340,7 @@ function coreSteps(){
       ]
     },
     {
-      code:"G06", kicker:"Event benchmarks", title:"Pre-flight briefing",
+      code:"G06", kicker:"Event benchmarks", title:"Event benchmarks",
       desc:"A few quick questions we ask before every workshop, regardless of topic.",
       fields:[
         field('first_time','text','Is this your first time attending a workshop on this topic? If not, which ones have you joined?'),
@@ -378,7 +380,7 @@ function blockA(track){
 
 function blockBOnsite(){
   return {
-    code:"G08", kicker:"Logistics & commitment · onsite", title:"Boarding gate — in person",
+    code:"G08", kicker:"Logistics & commitment · onsite", title:"Confirm attendance",
     desc:"Onsite seats are limited, so we ask everyone to confirm they can actually make it.",
     isGate:true,
     fields:[
@@ -391,7 +393,7 @@ function blockBOnsite(){
 
 function blockBCohort(){
   return {
-    code:"G08", kicker:"Logistics & commitment · multi-week cohort", title:"Boarding gate — full cohort",
+    code:"G08", kicker:"Logistics & commitment · multi-week cohort", title:"Confirm commitment",
     desc:"Multi-week programs run self-paced and live sessions together, so we ask for a real commitment up front.",
     isGate:true,
     fields:[
@@ -405,7 +407,7 @@ function blockBCohort(){
 function blockCPartner(partnerKey){
   const name = PARTNERS[partnerKey];
   return {
-    code:"G09", kicker:"Partner specifics", title:"Partner lounge",
+    code:"G09", kicker:"Partner specifics", title:"Partner specifics",
     desc:`Shown because this event is run with ${name}.`,
     fields:[
       field('partner_familiarity','choice',`How familiar are you with ${name}?`,{ options:['Never heard of them','Heard of them','Used their tools/courses before'] }),
@@ -416,7 +418,7 @@ function blockCPartner(partnerKey){
 
 function blockCThematic(){
   return {
-    code:"G10", kicker:"Theme · Pride Month", title:"Community spotlight",
+    code:"G10", kicker:"Theme · Pride Month", title:"Theme",
     desc:"Shown for cause-driven events, like our Pride Month programming.",
     fields:[
       field('lgbtq_identity','choice','Do you identify as a member, ally, or advocate of the LGBTQIA+ community?',{ options:['Member','Ally','Advocate','Prefer not to say'] }),
@@ -597,17 +599,19 @@ function renderWizard(){
   const ticket = el(`<div class="ticket"></div>`);
 
   // stub
-  const stub = el(`<div class="stub"><div class="stub-title">Boarding stub</div></div>`);
+  const stub = el(`<div class="stub"><div class="stub-title">Progress outline</div></div>`);
   steps.forEach((s,i)=>{
     const cls = i < state.stepIndex ? 'done' : (i === state.stepIndex ? 'current' : '');
     const gateCls = s.isGate ? 'gate' : '';
     const dotContent = i < state.stepIndex ? '✓' : (i+1);
-    stub.appendChild(el(`
+    const item = el(`
       <div class="stub-item ${cls} ${gateCls}">
         <span class="stub-dot">${dotContent}</span>
         <span>${s.title}</span>
       </div>
-    `));
+    `);
+    item.onclick = ()=>{ state.stepIndex = i; state.gateError = false; render(); };
+    stub.appendChild(item);
   });
   ticket.appendChild(stub);
 
@@ -730,7 +734,7 @@ function renderPass(){
   const wrap = el(`
     <div class="pass">
       <div class="pass-main">
-        <div class="pass-eyebrow">Boarding pass · sign-up complete</div>
+        <div class="pass-eyebrow">Sign-up complete</div>
         <div class="pass-title">You're confirmed, ${name.split(' ')[0]}.</div>
         <div class="pass-grid">
           <div class="pass-field"><div class="k">Passenger</div><div class="v">${name}</div></div>
