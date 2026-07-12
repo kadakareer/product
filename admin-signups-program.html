@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="admin-common.css">
-  <title>Program Signups Admin – Manage program signups</title>
+  <title>Programs Admin – Track progress of kadets</title>
   <style>
     /* Page-specific: this page's filter dropdown hides the native chevron */
     .filter-dropdown {
@@ -17,6 +17,182 @@
       font-size: 13px;
       color: #6e6e73;
     }
+
+    /* Attendance column(s) — shape depends on the configured program
+       duration (see .config-radio[name="duration"] in the modal below). */
+    .attendance-td {
+      text-align: left;
+    }
+
+    .attendance-day-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .attendance-day-row-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #6e6e73;
+    }
+
+    .attendance-th-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      color: #6e6e73;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* Connected segmented button group — one button per event day, all
+       sharing one border line via negative margin overlap. Only the two
+       end buttons get outer corner rounding. */
+    .attendance-day-group {
+      display: inline-flex;
+    }
+
+    .attendance-day-btn {
+      padding: 6px 10px;
+      min-width: 32px;
+      border: 1px solid #d2d2d7;
+      background: white;
+      color: #1d1d1f;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .attendance-day-btn + .attendance-day-btn {
+      margin-left: -1px;
+    }
+
+    .attendance-day-group .attendance-day-btn:first-child {
+      border-top-left-radius: 6px;
+      border-bottom-left-radius: 6px;
+    }
+
+    .attendance-day-group .attendance-day-btn:last-child {
+      border-top-right-radius: 6px;
+      border-bottom-right-radius: 6px;
+    }
+
+    .attendance-day-btn {
+      position: relative;
+    }
+
+    .attendance-day-btn:hover {
+      background: #f5f5f7;
+      z-index: 1;
+    }
+
+    .attendance-day-btn.filled {
+      background: #10b981;
+      color: white;
+      border-color: #10b981;
+      z-index: 1;
+    }
+
+    .attendance-day-btn.filled:hover {
+      background: #0ea472;
+    }
+
+    /* Custom tooltip (native title tooltips are inconsistent/delayed).
+       Generic on [data-tooltip] so both attendance and submission
+       buttons (and anything else) can reuse it. */
+    [data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: 6px;
+      padding: 5px 9px;
+      background: #1d1d1f;
+      color: white;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      border-radius: 4px;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    /* Submissions column — same connected-button pattern as Attendance,
+       but orange, and each button represents a task rather than a day. */
+    .submission-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .submission-row-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #6e6e73;
+    }
+
+    .submission-group {
+      display: inline-flex;
+    }
+
+    .submission-btn {
+      padding: 6px 10px;
+      min-width: 32px;
+      border: 1px solid #d2d2d7;
+      background: white;
+      color: #1d1d1f;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      position: relative;
+    }
+
+    .submission-btn + .submission-btn {
+      margin-left: -1px;
+    }
+
+    .submission-group .submission-btn:first-child {
+      border-top-left-radius: 6px;
+      border-bottom-left-radius: 6px;
+    }
+
+    .submission-group .submission-btn:last-child {
+      border-top-right-radius: 6px;
+      border-bottom-right-radius: 6px;
+    }
+
+    .submission-btn:hover {
+      background: #f5f5f7;
+      z-index: 1;
+    }
+
+    .submission-btn.filled {
+      background: #f59e0b;
+      color: white;
+      border-color: #f59e0b;
+      z-index: 1;
+    }
+
+    .submission-btn.filled:hover {
+      background: #d97706;
+    }
+
+    .config-days-field {
+      margin-top: 12px;
+    }
+
+    .config-days-input {
+      padding: 8px 12px;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      font-size: 14px;
+      width: 80px;
+    }
   </style>
 </head>
 <body>
@@ -25,8 +201,8 @@
 <div class="container">
   <div class="page-header">
     <div class="page-header-content">
-      <h1 class="page-title">Program Signups Admin</h1>
-      <p class="page-subtitle">Manage and track program signups</p>
+      <h1 class="page-title">Programs Admin</h1>
+      <p class="page-subtitle">Track progress of kadets in their programs</p>
     </div>
     <button class="config-btn" onclick="openModal('configModal')" title="Program settings">⚙️</button>
   </div>
@@ -37,7 +213,7 @@
       <span class="filter-label">Filter by Status:</span>
       <select class="filter-dropdown">
         <option>All signups</option>
-        <option>Attended</option>
+        <option>Completed</option>
         <option>Registered</option>
         <option>Interacted</option>
       </select>
@@ -50,7 +226,7 @@
 
   <!-- Signups Table -->
   <div class="table-wrapper">
-  <table>
+  <table id="signups-table">
     <thead>
       <tr>
         <th>Name</th>
@@ -58,7 +234,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr>
+      <tr data-row-id="r1">
         <td>
           <div class="participant-cell">
             <div class="participant-name">Sarah Martinez</div>
@@ -66,10 +242,10 @@
           </div>
         </td>
         <td>
-          <span class="status-pill editable" data-status="attended" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Attended</span>
-            <div class="status-dropdown" data-statuses="attended,registered,interacted">
-              <div class="status-option" data-status="attended">Attended</div>
+          <span class="status-pill editable" data-status="completed" onclick="toggleStatusDropdown(event)">
+            <span class="status-pill-label">Completed</span>
+            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+              <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
               <div class="status-option" data-status="interacted">Interacted</div>
             </div>
@@ -77,7 +253,7 @@
         </td>
       </tr>
 
-      <tr>
+      <tr data-row-id="r2">
         <td>
           <div class="participant-cell">
             <div class="participant-name">James Wilson</div>
@@ -87,8 +263,8 @@
         <td>
           <span class="status-pill editable" data-status="registered" onclick="toggleStatusDropdown(event)">
             <span class="status-pill-label">Registered</span>
-            <div class="status-dropdown" data-statuses="attended,registered,interacted">
-              <div class="status-option" data-status="attended">Attended</div>
+            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+              <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
               <div class="status-option" data-status="interacted">Interacted</div>
             </div>
@@ -96,7 +272,7 @@
         </td>
       </tr>
 
-      <tr>
+      <tr data-row-id="r3">
         <td>
           <div class="participant-cell">
             <div class="participant-name">Emily Chen</div>
@@ -104,10 +280,10 @@
           </div>
         </td>
         <td>
-          <span class="status-pill editable" data-status="attended" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Attended</span>
-            <div class="status-dropdown" data-statuses="attended,registered,interacted">
-              <div class="status-option" data-status="attended">Attended</div>
+          <span class="status-pill editable" data-status="completed" onclick="toggleStatusDropdown(event)">
+            <span class="status-pill-label">Completed</span>
+            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+              <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
               <div class="status-option" data-status="interacted">Interacted</div>
             </div>
@@ -115,7 +291,7 @@
         </td>
       </tr>
 
-      <tr>
+      <tr data-row-id="r4">
         <td>
           <div class="participant-cell">
             <div class="participant-name">Michael Brown</div>
@@ -125,8 +301,8 @@
         <td>
           <span class="status-pill editable" data-status="interacted" onclick="toggleStatusDropdown(event)">
             <span class="status-pill-label">Interacted</span>
-            <div class="status-dropdown" data-statuses="attended,registered,interacted">
-              <div class="status-option" data-status="attended">Attended</div>
+            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+              <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
               <div class="status-option" data-status="interacted">Interacted</div>
             </div>
@@ -134,7 +310,7 @@
         </td>
       </tr>
 
-      <tr>
+      <tr data-row-id="r5">
         <td>
           <div class="participant-cell">
             <div class="participant-name">Alex Rodriguez</div>
@@ -144,8 +320,8 @@
         <td>
           <span class="status-pill editable" data-status="registered" onclick="toggleStatusDropdown(event)">
             <span class="status-pill-label">Registered</span>
-            <div class="status-dropdown" data-statuses="attended,registered,interacted">
-              <div class="status-option" data-status="attended">Attended</div>
+            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+              <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
               <div class="status-option" data-status="interacted">Interacted</div>
             </div>
@@ -153,7 +329,7 @@
         </td>
       </tr>
 
-      <tr>
+      <tr data-row-id="r6">
         <td>
           <div class="participant-cell">
             <div class="participant-name">Lisa Thompson</div>
@@ -161,10 +337,10 @@
           </div>
         </td>
         <td>
-          <span class="status-pill editable" data-status="attended" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Attended</span>
-            <div class="status-dropdown" data-statuses="attended,registered,interacted">
-              <div class="status-option" data-status="attended">Attended</div>
+          <span class="status-pill editable" data-status="completed" onclick="toggleStatusDropdown(event)">
+            <span class="status-pill-label">Completed</span>
+            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+              <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
               <div class="status-option" data-status="interacted">Interacted</div>
             </div>
@@ -172,7 +348,7 @@
         </td>
       </tr>
 
-      <tr>
+      <tr data-row-id="r7">
         <td>
           <div class="participant-cell">
             <div class="participant-name">David Kim</div>
@@ -182,8 +358,8 @@
         <td>
           <span class="status-pill editable" data-status="interacted" onclick="toggleStatusDropdown(event)">
             <span class="status-pill-label">Interacted</span>
-            <div class="status-dropdown" data-statuses="attended,registered,interacted">
-              <div class="status-option" data-status="attended">Attended</div>
+            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+              <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
               <div class="status-option" data-status="interacted">Interacted</div>
             </div>
@@ -191,7 +367,7 @@
         </td>
       </tr>
 
-      <tr>
+      <tr data-row-id="r8">
         <td>
           <div class="participant-cell">
             <div class="participant-name">Rachel Patel</div>
@@ -199,10 +375,10 @@
           </div>
         </td>
         <td>
-          <span class="status-pill editable" data-status="attended" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Attended</span>
-            <div class="status-dropdown" data-statuses="attended,registered,interacted">
-              <div class="status-option" data-status="attended">Attended</div>
+          <span class="status-pill editable" data-status="completed" onclick="toggleStatusDropdown(event)">
+            <span class="status-pill-label">Completed</span>
+            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+              <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
               <div class="status-option" data-status="interacted">Interacted</div>
             </div>
@@ -210,7 +386,7 @@
         </td>
       </tr>
 
-      <tr>
+      <tr data-row-id="r9">
         <td>
           <div class="participant-cell">
             <div class="participant-name">Kevin Santos</div>
@@ -220,8 +396,8 @@
         <td>
           <span class="status-pill editable" data-status="registered" onclick="toggleStatusDropdown(event)">
             <span class="status-pill-label">Registered</span>
-            <div class="status-dropdown" data-statuses="attended,registered,interacted">
-              <div class="status-option" data-status="attended">Attended</div>
+            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+              <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
               <div class="status-option" data-status="interacted">Interacted</div>
             </div>
@@ -229,7 +405,7 @@
         </td>
       </tr>
 
-      <tr>
+      <tr data-row-id="r10">
         <td>
           <div class="participant-cell">
             <div class="participant-name">Jennifer Lee</div>
@@ -239,8 +415,8 @@
         <td>
           <span class="status-pill editable" data-status="interacted" onclick="toggleStatusDropdown(event)">
             <span class="status-pill-label">Interacted</span>
-            <div class="status-dropdown" data-statuses="attended,registered,interacted">
-              <div class="status-option" data-status="attended">Attended</div>
+            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+              <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
               <div class="status-option" data-status="interacted">Interacted</div>
             </div>
@@ -263,28 +439,15 @@
     <div class="config-group">
       <label class="config-label">Duration</label>
       <div class="config-options">
-        <input type="radio" id="duration-single" name="duration" class="config-radio" value="single-day" checked>
+        <input type="radio" id="duration-single" name="duration" class="config-radio" value="single-day">
         <label for="duration-single" class="config-radio-label">Single-day</label>
 
-        <input type="radio" id="duration-multi" name="duration" class="config-radio" value="multi-day">
+        <input type="radio" id="duration-multi" name="duration" class="config-radio" value="multi-day" checked>
         <label for="duration-multi" class="config-radio-label">Multi-day</label>
-
-        <input type="radio" id="duration-week" name="duration" class="config-radio" value="multi-week">
-        <label for="duration-week" class="config-radio-label">Multi-week</label>
       </div>
-    </div>
-
-    <div class="config-group">
-      <label class="config-label">Format</label>
-      <div class="config-options">
-        <input type="radio" id="format-online" name="format" class="config-radio" value="online" checked>
-        <label for="format-online" class="config-radio-label">Online</label>
-
-        <input type="radio" id="format-onsite" name="format" class="config-radio" value="onsite">
-        <label for="format-onsite" class="config-radio-label">Onsite</label>
-
-        <input type="radio" id="format-hybrid" name="format" class="config-radio" value="hybrid">
-        <label for="format-hybrid" class="config-radio-label">Hybrid</label>
+      <div class="config-days-field" id="configDaysField" style="display: block;">
+        <label class="config-label" for="configDaysCount">Number of days</label>
+        <input type="number" id="configDaysCount" class="config-days-input" min="2" max="31" value="7">
       </div>
     </div>
 
@@ -296,6 +459,20 @@
 
         <input type="radio" id="submissions-no" name="submissions" class="config-radio" value="no-submissions">
         <label for="submissions-no" class="config-radio-label">No submissions</label>
+      </div>
+    </div>
+    
+    <div class="config-group">
+      <label class="config-label">Format</label>
+      <div class="config-options">
+        <input type="radio" id="format-online" name="format" class="config-radio" value="online" checked>
+        <label for="format-online" class="config-radio-label">Online</label>
+
+        <input type="radio" id="format-onsite" name="format" class="config-radio" value="onsite">
+        <label for="format-onsite" class="config-radio-label">Onsite</label>
+
+        <input type="radio" id="format-hybrid" name="format" class="config-radio" value="hybrid">
+        <label for="format-hybrid" class="config-radio-label">Hybrid</label>
       </div>
     </div>
 
@@ -312,8 +489,10 @@
     const duration = document.querySelector('input[name="duration"]:checked').value;
     const format = document.querySelector('input[name="format"]:checked').value;
     const submissions = document.querySelector('input[name="submissions"]:checked').value;
+    const daysCount = parseInt(document.getElementById('configDaysCount').value, 10) || 1;
 
-    console.log('Config saved:', { duration, format, submissions });
+    console.log('Config saved:', { duration, format, submissions, daysCount });
+    refreshTableColumns(duration, daysCount, submissions === 'has-submissions');
     closeModal('configModal');
   }
 
@@ -324,6 +503,222 @@
   function exportCSV() {
     alert('Export CSV functionality');
   }
+
+  // Show the "Number of days" field only when Multi-day is selected.
+  document.querySelectorAll('input[name="duration"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      document.getElementById('configDaysField').style.display = this.value === 'multi-day' ? 'block' : 'none';
+    });
+  });
+
+  /* Attendance tracker — Single-day is one checkbox column with a
+     "select all". Multi-day is a connected segmented button group, one
+     button per event day, inline in each row's own cell — clicking a
+     button toggles that day's attendance for that person, and hovering
+     shows the exact calendar date. No bulk/select-all here since the
+     control is per-row, not per-column.
+
+     Submissions is an independent column (Deliverables config), also a
+     connected segmented button group, one button per task — hovering
+     shows the task name/title. Attendance and Submissions are rebuilt
+     together by refreshTableColumns() so column order stays stable no
+     matter which config changes. */
+  const PROGRAM_START_DATE = new Date(2026, 0, 5); // demo: Monday, Jan 5 2026
+
+  function formatDayDate(dayIndex) {
+    const d = new Date(PROGRAM_START_DATE);
+    d.setDate(d.getDate() + dayIndex);
+    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  // Demo seed data — in a real app this would come from the backend.
+  // `days` holds up to 7 demo days; a higher configured day count just
+  // shows unmarked buttons past index 6.
+  const attendanceData = {
+    r1:  { single: true,  days: [true,  true,  false, true,  false, true,  true ] },
+    r2:  { single: false, days: [true,  false, false, true,  false, false, true ] },
+    r3:  { single: true,  days: [true,  true,  true,  true,  true,  true,  true ] },
+    r4:  { single: true,  days: [false, true,  true,  false, true,  true,  false] },
+    r5:  { single: false, days: [false, false, true,  false, false, true,  false] },
+    r6:  { single: true,  days: [true,  false, true,  true,  false, true,  true ] },
+    r7:  { single: true,  days: [true,  true,  false, true,  true,  false, false] },
+    r8:  { single: false, days: [true,  false, false, false, true,  false, true ] },
+    r9:  { single: true,  days: [true,  true,  true,  true,  true,  true,  true ] },
+    r10: { single: false, days: [false, true,  false, false, true,  false, false] },
+  };
+
+  // Demo seed data for the Submissions column — 3 tasks by default.
+  const SUBMISSION_TASKS = ['Week 1 Reflection', 'Midpoint Project', 'Final Submission'];
+
+  const submissionsData = {
+    r1:  [true,  true,  false],
+    r2:  [true,  false, false],
+    r3:  [true,  true,  true ],
+    r4:  [false, true,  true ],
+    r5:  [false, false, false],
+    r6:  [true,  true,  false],
+    r7:  [true,  false, true ],
+    r8:  [false, false, true ],
+    r9:  [true,  true,  true ],
+    r10: [false, true,  false],
+  };
+
+  function wireSelectAll(headerRow, rows, getChecked, setChecked) {
+    const selectAll = headerRow.querySelector('.attendance-select-all');
+    if (!selectAll) return;
+
+    function refresh() {
+      const states = Array.from(rows).map(getChecked);
+      const allChecked = states.every(Boolean);
+      const someChecked = states.some(Boolean);
+      selectAll.checked = allChecked;
+      selectAll.indeterminate = someChecked && !allChecked;
+    }
+
+    selectAll.addEventListener('change', function() {
+      rows.forEach(row => setChecked(row, this.checked));
+      refresh();
+    });
+
+    rows.forEach(row => {
+      row.querySelector('.attendance-checkbox').addEventListener('change', refresh);
+    });
+
+    refresh();
+  }
+
+  function renderAttendanceColumn(headerRow, rows, mode, daysCount) {
+    const th = document.createElement('th');
+    th.className = 'attendance-th';
+    headerRow.appendChild(th);
+
+    if (mode === 'multi-day') {
+      th.textContent = 'Attendance';
+
+      rows.forEach(row => {
+        const rowId = row.dataset.rowId;
+        const record = attendanceData[rowId];
+        const td = document.createElement('td');
+        td.className = 'attendance-td';
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'attendance-day-row';
+
+        const label = document.createElement('span');
+        label.className = 'attendance-day-row-label';
+        label.textContent = 'Day';
+        wrapper.appendChild(label);
+
+        const group = document.createElement('div');
+        group.className = 'attendance-day-group';
+
+        for (let i = 0; i < daysCount; i++) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'attendance-day-btn';
+          btn.textContent = String(i + 1);
+          btn.dataset.tooltip = formatDayDate(i);
+          if (record.days[i]) btn.classList.add('filled');
+
+          btn.addEventListener('click', () => {
+            record.days[i] = !record.days[i];
+            btn.classList.toggle('filled', record.days[i]);
+          });
+
+          group.appendChild(btn);
+        }
+
+        wrapper.appendChild(group);
+        td.appendChild(wrapper);
+        row.appendChild(td);
+      });
+
+    } else {
+      // single-day
+      th.innerHTML = '<label class="attendance-th-label"><input type="checkbox" class="checkbox attendance-select-all"> Attendance</label>';
+
+      rows.forEach(row => {
+        const rowId = row.dataset.rowId;
+        const td = document.createElement('td');
+        td.className = 'attendance-td';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.className = 'checkbox attendance-checkbox';
+        input.checked = attendanceData[rowId].single;
+        input.addEventListener('change', () => {
+          attendanceData[rowId].single = input.checked;
+        });
+        td.appendChild(input);
+        row.appendChild(td);
+      });
+
+      wireSelectAll(headerRow, rows,
+        row => attendanceData[row.dataset.rowId].single,
+        (row, val) => {
+          attendanceData[row.dataset.rowId].single = val;
+          row.querySelector('.attendance-checkbox').checked = val;
+        });
+    }
+  }
+
+  function renderSubmissionsColumn(headerRow, rows) {
+    const th = document.createElement('th');
+    th.className = 'submissions-th';
+    th.textContent = 'Submissions';
+    headerRow.appendChild(th);
+
+    rows.forEach(row => {
+      const rowId = row.dataset.rowId;
+      const record = submissionsData[rowId];
+      const td = document.createElement('td');
+      td.className = 'submissions-td';
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'submission-row';
+
+      const label = document.createElement('span');
+      label.className = 'submission-row-label';
+      label.textContent = 'Task';
+      wrapper.appendChild(label);
+
+      const group = document.createElement('div');
+      group.className = 'submission-group';
+
+      SUBMISSION_TASKS.forEach((taskName, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'submission-btn';
+        btn.textContent = String(i + 1);
+        btn.dataset.tooltip = taskName;
+        if (record[i]) btn.classList.add('filled');
+
+        btn.addEventListener('click', () => {
+          record[i] = !record[i];
+          btn.classList.toggle('filled', record[i]);
+        });
+
+        group.appendChild(btn);
+      });
+
+      wrapper.appendChild(group);
+      td.appendChild(wrapper);
+      row.appendChild(td);
+    });
+  }
+
+  function refreshTableColumns(duration, daysCount, hasSubmissions) {
+    const table = document.getElementById('signups-table');
+    const headerRow = table.querySelector('thead tr');
+    const rows = table.querySelectorAll('tbody tr');
+
+    headerRow.querySelectorAll('.attendance-th, .submissions-th').forEach(th => th.remove());
+    rows.forEach(row => row.querySelectorAll('.attendance-td, .submissions-td').forEach(td => td.remove()));
+
+    renderAttendanceColumn(headerRow, rows, duration, daysCount);
+    if (hasSubmissions) renderSubmissionsColumn(headerRow, rows);
+  }
+
+  refreshTableColumns('multi-day', 7, true);
 </script>
 
 </body>
