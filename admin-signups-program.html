@@ -182,6 +182,28 @@
       background: #d97706;
     }
 
+    /* Helper tooltips on the status pill + its dropdown options, explaining
+       what each status means. Options get a side tooltip (they're stacked
+       vertically, so "above" would collide with neighboring rows); the
+       pill itself keeps the default "above" placement, but is suppressed
+       while its own dropdown is open to avoid a double tooltip. */
+    .status-option {
+      position: relative;
+    }
+
+    .status-option[data-tooltip]:hover::after {
+      bottom: auto;
+      top: 50%;
+      left: 100%;
+      transform: translateY(-50%);
+      margin-bottom: 0;
+      margin-left: 6px;
+    }
+
+    .status-pill:has(.status-dropdown.show)[data-tooltip]:hover::after {
+      display: none;
+    }
+
     .config-days-field {
       margin-top: 12px;
     }
@@ -460,6 +482,10 @@
         <input type="radio" id="submissions-no" name="submissions" class="config-radio" value="no-submissions">
         <label for="submissions-no" class="config-radio-label">No submissions</label>
       </div>
+      <div class="config-days-field" id="configSubmissionsField" style="display: block;">
+        <label class="config-label" for="configSubmissionsCount">Number of submissions</label>
+        <input type="number" id="configSubmissionsCount" class="config-days-input" min="1" max="20" value="3">
+      </div>
     </div>
     
     <div class="config-group">
@@ -490,9 +516,10 @@
     const format = document.querySelector('input[name="format"]:checked').value;
     const submissions = document.querySelector('input[name="submissions"]:checked').value;
     const daysCount = parseInt(document.getElementById('configDaysCount').value, 10) || 1;
+    const submissionsCount = parseInt(document.getElementById('configSubmissionsCount').value, 10) || 1;
 
-    console.log('Config saved:', { duration, format, submissions, daysCount });
-    refreshTableColumns(duration, daysCount, submissions === 'has-submissions');
+    console.log('Config saved:', { duration, format, submissions, daysCount, submissionsCount });
+    refreshTableColumns(duration, daysCount, submissions === 'has-submissions', submissionsCount);
     closeModal('configModal');
   }
 
@@ -508,6 +535,13 @@
   document.querySelectorAll('input[name="duration"]').forEach(radio => {
     radio.addEventListener('change', function() {
       document.getElementById('configDaysField').style.display = this.value === 'multi-day' ? 'block' : 'none';
+    });
+  });
+
+  // Show the "Number of submissions" field only when Deliverables = Has submissions.
+  document.querySelectorAll('input[name="submissions"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      document.getElementById('configSubmissionsField').style.display = this.value === 'has-submissions' ? 'block' : 'none';
     });
   });
 
@@ -661,7 +695,11 @@
     }
   }
 
-  function renderSubmissionsColumn(headerRow, rows) {
+  function taskLabel(i) {
+    return SUBMISSION_TASKS[i] || ('Task ' + (i + 1));
+  }
+
+  function renderSubmissionsColumn(headerRow, rows, submissionsCount) {
     const th = document.createElement('th');
     th.className = 'submissions-th';
     th.textContent = 'Submissions';
@@ -684,12 +722,12 @@
       const group = document.createElement('div');
       group.className = 'submission-group';
 
-      SUBMISSION_TASKS.forEach((taskName, i) => {
+      for (let i = 0; i < submissionsCount; i++) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'submission-btn';
         btn.textContent = String(i + 1);
-        btn.dataset.tooltip = taskName;
+        btn.dataset.tooltip = taskLabel(i);
         if (record[i]) btn.classList.add('filled');
 
         btn.addEventListener('click', () => {
@@ -698,7 +736,7 @@
         });
 
         group.appendChild(btn);
-      });
+      }
 
       wrapper.appendChild(group);
       td.appendChild(wrapper);
@@ -706,7 +744,7 @@
     });
   }
 
-  function refreshTableColumns(duration, daysCount, hasSubmissions) {
+  function refreshTableColumns(duration, daysCount, hasSubmissions, submissionsCount) {
     const table = document.getElementById('signups-table');
     const headerRow = table.querySelector('thead tr');
     const rows = table.querySelectorAll('tbody tr');
@@ -715,10 +753,36 @@
     rows.forEach(row => row.querySelectorAll('.attendance-td, .submissions-td').forEach(td => td.remove()));
 
     renderAttendanceColumn(headerRow, rows, duration, daysCount);
-    if (hasSubmissions) renderSubmissionsColumn(headerRow, rows);
+    if (hasSubmissions) renderSubmissionsColumn(headerRow, rows, submissionsCount);
   }
 
-  refreshTableColumns('multi-day', 7, true);
+  refreshTableColumns('multi-day', 7, true, 3);
+
+  /* Helper tooltips on the status pill + its dropdown options. */
+  const STATUS_DESCRIPTIONS = {
+    completed: 'Complete attendance and submissions',
+    registered: 'Signup form response verified',
+    interacted: 'Clicked the register button',
+  };
+
+  function applyStatusTooltips() {
+    document.querySelectorAll('.status-pill.editable').forEach(pill => {
+      pill.dataset.tooltip = STATUS_DESCRIPTIONS[pill.dataset.status] || '';
+    });
+    document.querySelectorAll('.status-option').forEach(opt => {
+      opt.dataset.tooltip = STATUS_DESCRIPTIONS[opt.dataset.status] || '';
+    });
+  }
+
+  applyStatusTooltips();
+
+  // Runs after admin-common.js's own delegated handler has already updated
+  // the pill's data-status for this same click, so the tooltip stays in sync.
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.status-option')) {
+      applyStatusTooltips();
+    }
+  });
 </script>
 
 </body>
