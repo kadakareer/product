@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Program Manager – Bulk Review Submissions</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+    }
+
+    /* Main content */
+    .container {
+      max-width: 1800px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      color: #6e6e73;
+      font-size: 16px;
+    }
+
+    /* Bulk action bar */
+    .bulk-action-bar {
+      background: white;
+      border: 1px solid #d2d2d7;
+      border-radius: 8px;
+      padding: 16px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .bulk-selection-info {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1d1d1f;
+    }
+
+    .bulk-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .bulk-btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .bulk-btn.accept {
+      background: #10b981;
+      color: white;
+    }
+
+    .bulk-btn.accept:hover {
+      background: #059669;
+    }
+
+    .bulk-btn.reject {
+      background: #ef4444;
+      color: white;
+    }
+
+    .bulk-btn.reject:hover {
+      background: #dc2626;
+    }
+
+    .bulk-btn.revision {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .bulk-btn.revision:hover {
+      background: #d97706;
+    }
+
+    /* Table */
+    .table-wrapper {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: #f5f5f7;
+      padding: 16px;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 600;
+      color: #6e6e73;
+      border-bottom: 1px solid #d2d2d7;
+      white-space: nowrap;
+    }
+
+    th.checkbox-col {
+      width: 40px;
+    }
+
+    td {
+      padding: 16px;
+      border-bottom: 1px solid #f5f5f7;
+      font-size: 14px;
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover {
+      background: #fafafa;
+    }
+
+    /* Checkbox styling */
+    .checkbox {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #0066cc;
+    }
+
+    /* Status pills */
+    .status-pill {
+      display: inline-block;
+      padding: 5px 14px;
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-pill.pending-review {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-pill.revised {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .status-pill.draft {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    /* Participant cell */
+    .participant-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .participant-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1d1d1f;
+    }
+
+    .participant-note {
+      font-size: 12px;
+      color: #6e6e73;
+      font-style: italic;
+      max-width: 200px;
+      line-height: 1.4;
+    }
+
+    .group-members {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 13px;
+      color: #6e6e73;
+    }
+
+    .group-label {
+      font-size: 12px;
+      font-style: italic;
+      color: #86868b;
+    }
+
+    .group-member {
+      font-size: 13px;
+      color: #1d1d1f;
+      padding: 4px 0;
+    }
+
+    .expand-icon {
+      font-size: 10px;
+      transition: transform 0.2s;
+      display: inline-block;
+    }
+
+    .expand-icon.expanded {
+      transform: rotate(90deg);
+    }
+
+    .group-members-expanded {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* Challenge cell */
+    .challenge-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1d1d1f;
+    }
+
+    /* Submission milestone */
+    .milestone-item {
+      font-size: 14px;
+      color: #1d1d1f;
+      font-weight: 500;
+    }
+
+    /* Output cell */
+    .output-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .file-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 13px;
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .file-type {
+      font-weight: 700;
+    }
+
+    .file-name {
+      font-weight: 400;
+    }
+
+    .eye-icon {
+      cursor: pointer;
+      font-size: 18px;
+      color: #0066cc;
+      transition: transform 0.2s;
+      user-select: none;
+    }
+
+    .eye-icon:hover {
+      transform: scale(1.15);
+    }
+
+    /* Submitted column */
+    .submitted-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .submitted-date {
+      font-size: 13px;
+      color: #6e6e73;
+    }
+
+    .time-ago {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .time-ago.recent {
+      color: #10b981;
+    }
+
+    .time-ago.moderate {
+      color: #f59e0b;
+    }
+
+    .time-ago.old {
+      color: #ef4444;
+    }
+
+    /* Action buttons */
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .action-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid;
+      font-size: 18px;
+      user-select: none;
+    }
+
+    .action-icon.accept {
+      background: #10b981;
+      color: white;
+      border-color: #10b981;
+    }
+
+    .action-icon.accept:hover {
+      background: #059669;
+      border-color: #059669;
+    }
+
+    .action-icon.reject {
+      background: #ef4444;
+      color: white;
+      border-color: #ef4444;
+    }
+
+    .action-icon.reject:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+
+    .action-icon.revision {
+      background: #f59e0b;
+      color: white;
+      border-color: #f59e0b;
+    }
+
+    .action-icon.revision:hover {
+      background: #d97706;
+      border-color: #d97706;
+    }
+
+    /* Note about manual review */
+    .review-note {
+      background: #fef3c7;
+      border: 1px solid #fbbf24;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: #92400e;
+    }
+
+    .review-note strong {
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Main Content -->
+<div class="container">
+  <div class="page-header">
+    <h1 class="page-title">Submissions Review</h1>
+    <p class="page-subtitle">Bulk approve, reject, or request revisions for multiple submissions</p>
+  </div>
+
+  <!-- Bulk Action Bar (hidden by default) -->
+  <div class="bulk-action-bar" id="bulk-action-bar" style="display: none;">
+    <div class="bulk-selection-info">0 submissions selected</div>
+    <div class="bulk-actions">
+      <button class="bulk-btn accept">✓ Accept Selected</button>
+      <button class="bulk-btn reject">✗ Reject Selected</button>
+      <button class="bulk-btn revision">↻ Request Revision</button>
+    </div>
+  </div>
+
+  <!-- Submissions Table -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th class="checkbox-col"><input type="checkbox" class="checkbox" id="select-all"></th>
+          <th>Status</th>
+          <th>Participant (Group/ Solo)</th>
+          <th>Submission Milestone</th>
+          <th>Output</th>
+          <th>Submitted</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Row 1: Individual - Pending review -->
+        <tr>
+          <td><input type="checkbox" class="checkbox"></td>
+          <td>
+            <span class="status-pill pending-review">Pending review</span>
+          </td>
+          <td>
+            <div class="participant-cell">
+              <div class="participant-name">Maria Santos</div>
+            </div>
+          </td>
+          <td>
+            <div class="milestone-item">Week 1</div>
+          </td>
+          <td>
+            <div class="output-cell">
+              <span class="file-pill">
+                <span class="file-type">PDF</span>
+                <span class="file-name">week1_submission_santos.pdf</span>
+              </span>
+              <span class="eye-icon material-icons" title="Preview">visibility</span>
+            </div>
+          </td>
+          <td>
+            <div class="submitted-cell">
+              <span class="submitted-date">Dec 28, 2025</span>
+              <span class="time-ago recent">2d ago</span>
+            </div>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <span class="action-icon accept material-icons" title="Accept">check_circle</span>
+              <span class="action-icon reject material-icons" title="Reject">cancel</span>
+              <span class="action-icon revision material-icons" title="Request Revision">edit</span>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Row 2: Individual with Revised (Attempt #3) -->
+        <tr>
+          <td><input type="checkbox" class="checkbox"></td>
+          <td>
+            <span class="status-pill revised">Revised (Attempt #3)</span>
+          </td>
+          <td>
+            <div class="participant-cell">
+              <div class="participant-name">Elias Quezon</div>
+            </div>
+          </td>
+          <td>
+            <div class="milestone-item">Week 3</div>
+          </td>
+          <td>
+            <div class="output-cell">
+              <span class="file-pill">
+                <span class="file-type">PDF</span>
+                <span class="file-name">analytics_report_quezon_v3.pdf</span>
+              </span>
+              <span class="eye-icon material-icons" title="Preview">visibility</span>
+            </div>
+          </td>
+          <td>
+            <div class="submitted-cell">
+              <span class="submitted-date">Dec 25, 2025</span>
+              <span class="time-ago moderate">5d ago</span>
+            </div>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <span class="action-icon accept material-icons" title="Accept">check_circle</span>
+              <span class="action-icon reject material-icons" title="Reject">cancel</span>
+              <span class="action-icon revision material-icons" title="Request Revision">edit</span>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Row 3: Group submission (collapsed) -->
+        <tr class="group-row" data-group-id="group1">
+          <td><input type="checkbox" class="checkbox"></td>
+          <td>
+            <span class="status-pill pending-review">Pending review</span>
+          </td>
+          <td>
+            <div class="participant-cell" data-group-id="group1">
+              <div class="participant-name" style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <span class="expand-icon">▶</span>
+                Team Phoenix
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="milestone-item">Week 4</div>
+          </td>
+          <td>
+            <div class="output-cell">
+              <span class="file-pill">
+                <span class="file-type">PPTX</span>
+                <span class="file-name">phoenix_final_presentation.pptx</span>
+              </span>
+              <span class="eye-icon material-icons" title="Preview">visibility</span>
+            </div>
+          </td>
+          <td>
+            <div class="submitted-cell">
+              <span class="submitted-date">Dec 29, 2025</span>
+              <span class="time-ago recent">1d ago</span>
+            </div>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <span class="action-icon accept material-icons" title="Accept">check_circle</span>
+              <span class="action-icon reject material-icons" title="Reject">cancel</span>
+              <span class="action-icon revision material-icons" title="Request Revision">edit</span>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Row 4: Draft status -->
+        <tr>
+          <td><input type="checkbox" class="checkbox"></td>
+          <td>
+            <span class="status-pill draft">Draft</span>
+          </td>
+          <td>
+            <div class="participant-cell">
+              <div class="participant-name">Carlos Reyes</div>
+            </div>
+          </td>
+          <td>
+            <div class="milestone-item">Week 1</div>
+          </td>
+          <td>
+            <div class="output-cell">
+              <span class="file-pill">
+                <span class="file-type">DOCX</span>
+                <span class="file-name">business_plan_draft.docx</span>
+              </span>
+              <span class="eye-icon material-icons" title="Preview">visibility</span>
+            </div>
+          </td>
+          <td>
+            <div class="submitted-cell">
+              <span class="submitted-date">Dec 23, 2025</span>
+              <span class="time-ago old">7d ago</span>
+            </div>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <span class="action-icon accept material-icons" title="Accept">check_circle</span>
+              <span class="action-icon reject material-icons" title="Reject">cancel</span>
+              <span class="action-icon revision material-icons" title="Request Revision">edit</span>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Row 5: Another group (collapsed) -->
+        <tr class="group-row" data-group-id="group2">
+          <td><input type="checkbox" class="checkbox"></td>
+          <td>
+            <span class="status-pill revised">Revised (Attempt #2)</span>
+          </td>
+          <td>
+            <div class="participant-cell" data-group-id="group2">
+              <div class="participant-name" style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <span class="expand-icon">▶</span>
+                Code Crushers
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="milestone-item">Final project</div>
+          </td>
+          <td>
+            <div class="output-cell">
+              <span class="file-pill">
+                <span class="file-type">HTML</span>
+                <span class="file-name">codecrushers_website_v2.html</span>
+              </span>
+              <span class="eye-icon material-icons" title="Preview">visibility</span>
+            </div>
+          </td>
+          <td>
+            <div class="submitted-cell">
+              <span class="submitted-date">Dec 27, 2025</span>
+              <span class="time-ago recent">3d ago</span>
+            </div>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <span class="action-icon accept material-icons" title="Accept">check_circle</span>
+              <span class="action-icon reject material-icons" title="Reject">cancel</span>
+              <span class="action-icon revision material-icons" title="Request Revision">edit</span>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Row 6: Another individual -->
+        <tr>
+          <td><input type="checkbox" class="checkbox"></td>
+          <td>
+            <span class="status-pill pending-review">Pending review</span>
+          </td>
+          <td>
+            <div class="participant-cell">
+              <div class="participant-name">Aisha Rodriguez</div>
+            </div>
+          </td>
+          <td>
+            <div class="milestone-item">Week 2</div>
+          </td>
+          <td>
+            <div class="output-cell">
+              <span class="file-pill">
+                <span class="file-type">PDF</span>
+                <span class="file-name">devops_implementation.pdf</span>
+              </span>
+              <span class="eye-icon material-icons" title="Preview">visibility</span>
+            </div>
+          </td>
+          <td>
+            <div class="submitted-cell">
+              <span class="submitted-date">Dec 26, 2025</span>
+              <span class="time-ago moderate">4d ago</span>
+            </div>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <span class="action-icon accept material-icons" title="Accept">check_circle</span>
+              <span class="action-icon reject material-icons" title="Reject">cancel</span>
+              <span class="action-icon revision material-icons" title="Request Revision">edit</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // Bulk action bar visibility
+  const bulkActionBar = document.getElementById('bulk-action-bar');
+  const selectAllCheckbox = document.getElementById('select-all');
+  const rowCheckboxes = document.querySelectorAll('tbody .checkbox');
+  
+  function updateBulkActionBar() {
+    const checkedCount = Array.from(rowCheckboxes).filter(cb => cb.checked).length;
+    const bulkSelectionInfo = document.querySelector('.bulk-selection-info');
+    
+    if (checkedCount > 0) {
+      bulkActionBar.style.display = 'flex';
+      bulkSelectionInfo.textContent = `${checkedCount} submission${checkedCount !== 1 ? 's' : ''} selected`;
+    } else {
+      bulkActionBar.style.display = 'none';
+    }
+  }
+  
+  selectAllCheckbox.addEventListener('change', function() {
+    rowCheckboxes.forEach(checkbox => {
+      checkbox.checked = this.checked;
+    });
+    updateBulkActionBar();
+  });
+
+  rowCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      updateBulkActionBar();
+      
+      // Update select all checkbox state
+      const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+      const someChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+      
+      selectAllCheckbox.checked = allChecked;
+      selectAllCheckbox.indeterminate = someChecked && !allChecked;
+    });
+  });
+
+  // Group expand/collapse functionality
+  document.querySelectorAll('.participant-cell[data-group-id]').forEach(cell => {
+    const groupId = cell.dataset.groupId;
+    const participantName = cell.querySelector('.participant-name');
+    const expandIcon = cell.querySelector('.expand-icon');
+    
+    // Create members div (hidden initially)
+    const membersDiv = document.createElement('div');
+    membersDiv.className = 'group-members-expanded';
+    membersDiv.style.display = 'none';
+    
+    // Add members based on group
+    if (groupId === 'group1') {
+      membersDiv.innerHTML = `
+        <span class="group-member">• Juliet Rizal</span>
+        <span class="group-member">• Apple Mabini</span>
+        <span class="group-member">• Jana Luna</span>
+      `;
+    } else if (groupId === 'group2') {
+      membersDiv.innerHTML = `
+        <span class="group-member">• Mark Dela Cruz</span>
+        <span class="group-member">• Sofia Tan</span>
+        <span class="group-member">• Bea Fernandez</span>
+        <span class="group-member">• Rico Villanueva</span>
+      `;
+    }
+    
+    cell.appendChild(membersDiv);
+    
+    participantName.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const isExpanded = membersDiv.style.display === 'flex';
+      
+      if (isExpanded) {
+        membersDiv.style.display = 'none';
+        expandIcon.classList.remove('expanded');
+      } else {
+        membersDiv.style.display = 'flex';
+        expandIcon.classList.add('expanded');
+      }
+    });
+  });
+
+  // Individual action buttons
+  document.querySelectorAll('.action-icon').forEach(icon => {
+    icon.addEventListener('click', function(e) {
+      const action = this.classList.contains('accept') ? 'Accept' :
+                     this.classList.contains('reject') ? 'Reject' : 'Request Revision';
+      alert(`${action} action clicked for this submission`);
+    });
+  });
+
+  // Bulk action buttons
+  document.querySelectorAll('.bulk-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const checkedCount = Array.from(rowCheckboxes).filter(cb => cb.checked).length;
+      if (checkedCount === 0) {
+        alert('Please select at least one submission');
+        return;
+      }
+      
+      const action = this.classList.contains('accept') ? 'Accept' :
+                     this.classList.contains('reject') ? 'Reject' : 'Request Revision';
+      alert(`${action} action for ${checkedCount} submission(s)`);
+    });
+  });
+</script>
+
+</body>
+</html>
