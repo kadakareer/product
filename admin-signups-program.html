@@ -215,6 +215,119 @@
       font-size: 14px;
       width: 80px;
     }
+
+    /* Checkbox styling (row bulk-selection) */
+    .checkbox {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #0066cc;
+    }
+
+    .select-col {
+      width: 40px;
+    }
+
+    /* Page shell: the page itself doesn't scroll — only the table's row
+       body does. Header/controls above the table and the footer below it
+       stay fixed on screen; .table-scroll is the one scrollable region. */
+    body {
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .page-header,
+    .controls {
+      flex-shrink: 0;
+    }
+
+    .table-wrapper {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .table-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+    }
+
+    /* Header lives in its own table, outside .table-scroll entirely, so
+       the scrollbar only ever spans the row body — not the header. Widths
+       are synced to the body table's actual columns via JS (see
+       syncHeaderWidths), since the header table has no data of its own to
+       size against. */
+    .table-head-table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      flex-shrink: 0;
+      background: #f5f5f7;
+      position: relative;
+      z-index: 5;
+    }
+
+    .scrollbar-spacer {
+      padding: 0;
+      border: none;
+    }
+
+    .table-footer {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      border-top: 1px solid #e5e7eb;
+      background: #fafafa;
+      font-size: 13px;
+      color: #6e6e73;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-selected-count {
+      color: #0066cc;
+      font-weight: 600;
+    }
+
+    /* Tooltips must render above the header/footer. A hovered row's
+       default z-index (1, from admin-common.css) sits below the header's
+       (5) so its sticky-safe occlusion still works while scrolling — but
+       that would also trap a tooltip beneath the header. Escalate only
+       the specific row containing the hovered, tooltip-bearing element,
+       and only while it's actually hovered. */
+    #signups-table tbody tr:has([data-tooltip]:hover) {
+      z-index: 10;
+    }
+
+    [data-tooltip]:hover::after {
+      z-index: 10001;
+    }
+
+    /* Selected-row highlight */
+    #signups-table tbody tr:has(.row-select:checked) {
+      background: #eff6ff;
+    }
+
+    /* Whole-row click selects it — except the Name/email column, which
+       needs normal text selection (e.g. double-click to copy). */
+    #signups-table tbody tr {
+      cursor: pointer;
+    }
+
+    #signups-table tbody .participant-cell {
+      cursor: auto;
+    }
   </style>
 </head>
 <body>
@@ -224,7 +337,7 @@
   <div class="page-header">
     <div class="page-header-content">
       <h1 class="page-title">Programs Admin</h1>
-      <p class="page-subtitle">Track progress of kadets in their programs</p>
+      <p class="page-subtitle">Track the progress of kadets for the program {program_name}</p>
     </div>
     <button class="config-btn" onclick="openModal('configModal')" title="Program settings">⚙️</button>
   </div>
@@ -248,19 +361,25 @@
 
   <!-- Signups Table -->
   <div class="table-wrapper">
-  <table id="signups-table">
+  <table id="tableHead" class="table-head-table">
     <thead>
-      <tr>
+      <tr id="headRow">
+        <th class="select-col"><input type="checkbox" class="checkbox" id="selectAllRows"></th>
         <th>Name</th>
         <th>Status</th>
+        <th class="scrollbar-spacer" id="scrollbarSpacer"></th>
       </tr>
     </thead>
+  </table>
+  <div class="table-scroll">
+  <table id="signups-table">
     <tbody>
       <tr data-row-id="r1">
+        <td><input type="checkbox" class="checkbox row-select"></td>
         <td>
           <div class="participant-cell">
-            <div class="participant-name">Sarah Martinez</div>
-            <div class="participant-email">sarah.martinez@email.com</div>
+            <div><span class="participant-name">Sarah Martinez</span></div>
+            <div><span class="participant-email">sarah.martinez@email.com</span></div>
           </div>
         </td>
         <td>
@@ -276,10 +395,11 @@
       </tr>
 
       <tr data-row-id="r2">
+        <td><input type="checkbox" class="checkbox row-select"></td>
         <td>
           <div class="participant-cell">
-            <div class="participant-name">James Wilson</div>
-            <div class="participant-email">james.wilson@gmail.com</div>
+            <div><span class="participant-name">James Wilson</span></div>
+            <div><span class="participant-email">james.wilson@gmail.com</span></div>
           </div>
         </td>
         <td>
@@ -295,10 +415,11 @@
       </tr>
 
       <tr data-row-id="r3">
+        <td><input type="checkbox" class="checkbox row-select"></td>
         <td>
           <div class="participant-cell">
-            <div class="participant-name">Emily Chen</div>
-            <div class="participant-email">emily.chen@outlook.com</div>
+            <div><span class="participant-name">Emily Chen</span></div>
+            <div><span class="participant-email">emily.chen@outlook.com</span></div>
           </div>
         </td>
         <td>
@@ -314,10 +435,11 @@
       </tr>
 
       <tr data-row-id="r4">
+        <td><input type="checkbox" class="checkbox row-select"></td>
         <td>
           <div class="participant-cell">
-            <div class="participant-name">Michael Brown</div>
-            <div class="participant-email">michael.brown@gmail.com</div>
+            <div><span class="participant-name">Michael Brown</span></div>
+            <div><span class="participant-email">michael.brown@gmail.com</span></div>
           </div>
         </td>
         <td>
@@ -333,10 +455,11 @@
       </tr>
 
       <tr data-row-id="r5">
+        <td><input type="checkbox" class="checkbox row-select"></td>
         <td>
           <div class="participant-cell">
-            <div class="participant-name">Alex Rodriguez</div>
-            <div class="participant-email">alex.rodriguez@email.com</div>
+            <div><span class="participant-name">Alex Rodriguez</span></div>
+            <div><span class="participant-email">alex.rodriguez@email.com</span></div>
           </div>
         </td>
         <td>
@@ -352,10 +475,11 @@
       </tr>
 
       <tr data-row-id="r6">
+        <td><input type="checkbox" class="checkbox row-select"></td>
         <td>
           <div class="participant-cell">
-            <div class="participant-name">Lisa Thompson</div>
-            <div class="participant-email">lisa.thompson@email.com</div>
+            <div><span class="participant-name">Lisa Thompson</span></div>
+            <div><span class="participant-email">lisa.thompson@email.com</span></div>
           </div>
         </td>
         <td>
@@ -371,10 +495,11 @@
       </tr>
 
       <tr data-row-id="r7">
+        <td><input type="checkbox" class="checkbox row-select"></td>
         <td>
           <div class="participant-cell">
-            <div class="participant-name">David Kim</div>
-            <div class="participant-email">david.kim@outlook.com</div>
+            <div><span class="participant-name">David Kim</span></div>
+            <div><span class="participant-email">david.kim@outlook.com</span></div>
           </div>
         </td>
         <td>
@@ -390,10 +515,11 @@
       </tr>
 
       <tr data-row-id="r8">
+        <td><input type="checkbox" class="checkbox row-select"></td>
         <td>
           <div class="participant-cell">
-            <div class="participant-name">Rachel Patel</div>
-            <div class="participant-email">rachel.patel@gmail.com</div>
+            <div><span class="participant-name">Rachel Patel</span></div>
+            <div><span class="participant-email">rachel.patel@gmail.com</span></div>
           </div>
         </td>
         <td>
@@ -409,10 +535,11 @@
       </tr>
 
       <tr data-row-id="r9">
+        <td><input type="checkbox" class="checkbox row-select"></td>
         <td>
           <div class="participant-cell">
-            <div class="participant-name">Kevin Santos</div>
-            <div class="participant-email">kevin.santos@gmail.com</div>
+            <div><span class="participant-name">Kevin Santos</span></div>
+            <div><span class="participant-email">kevin.santos@gmail.com</span></div>
           </div>
         </td>
         <td>
@@ -428,10 +555,11 @@
       </tr>
 
       <tr data-row-id="r10">
+        <td><input type="checkbox" class="checkbox row-select"></td>
         <td>
           <div class="participant-cell">
-            <div class="participant-name">Jennifer Lee</div>
-            <div class="participant-email">jennifer.lee@email.com</div>
+            <div><span class="participant-name">Jennifer Lee</span></div>
+            <div><span class="participant-email">jennifer.lee@email.com</span></div>
           </div>
         </td>
         <td>
@@ -447,6 +575,10 @@
       </tr>
     </tbody>
   </table>
+  </div>
+  <div class="table-footer" id="tableFooter">
+    <span id="footerText">10 rows</span>
+  </div>
   </div>
 </div>
 
@@ -621,10 +753,15 @@
     refresh();
   }
 
+  function insertHeaderCell(headerRow, th) {
+    const spacer = document.getElementById('scrollbarSpacer');
+    headerRow.insertBefore(th, spacer);
+  }
+
   function renderAttendanceColumn(headerRow, rows, mode, daysCount) {
     const th = document.createElement('th');
     th.className = 'attendance-th';
-    headerRow.appendChild(th);
+    insertHeaderCell(headerRow, th);
 
     if (mode === 'multi-day') {
       th.textContent = 'Attendance';
@@ -703,7 +840,7 @@
     const th = document.createElement('th');
     th.className = 'submissions-th';
     th.textContent = 'Submissions';
-    headerRow.appendChild(th);
+    insertHeaderCell(headerRow, th);
 
     rows.forEach(row => {
       const rowId = row.dataset.rowId;
@@ -745,18 +882,41 @@
   }
 
   function refreshTableColumns(duration, daysCount, hasSubmissions, submissionsCount) {
-    const table = document.getElementById('signups-table');
-    const headerRow = table.querySelector('thead tr');
-    const rows = table.querySelectorAll('tbody tr');
+    const headerRow = document.getElementById('headRow');
+    const rows = document.querySelectorAll('#signups-table tbody tr');
 
     headerRow.querySelectorAll('.attendance-th, .submissions-th').forEach(th => th.remove());
     rows.forEach(row => row.querySelectorAll('.attendance-td, .submissions-td').forEach(td => td.remove()));
 
     renderAttendanceColumn(headerRow, rows, duration, daysCount);
     if (hasSubmissions) renderSubmissionsColumn(headerRow, rows, submissionsCount);
+
+    syncHeaderWidths();
+  }
+
+  // The header table has no data of its own, so its column widths are
+  // copied from the body table's actual rendered cells after every
+  // render. A trailing spacer cell reserves the exact width the vertical
+  // scrollbar takes from the body, so columns still line up.
+  function syncHeaderWidths() {
+    const headRow = document.getElementById('headRow');
+    const spacer = document.getElementById('scrollbarSpacer');
+    const scrollEl = document.querySelector('.table-scroll');
+    const firstBodyRow = document.querySelector('#signups-table tbody tr');
+
+    if (firstBodyRow) {
+      const headCells = Array.from(headRow.children).filter(el => el !== spacer);
+      const bodyCells = Array.from(firstBodyRow.children);
+      headCells.forEach((th, i) => {
+        if (bodyCells[i]) th.style.width = bodyCells[i].getBoundingClientRect().width + 'px';
+      });
+    }
+
+    spacer.style.width = (scrollEl.offsetWidth - scrollEl.clientWidth) + 'px';
   }
 
   refreshTableColumns('multi-day', 7, true, 3);
+  window.addEventListener('resize', syncHeaderWidths);
 
   /* Helper tooltips on the status pill + its dropdown options. */
   const STATUS_DESCRIPTIONS = {
@@ -782,6 +942,56 @@
     if (e.target.closest('.status-option')) {
       applyStatusTooltips();
     }
+  });
+
+  /* Bulk row selection + footer counts. */
+  const selectAllRows = document.getElementById('selectAllRows');
+  const footerText = document.getElementById('footerText');
+
+  function rowCheckboxes() {
+    return Array.from(document.querySelectorAll('#signups-table tbody .row-select'));
+  }
+
+  function updateSelectionUI() {
+    const boxes = rowCheckboxes();
+    const total = boxes.length;
+    const selectedCount = boxes.filter(cb => cb.checked).length;
+
+    selectAllRows.checked = total > 0 && selectedCount === total;
+    selectAllRows.indeterminate = selectedCount > 0 && selectedCount < total;
+
+    if (selectedCount > 0) {
+      footerText.innerHTML = '<span class="footer-selected-count">' + selectedCount + ' selected</span> of ' + total + ' rows';
+    } else {
+      footerText.textContent = total + ' rows';
+    }
+  }
+
+  selectAllRows.addEventListener('change', function() {
+    rowCheckboxes().forEach(cb => { cb.checked = this.checked; });
+    updateSelectionUI();
+  });
+
+  rowCheckboxes().forEach(cb => cb.addEventListener('change', updateSelectionUI));
+
+  updateSelectionUI();
+
+  // Clicking anywhere on a row toggles its selection, except the checkbox
+  // itself (already toggles natively), the Name/email column (needs normal
+  // text selection for copying), and any interactive control within the
+  // row (status pill/dropdown, attendance/submission buttons) — those
+  // should only do their own thing, not also flip row selection.
+  document.querySelectorAll('#signups-table tbody tr').forEach(row => {
+    row.addEventListener('click', function(e) {
+      const excluded = e.target.closest(
+        '.row-select, .participant-name, .participant-email, .status-pill, .attendance-day-btn, .submission-btn, .attendance-checkbox'
+      );
+      if (excluded) return;
+
+      const checkbox = row.querySelector('.row-select');
+      checkbox.checked = !checkbox.checked;
+      checkbox.dispatchEvent(new Event('change'));
+    });
   });
 </script>
 
