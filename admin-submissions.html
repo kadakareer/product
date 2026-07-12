@@ -3,43 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="admin-common.css">
   <title>Program Manager – Bulk Review Submissions</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background: #f5f5f7;
-      color: #1d1d1f;
-    }
-
-    /* Main content */
-    .container {
-      max-width: 1800px;
-      margin: 0 auto;
-      padding: 40px 24px;
-    }
-
-    .page-header {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .page-title {
-      font-size: 32px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .page-subtitle {
-      color: #6e6e73;
-      font-size: 16px;
-    }
-
     /* Bulk action bar */
     .bulk-action-bar {
       background: white;
@@ -101,47 +67,8 @@
       background: #d97706;
     }
 
-    /* Table */
-    .table-wrapper {
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th {
-      background: #f5f5f7;
-      padding: 16px;
-      text-align: left;
-      font-size: 13px;
-      font-weight: 600;
-      color: #6e6e73;
-      border-bottom: 1px solid #d2d2d7;
-      white-space: nowrap;
-    }
-
     th.checkbox-col {
       width: 40px;
-    }
-
-    td {
-      padding: 16px;
-      border-bottom: 1px solid #f5f5f7;
-      font-size: 14px;
-      vertical-align: top;
-    }
-
-    tr:last-child td {
-      border-bottom: none;
-    }
-
-    tr:hover {
-      background: #fafafa;
     }
 
     /* Checkbox styling */
@@ -153,14 +80,6 @@
     }
 
     /* Status pills */
-    .status-pill {
-      display: inline-block;
-      padding: 5px 14px;
-      border-radius: 14px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
     .status-pill.pending-review {
       background: #fef3c7;
       color: #92400e;
@@ -174,19 +93,6 @@
     .status-pill.draft {
       background: #e5e7eb;
       color: #374151;
-    }
-
-    /* Participant cell */
-    .participant-cell {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .participant-name {
-      font-size: 14px;
-      font-weight: 600;
-      color: #1d1d1f;
     }
 
     .participant-note {
@@ -319,8 +225,6 @@
 
     /* Action buttons */
     .action-buttons {
-      display: flex;
-      gap: 8px;
       align-items: center;
     }
 
@@ -392,8 +296,10 @@
 <!-- Main Content -->
 <div class="container">
   <div class="page-header">
-    <h1 class="page-title">Submissions Review</h1>
-    <p class="page-subtitle">Bulk approve, reject, or request revisions for multiple submissions</p>
+    <div class="page-header-content">
+      <h1 class="page-title">Submissions Review</h1>
+      <p class="page-subtitle">Bulk approve, reject, or request revisions for multiple submissions</p>
+    </div>
   </div>
 
   <!-- Bulk Action Bar (hidden by default) -->
@@ -659,16 +565,17 @@
   </div>
 </div>
 
+<script src="admin-common.js"></script>
 <script>
   // Bulk action bar visibility
   const bulkActionBar = document.getElementById('bulk-action-bar');
   const selectAllCheckbox = document.getElementById('select-all');
   const rowCheckboxes = document.querySelectorAll('tbody .checkbox');
-  
+
   function updateBulkActionBar() {
     const checkedCount = Array.from(rowCheckboxes).filter(cb => cb.checked).length;
     const bulkSelectionInfo = document.querySelector('.bulk-selection-info');
-    
+
     if (checkedCount > 0) {
       bulkActionBar.style.display = 'flex';
       bulkSelectionInfo.textContent = `${checkedCount} submission${checkedCount !== 1 ? 's' : ''} selected`;
@@ -676,7 +583,7 @@
       bulkActionBar.style.display = 'none';
     }
   }
-  
+
   selectAllCheckbox.addEventListener('change', function() {
     rowCheckboxes.forEach(checkbox => {
       checkbox.checked = this.checked;
@@ -687,11 +594,11 @@
   rowCheckboxes.forEach(checkbox => {
     checkbox.addEventListener('change', function() {
       updateBulkActionBar();
-      
+
       // Update select all checkbox state
       const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
       const someChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
-      
+
       selectAllCheckbox.checked = allChecked;
       selectAllCheckbox.indeterminate = someChecked && !allChecked;
     });
@@ -702,12 +609,12 @@
     const groupId = cell.dataset.groupId;
     const participantName = cell.querySelector('.participant-name');
     const expandIcon = cell.querySelector('.expand-icon');
-    
+
     // Create members div (hidden initially)
     const membersDiv = document.createElement('div');
     membersDiv.className = 'group-members-expanded';
     membersDiv.style.display = 'none';
-    
+
     // Add members based on group
     if (groupId === 'group1') {
       membersDiv.innerHTML = `
@@ -723,13 +630,13 @@
         <span class="group-member">• Rico Villanueva</span>
       `;
     }
-    
+
     cell.appendChild(membersDiv);
-    
+
     participantName.addEventListener('click', function(e) {
       e.stopPropagation();
       const isExpanded = membersDiv.style.display === 'flex';
-      
+
       if (isExpanded) {
         membersDiv.style.display = 'none';
         expandIcon.classList.remove('expanded');
@@ -757,7 +664,7 @@
         alert('Please select at least one submission');
         return;
       }
-      
+
       const action = this.classList.contains('accept') ? 'Accept' :
                      this.classList.contains('reject') ? 'Reject' : 'Request Revision';
       alert(`${action} action for ${checkedCount} submission(s)`);

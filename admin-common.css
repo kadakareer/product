@@ -1,0 +1,383 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: #f5f5f7;
+  color: #1d1d1f;
+}
+
+/* Layout */
+.container {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.page-header-content {
+  text-align: center;
+  flex: 1;
+}
+
+.page-title {
+  font-size: 32px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.page-subtitle {
+  color: #6e6e73;
+  font-size: 16px;
+}
+
+.config-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.2s;
+}
+
+.config-btn:hover {
+  background: #f5f5f7;
+  border-color: #0066cc;
+}
+
+/* Controls bar (filter + action buttons row) */
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 12px;
+}
+
+.filter-section {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.filter-label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.filter-dropdown {
+  padding: 8px 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* Buttons */
+.btn-outline {
+  padding: 8px 16px;
+  border: 1px solid #d2d2d7;
+  border-radius: 6px;
+  background: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-outline:hover {
+  background: #f5f5f7;
+  border-color: #0066cc;
+}
+
+/* Table */
+.table-wrapper {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background: #f5f5f7;
+  padding: 16px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6e6e73;
+  border-bottom: 1px solid #d2d2d7;
+  white-space: nowrap;
+}
+
+td {
+  padding: 16px;
+  border-bottom: 1px solid #f5f5f7;
+  font-size: 14px;
+  vertical-align: top;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+/* Every row gets a stacking context so a row with an open dropdown
+   (.dropdown-active) can be raised above the rows below it. */
+tr {
+  position: relative;
+  z-index: 1;
+}
+
+tr.dropdown-active {
+  z-index: 50;
+}
+
+tr:hover {
+  background: #fafafa;
+}
+
+/* Status pill (base shape/type — color variants stay page-specific) */
+.status-pill {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+/* Editable status pill + dropdown menu (click pill to change status).
+   Color comes from a shared palette cycled by JS based on the pill's
+   position in its own data-statuses list — pages declare a vocabulary,
+   not a color, so no per-status-name CSS is needed. */
+.status-pill.editable {
+  cursor: pointer;
+  border: none;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.pill-palette-0 { background: #0066cc; }
+.pill-palette-1 { background: #f59e0b; }
+.pill-palette-2 { background: #10b981; }
+.pill-palette-3 { background: #ef4444; }
+.pill-palette-4 { background: #6b7280; }
+.pill-palette-5 { background: #6366f1; }
+.pill-palette-6 { background: #ec4899; }
+.pill-palette-7 { background: #14b8a6; }
+
+.pill-palette-0:hover { background: #0052a3; }
+.pill-palette-1:hover { background: #d97706; }
+.pill-palette-2:hover { background: #0ea472; }
+.pill-palette-3:hover { background: #dc2626; }
+.pill-palette-4:hover { background: #52525b; }
+.pill-palette-5:hover { background: #4f46e5; }
+.pill-palette-6:hover { background: #db2777; }
+.pill-palette-7:hover { background: #0d9488; }
+
+.status-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid #d2d2d7;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 10000;
+  min-width: 120px;
+  display: none;
+}
+
+.status-dropdown.show {
+  display: block;
+}
+
+.status-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #1d1d1f;
+  white-space: nowrap;
+  border-bottom: 1px solid #f5f5f7;
+}
+
+.status-option:last-child {
+  border-bottom: none;
+}
+
+.status-option:hover {
+  background: #f5f5f7;
+}
+
+/* Person cell (name + sublabel) — used for applicants/participants */
+.applicant-cell,
+.participant-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.applicant-name,
+.participant-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.meta {
+  font-size: 12px;
+  color: #86868b;
+}
+
+/* Modal (generic) */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 32px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6e6e73;
+  padding: 0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.modal-btn.save {
+  background: #0066cc;
+  color: white;
+}
+
+.modal-btn.save:hover {
+  background: #0052a3;
+}
+
+.modal-btn.cancel {
+  background: #f5f5f7;
+  color: #1d1d1f;
+  border: 1px solid #d2d2d7;
+}
+
+.modal-btn.cancel:hover {
+  background: #e8e8ed;
+}
+
+/* Config form (radio pill groups, used inside modals) */
+.config-group {
+  margin-bottom: 20px;
+}
+
+.config-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.config-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.config-radio {
+  display: none;
+}
+
+.config-radio-label {
+  padding: 8px 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+}
+
+.config-radio:checked + .config-radio-label {
+  background: #0066cc;
+  color: white;
+  border-color: #0066cc;
+}
+
+.config-radio-label:hover {
+  border-color: #0066cc;
+}
