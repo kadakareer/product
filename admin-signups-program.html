@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <title>Program Signups Admin – Manage program signups</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+    }
+
+    /* Main content */
+    .container {
+      max-width: 1800px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+
+    .page-header-content {
+      text-align: center;
+      flex: 1;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      color: #6e6e73;
+      font-size: 16px;
+    }
+
+    .config-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      border: 1px solid #d2d2d7;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 20px;
+      transition: all 0.2s;
+    }
+
+    .config-btn:hover {
+      background: #f5f5f7;
+      border-color: #0066cc;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      gap: 12px;
+    }
+
+    .filter-section {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .filter-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .filter-dropdown {
+      padding: 8px 12px;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+      cursor: pointer;
+      appearance: none;
+      background-image: none;
+      padding-right: 12px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .csv-btn {
+      padding: 8px 16px;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      background: white;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .csv-btn:hover {
+      background: #f5f5f7;
+      border-color: #0066cc;
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .table-wrapper {
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    th {
+      background: #f5f5f7;
+      padding: 16px;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 600;
+      color: #6e6e73;
+      border-bottom: 1px solid #d2d2d7;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 16px;
+      border-bottom: 1px solid #f5f5f7;
+      font-size: 14px;
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr {
+      position: relative;
+      z-index: 1;
+    }
+
+    tr.dropdown-active {
+      z-index: 50;
+    }
+
+    tr:hover {
+      background: #fafafa;
+    }
+
+    /* Status pill */
+    .status-pill {
+      display: inline-block;
+      padding: 5px 14px;
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #0066cc;
+      color: white;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s;
+      position: relative;
+    }
+
+    .status-pill.attended {
+      background: #10b981;
+    }
+
+    .status-pill.registered {
+      background: #f59e0b;
+    }
+
+    .status-pill.interacted {
+      background: #6366f1;
+    }
+
+    .status-pill.attended:hover {
+      background: #0ea472;
+    }
+
+    .status-pill.registered:hover {
+      background: #d97706;
+    }
+
+    .status-pill.interacted:hover {
+      background: #4f46e5;
+    }
+
+    .status-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+      background: white;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10000;
+      min-width: 120px;
+      display: none;
+    }
+
+    .status-dropdown.show {
+      display: block;
+    }
+
+    .status-option {
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #1d1d1f;
+      white-space: nowrap;
+      border-bottom: 1px solid #f5f5f7;
+    }
+
+    .status-option:last-child {
+      border-bottom: none;
+    }
+
+    .status-option:hover {
+      background: #f5f5f7;
+    }
+
+    /* Participant cell */
+    .participant-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .participant-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1d1d1f;
+    }
+
+    .participant-email {
+      font-size: 13px;
+      color: #6e6e73;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background-color: white;
+      padding: 32px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1d1d1f;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #6e6e73;
+      padding: 0;
+    }
+
+    .config-group {
+      margin-bottom: 20px;
+    }
+
+    .config-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1d1d1f;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .config-options {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .config-radio {
+      display: none;
+    }
+
+    .config-radio-label {
+      padding: 8px 12px;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    .config-radio:checked + .config-radio-label {
+      background: #0066cc;
+      color: white;
+      border-color: #0066cc;
+    }
+
+    .config-radio-label:hover {
+      border-color: #0066cc;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .modal-btn.save {
+      background: #0066cc;
+      color: white;
+    }
+
+    .modal-btn.save:hover {
+      background: #0052a3;
+    }
+
+    .modal-btn.cancel {
+      background: #f5f5f7;
+      color: #1d1d1f;
+      border: 1px solid #d2d2d7;
+    }
+
+    .modal-btn.cancel:hover {
+      background: #e8e8ed;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Main Content -->
+<div class="container">
+  <div class="page-header">
+    <div class="page-header-content">
+      <h1 class="page-title">Program Signups Admin</h1>
+      <p class="page-subtitle">Manage and track program signups</p>
+    </div>
+    <button class="config-btn" onclick="openConfigModal()" title="Program settings">⚙️</button>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="filter-section">
+      <span class="filter-label">Filter by Status:</span>
+      <select class="filter-dropdown">
+        <option>All signups</option>
+        <option>Attended</option>
+        <option>Registered</option>
+        <option>Interacted</option>
+      </select>
+    </div>
+    <div class="action-buttons">
+      <button class="csv-btn" onclick="importCSV()">↓ Import CSV</button>
+      <button class="csv-btn" onclick="exportCSV()">↑ Export CSV</button>
+    </div>
+  </div>
+
+  <!-- Signups Table -->
+  <div class="table-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <div class="participant-cell">
+            <div class="participant-name">Sarah Martinez</div>
+            <div class="participant-email">sarah.martinez@email.com</div>
+          </div>
+        </td>
+        <td>
+          <span class="status-pill attended" onclick="toggleStatusDropdown(event)">Attended
+            <div class="status-dropdown">
+              <div class="status-option" onclick="updateStatus(event, 'attended')">Attended</div>
+              <div class="status-option" onclick="updateStatus(event, 'registered')">Registered</div>
+              <div class="status-option" onclick="updateStatus(event, 'interacted')">Interacted</div>
+            </div>
+          </span>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <div class="participant-cell">
+            <div class="participant-name">James Wilson</div>
+            <div class="participant-email">james.wilson@gmail.com</div>
+          </div>
+        </td>
+        <td>
+          <span class="status-pill registered" onclick="toggleStatusDropdown(event)">Registered
+            <div class="status-dropdown">
+              <div class="status-option" onclick="updateStatus(event, 'attended')">Attended</div>
+              <div class="status-option" onclick="updateStatus(event, 'registered')">Registered</div>
+              <div class="status-option" onclick="updateStatus(event, 'interacted')">Interacted</div>
+            </div>
+          </span>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <div class="participant-cell">
+            <div class="participant-name">Emily Chen</div>
+            <div class="participant-email">emily.chen@outlook.com</div>
+          </div>
+        </td>
+        <td>
+          <span class="status-pill attended" onclick="toggleStatusDropdown(event)">Attended
+            <div class="status-dropdown">
+              <div class="status-option" onclick="updateStatus(event, 'attended')">Attended</div>
+              <div class="status-option" onclick="updateStatus(event, 'registered')">Registered</div>
+              <div class="status-option" onclick="updateStatus(event, 'interacted')">Interacted</div>
+            </div>
+          </span>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <div class="participant-cell">
+            <div class="participant-name">Michael Brown</div>
+            <div class="participant-email">michael.brown@gmail.com</div>
+          </div>
+        </td>
+        <td>
+          <span class="status-pill interacted" onclick="toggleStatusDropdown(event)">Interacted
+            <div class="status-dropdown">
+              <div class="status-option" onclick="updateStatus(event, 'attended')">Attended</div>
+              <div class="status-option" onclick="updateStatus(event, 'registered')">Registered</div>
+              <div class="status-option" onclick="updateStatus(event, 'interacted')">Interacted</div>
+            </div>
+          </span>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <div class="participant-cell">
+            <div class="participant-name">Alex Rodriguez</div>
+            <div class="participant-email">alex.rodriguez@email.com</div>
+          </div>
+        </td>
+        <td>
+          <span class="status-pill registered" onclick="toggleStatusDropdown(event)">Registered
+            <div class="status-dropdown">
+              <div class="status-option" onclick="updateStatus(event, 'attended')">Attended</div>
+              <div class="status-option" onclick="updateStatus(event, 'registered')">Registered</div>
+              <div class="status-option" onclick="updateStatus(event, 'interacted')">Interacted</div>
+            </div>
+          </span>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <div class="participant-cell">
+            <div class="participant-name">Lisa Thompson</div>
+            <div class="participant-email">lisa.thompson@email.com</div>
+          </div>
+        </td>
+        <td>
+          <span class="status-pill attended" onclick="toggleStatusDropdown(event)">Attended
+            <div class="status-dropdown">
+              <div class="status-option" onclick="updateStatus(event, 'attended')">Attended</div>
+              <div class="status-option" onclick="updateStatus(event, 'registered')">Registered</div>
+              <div class="status-option" onclick="updateStatus(event, 'interacted')">Interacted</div>
+            </div>
+          </span>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <div class="participant-cell">
+            <div class="participant-name">David Kim</div>
+            <div class="participant-email">david.kim@outlook.com</div>
+          </div>
+        </td>
+        <td>
+          <span class="status-pill interacted" onclick="toggleStatusDropdown(event)">Interacted
+            <div class="status-dropdown">
+              <div class="status-option" onclick="updateStatus(event, 'attended')">Attended</div>
+              <div class="status-option" onclick="updateStatus(event, 'registered')">Registered</div>
+              <div class="status-option" onclick="updateStatus(event, 'interacted')">Interacted</div>
+            </div>
+          </span>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <div class="participant-cell">
+            <div class="participant-name">Rachel Patel</div>
+            <div class="participant-email">rachel.patel@gmail.com</div>
+          </div>
+        </td>
+        <td>
+          <span class="status-pill attended" onclick="toggleStatusDropdown(event)">Attended
+            <div class="status-dropdown">
+              <div class="status-option" onclick="updateStatus(event, 'attended')">Attended</div>
+              <div class="status-option" onclick="updateStatus(event, 'registered')">Registered</div>
+              <div class="status-option" onclick="updateStatus(event, 'interacted')">Interacted</div>
+            </div>
+          </span>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <div class="participant-cell">
+            <div class="participant-name">Kevin Santos</div>
+            <div class="participant-email">kevin.santos@gmail.com</div>
+          </div>
+        </td>
+        <td>
+          <span class="status-pill registered" onclick="toggleStatusDropdown(event)">Registered
+            <div class="status-dropdown">
+              <div class="status-option" onclick="updateStatus(event, 'attended')">Attended</div>
+              <div class="status-option" onclick="updateStatus(event, 'registered')">Registered</div>
+              <div class="status-option" onclick="updateStatus(event, 'interacted')">Interacted</div>
+            </div>
+          </span>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <div class="participant-cell">
+            <div class="participant-name">Jennifer Lee</div>
+            <div class="participant-email">jennifer.lee@email.com</div>
+          </div>
+        </td>
+        <td>
+          <span class="status-pill interacted" onclick="toggleStatusDropdown(event)">Interacted
+            <div class="status-dropdown">
+              <div class="status-option" onclick="updateStatus(event, 'attended')">Attended</div>
+              <div class="status-option" onclick="updateStatus(event, 'registered')">Registered</div>
+              <div class="status-option" onclick="updateStatus(event, 'interacted')">Interacted</div>
+            </div>
+          </span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- Config Modal -->
+<div id="configModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">Program Configuration</h2>
+      <button class="modal-close" onclick="closeConfigModal()">✕</button>
+    </div>
+
+    <div class="config-group">
+      <label class="config-label">Duration</label>
+      <div class="config-options">
+        <input type="radio" id="duration-single" name="duration" class="config-radio" value="single-day" checked>
+        <label for="duration-single" class="config-radio-label">Single-day</label>
+
+        <input type="radio" id="duration-multi" name="duration" class="config-radio" value="multi-day">
+        <label for="duration-multi" class="config-radio-label">Multi-day</label>
+
+        <input type="radio" id="duration-week" name="duration" class="config-radio" value="multi-week">
+        <label for="duration-week" class="config-radio-label">Multi-week</label>
+      </div>
+    </div>
+
+    <div class="config-group">
+      <label class="config-label">Format</label>
+      <div class="config-options">
+        <input type="radio" id="format-online" name="format" class="config-radio" value="online" checked>
+        <label for="format-online" class="config-radio-label">Online</label>
+
+        <input type="radio" id="format-onsite" name="format" class="config-radio" value="onsite">
+        <label for="format-onsite" class="config-radio-label">Onsite</label>
+
+        <input type="radio" id="format-hybrid" name="format" class="config-radio" value="hybrid">
+        <label for="format-hybrid" class="config-radio-label">Hybrid</label>
+      </div>
+    </div>
+
+    <div class="config-group">
+      <label class="config-label">Deliverables</label>
+      <div class="config-options">
+        <input type="radio" id="submissions-yes" name="submissions" class="config-radio" value="has-submissions" checked>
+        <label for="submissions-yes" class="config-radio-label">Has submissions</label>
+
+        <input type="radio" id="submissions-no" name="submissions" class="config-radio" value="no-submissions">
+        <label for="submissions-no" class="config-radio-label">No submissions</label>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeConfigModal()">Cancel</button>
+      <button class="modal-btn save" onclick="saveConfig()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleStatusDropdown(event) {
+    event.stopPropagation();
+    const pill = event.currentTarget;
+    const row = pill.closest('tr');
+    const dropdown = pill.querySelector('.status-dropdown');
+    const allDropdowns = document.querySelectorAll('.status-dropdown');
+
+    allDropdowns.forEach(dd => {
+      if (dd !== dropdown) {
+        dd.classList.remove('show');
+        dd.closest('tr').classList.remove('dropdown-active');
+      }
+    });
+
+    const isOpening = !dropdown.classList.contains('show');
+    dropdown.classList.toggle('show');
+    row.classList.toggle('dropdown-active', isOpening);
+  }
+
+  function updateStatus(event, newStatus) {
+    event.stopPropagation();
+    const pill = event.currentTarget.closest('.status-pill');
+    const row = pill.closest('tr');
+    const dropdown = pill.querySelector('.status-dropdown');
+
+    pill.classList.remove('attended', 'registered', 'interacted');
+    pill.classList.add(newStatus);
+
+    const textNode = Array.from(pill.childNodes).find(node => node.nodeType === 3);
+    if (textNode) {
+      textNode.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+    }
+
+    dropdown.classList.remove('show');
+    row.classList.remove('dropdown-active');
+  }
+
+  function openConfigModal() {
+    document.getElementById('configModal').classList.add('show');
+  }
+
+  function closeConfigModal() {
+    document.getElementById('configModal').classList.remove('show');
+  }
+
+  function saveConfig() {
+    const duration = document.querySelector('input[name="duration"]:checked').value;
+    const format = document.querySelector('input[name="format"]:checked').value;
+    const submissions = document.querySelector('input[name="submissions"]:checked').value;
+
+    console.log('Config saved:', { duration, format, submissions });
+    closeConfigModal();
+  }
+
+  function importCSV() {
+    alert('Import CSV functionality');
+  }
+
+  function exportCSV() {
+    alert('Export CSV functionality');
+  }
+
+  document.addEventListener('click', function() {
+    document.querySelectorAll('.status-dropdown').forEach(dd => {
+      dd.classList.remove('show');
+    });
+    document.querySelectorAll('tr.dropdown-active').forEach(row => {
+      row.classList.remove('dropdown-active');
+    });
+  });
+</script>
+
+</body>
+</html>
