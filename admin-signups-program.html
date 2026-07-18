@@ -100,16 +100,10 @@
       background: #0ea472;
     }
 
-    /* Custom tooltip (native title tooltips are inconsistent/delayed).
-       Generic on [data-tooltip] so both attendance and submission
-       buttons (and anything else) can reuse it. */
-    [data-tooltip]:hover::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      margin-bottom: 6px;
+    /* Custom global tooltip styled similarly to standard tooltips,
+       rendered at body level to escape overflow clipping in scrollable body. */
+    .custom-tooltip {
+      position: fixed;
       padding: 5px 9px;
       background: #1d1d1f;
       color: white;
@@ -117,8 +111,14 @@
       font-weight: 500;
       white-space: nowrap;
       border-radius: 4px;
-      z-index: 20;
+      z-index: 100000;
       pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    .custom-tooltip.show {
+      opacity: 1;
     }
 
     /* Submissions column — same connected-button pattern as Attendance,
@@ -191,18 +191,7 @@
       position: relative;
     }
 
-    .status-option[data-tooltip]:hover::after {
-      bottom: auto;
-      top: 50%;
-      left: 100%;
-      transform: translateY(-50%);
-      margin-bottom: 0;
-      margin-left: 6px;
-    }
 
-    .status-pill:has(.status-dropdown.show)[data-tooltip]:hover::after {
-      display: none;
-    }
 
     .config-days-field {
       margin-top: 12px;
@@ -300,19 +289,7 @@
       font-weight: 600;
     }
 
-    /* Tooltips must render above the header/footer. A hovered row's
-       default z-index (1, from admin-common.css) sits below the header's
-       (5) so its sticky-safe occlusion still works while scrolling — but
-       that would also trap a tooltip beneath the header. Escalate only
-       the specific row containing the hovered, tooltip-bearing element,
-       and only while it's actually hovered. */
-    #signups-table tbody tr:has([data-tooltip]:hover) {
-      z-index: 10;
-    }
 
-    [data-tooltip]:hover::after {
-      z-index: 10001;
-    }
 
     /* Selected-row highlight */
     #signups-table tbody tr:has(.row-select:checked) {
@@ -943,6 +920,78 @@
       applyStatusTooltips();
     }
   });
+
+  /* Dynamic custom tooltip to prevent clipping by overflow: auto container */
+  const tooltipEl = document.createElement('div');
+  tooltipEl.className = 'custom-tooltip';
+  document.body.appendChild(tooltipEl);
+
+  let activeTooltipTarget = null;
+
+  function positionTooltip(target) {
+    const rect = target.getBoundingClientRect();
+    const tooltipRect = tooltipEl.getBoundingClientRect();
+
+    if (target.classList.contains('status-option')) {
+      // Side tooltip
+      const top = rect.top + (rect.height - tooltipRect.height) / 2;
+      const left = rect.right + 6;
+      tooltipEl.style.top = top + 'px';
+      tooltipEl.style.left = left + 'px';
+    } else {
+      // Top tooltip
+      const top = rect.top - tooltipRect.height - 6;
+      const left = rect.left + (rect.width - tooltipRect.width) / 2;
+      tooltipEl.style.top = top + 'px';
+      tooltipEl.style.left = left + 'px';
+    }
+  }
+
+  function hideTooltip() {
+    tooltipEl.classList.remove('show');
+    activeTooltipTarget = null;
+  }
+
+  document.addEventListener('mouseover', function(e) {
+    const target = e.target.closest('[data-tooltip]');
+    if (!target) return;
+
+    // Suppress tooltip if it's a status pill and its dropdown is open
+    if (target.classList.contains('status-pill') && target.querySelector('.status-dropdown.show')) {
+      hideTooltip();
+      return;
+    }
+
+    activeTooltipTarget = target;
+    tooltipEl.textContent = target.dataset.tooltip;
+    tooltipEl.classList.add('show');
+    positionTooltip(target);
+  });
+
+  document.addEventListener('mouseout', function(e) {
+    if (activeTooltipTarget && !e.target.closest('[data-tooltip]')) {
+      hideTooltip();
+    }
+  });
+
+  // Hide or reposition tooltip on scroll inside the table body
+  const tableScroll = document.querySelector('.table-scroll');
+  if (tableScroll) {
+    tableScroll.addEventListener('scroll', () => {
+      if (activeTooltipTarget) {
+        const rect = activeTooltipTarget.getBoundingClientRect();
+        const scrollRect = tableScroll.getBoundingClientRect();
+        // If the hovered element is scrolled out of the visible area of table-scroll, hide the tooltip
+        if (rect.bottom < scrollRect.top || rect.top > scrollRect.bottom) {
+          hideTooltip();
+        } else {
+          positionTooltip(activeTooltipTarget);
+        }
+      }
+    });
+  }
+
+  window.addEventListener('resize', hideTooltip);
 
   /* Bulk row selection + footer counts. */
   const selectAllRows = document.getElementById('selectAllRows');
