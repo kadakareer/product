@@ -20,8 +20,10 @@
 
     /* Attendance column(s) — shape depends on the configured program
        duration (see .config-radio[name="duration"] in the modal below). */
+    .attendance-th,
     .attendance-td {
       text-align: left;
+      min-width: 140px;
     }
 
     .attendance-day-row {
@@ -305,6 +307,18 @@
     #signups-table tbody .participant-cell {
       cursor: auto;
     }
+
+    .created-at-cell,
+    .updated-at-cell {
+      white-space: nowrap;
+      color: #6e6e73;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .time-part {
+      color: #86868b;
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
@@ -327,7 +341,7 @@
         <option>All signups</option>
         <option>Completed</option>
         <option>Registered</option>
-        <option>Interacted</option>
+        <option>Interested</option>
       </select>
     </div>
     <div class="action-buttons">
@@ -344,6 +358,8 @@
         <th class="select-col"><input type="checkbox" class="checkbox" id="selectAllRows"></th>
         <th>Name</th>
         <th>Status</th>
+        <th class="created-at-th">Created At</th>
+        <th class="updated-at-th">Updated At</th>
         <th class="scrollbar-spacer" id="scrollbarSpacer"></th>
       </tr>
     </thead>
@@ -362,12 +378,20 @@
         <td>
           <span class="status-pill editable" data-status="completed" onclick="toggleStatusDropdown(event)">
             <span class="status-pill-label">Completed</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+            <div class="status-dropdown" data-statuses="completed,registered,interested">
               <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interacted">Interacted</div>
+              <div class="status-option" data-status="interested">Interested</div>
             </div>
           </span>
+        </td>
+        <td class="created-at-cell">
+          <div>Dec 15, 2025</div>
+          <div class="time-part">11:30 AM</div>
+        </td>
+        <td class="updated-at-cell">
+          <div>Dec 15, 2025</div>
+          <div class="time-part">11:30 AM</div>
         </td>
       </tr>
 
@@ -382,12 +406,20 @@
         <td>
           <span class="status-pill editable" data-status="registered" onclick="toggleStatusDropdown(event)">
             <span class="status-pill-label">Registered</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+            <div class="status-dropdown" data-statuses="completed,registered,interested">
               <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interacted">Interacted</div>
+              <div class="status-option" data-status="interested">Interested</div>
             </div>
           </span>
+        </td>
+        <td class="created-at-cell">
+          <div>Dec 12, 2025</div>
+          <div class="time-part">09:15 AM</div>
+        </td>
+        <td class="updated-at-cell">
+          <div>Dec 12, 2025</div>
+          <div class="time-part">04:30 PM</div>
         </td>
       </tr>
 
@@ -402,12 +434,20 @@
         <td>
           <span class="status-pill editable" data-status="completed" onclick="toggleStatusDropdown(event)">
             <span class="status-pill-label">Completed</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+            <div class="status-dropdown" data-statuses="completed,registered,interested">
               <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interacted">Interacted</div>
+              <div class="status-option" data-status="interested">Interested</div>
             </div>
           </span>
+        </td>
+        <td class="created-at-cell">
+          <div>Dec 10, 2025</div>
+          <div class="time-part">02:20 PM</div>
+        </td>
+        <td class="updated-at-cell">
+          <div>Dec 10, 2025</div>
+          <div class="time-part">02:20 PM</div>
         </td>
       </tr>
 
@@ -420,14 +460,22 @@
           </div>
         </td>
         <td>
-          <span class="status-pill editable" data-status="interacted" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Interacted</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+          <span class="status-pill editable" data-status="interested" onclick="toggleStatusDropdown(event)">
+            <span class="status-pill-label">Interested</span>
+            <div class="status-dropdown" data-statuses="completed,registered,interested">
               <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interacted">Interacted</div>
+              <div class="status-option" data-status="interested">Interested</div>
             </div>
           </span>
+        </td>
+        <td class="created-at-cell">
+          <div>Dec 08, 2025</div>
+          <div class="time-part">10:45 AM</div>
+        </td>
+        <td class="updated-at-cell">
+          <div>Dec 09, 2025</div>
+          <div class="time-part">11:00 AM</div>
         </td>
       </tr>
 
@@ -442,12 +490,20 @@
         <td>
           <span class="status-pill editable" data-status="registered" onclick="toggleStatusDropdown(event)">
             <span class="status-pill-label">Registered</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+            <div class="status-dropdown" data-statuses="completed,registered,interested">
               <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interacted">Interacted</div>
+              <div class="status-option" data-status="interested">Interested</div>
             </div>
           </span>
+        </td>
+        <td class="created-at-cell">
+          <div>Dec 05, 2025</div>
+          <div class="time-part">08:30 AM</div>
+        </td>
+        <td class="updated-at-cell">
+          <div>Dec 05, 2025</div>
+          <div class="time-part">08:30 AM</div>
         </td>
       </tr>
 
@@ -462,12 +518,20 @@
         <td>
           <span class="status-pill editable" data-status="completed" onclick="toggleStatusDropdown(event)">
             <span class="status-pill-label">Completed</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+            <div class="status-dropdown" data-statuses="completed,registered,interested">
               <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interacted">Interacted</div>
+              <div class="status-option" data-status="interested">Interested</div>
             </div>
           </span>
+        </td>
+        <td class="created-at-cell">
+          <div>Dec 02, 2025</div>
+          <div class="time-part">11:15 AM</div>
+        </td>
+        <td class="updated-at-cell">
+          <div>Dec 03, 2025</div>
+          <div class="time-part">02:45 PM</div>
         </td>
       </tr>
 
@@ -480,14 +544,22 @@
           </div>
         </td>
         <td>
-          <span class="status-pill editable" data-status="interacted" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Interacted</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+          <span class="status-pill editable" data-status="interested" onclick="toggleStatusDropdown(event)">
+            <span class="status-pill-label">Interested</span>
+            <div class="status-dropdown" data-statuses="completed,registered,interested">
               <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interacted">Interacted</div>
+              <div class="status-option" data-status="interested">Interested</div>
             </div>
           </span>
+        </td>
+        <td class="created-at-cell">
+          <div>Nov 28, 2025</div>
+          <div class="time-part">09:20 AM</div>
+        </td>
+        <td class="updated-at-cell">
+          <div>Nov 28, 2025</div>
+          <div class="time-part">09:20 AM</div>
         </td>
       </tr>
 
@@ -502,12 +574,20 @@
         <td>
           <span class="status-pill editable" data-status="completed" onclick="toggleStatusDropdown(event)">
             <span class="status-pill-label">Completed</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+            <div class="status-dropdown" data-statuses="completed,registered,interested">
               <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interacted">Interacted</div>
+              <div class="status-option" data-status="interested">Interested</div>
             </div>
           </span>
+        </td>
+        <td class="created-at-cell">
+          <div>Nov 25, 2025</div>
+          <div class="time-part">04:10 PM</div>
+        </td>
+        <td class="updated-at-cell">
+          <div>Nov 26, 2025</div>
+          <div class="time-part">10:00 AM</div>
         </td>
       </tr>
 
@@ -522,12 +602,20 @@
         <td>
           <span class="status-pill editable" data-status="registered" onclick="toggleStatusDropdown(event)">
             <span class="status-pill-label">Registered</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+            <div class="status-dropdown" data-statuses="completed,registered,interested">
               <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interacted">Interacted</div>
+              <div class="status-option" data-status="interested">Interested</div>
             </div>
           </span>
+        </td>
+        <td class="created-at-cell">
+          <div>Nov 22, 2025</div>
+          <div class="time-part">02:10 PM</div>
+        </td>
+        <td class="updated-at-cell">
+          <div>Nov 22, 2025</div>
+          <div class="time-part">02:10 PM</div>
         </td>
       </tr>
 
@@ -540,14 +628,22 @@
           </div>
         </td>
         <td>
-          <span class="status-pill editable" data-status="interacted" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Interacted</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interacted">
+          <span class="status-pill editable" data-status="interested" onclick="toggleStatusDropdown(event)">
+            <span class="status-pill-label">Interested</span>
+            <div class="status-dropdown" data-statuses="completed,registered,interested">
               <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interacted">Interacted</div>
+              <div class="status-option" data-status="interested">Interested</div>
             </div>
           </span>
+        </td>
+        <td class="created-at-cell">
+          <div>Nov 18, 2025</div>
+          <div class="time-part">10:00 AM</div>
+        </td>
+        <td class="updated-at-cell">
+          <div>Nov 18, 2025</div>
+          <div class="time-part">10:00 AM</div>
         </td>
       </tr>
     </tbody>
@@ -575,6 +671,9 @@
 
         <input type="radio" id="duration-multi" name="duration" class="config-radio" value="multi-day" checked>
         <label for="duration-multi" class="config-radio-label">Multi-day</label>
+
+        <input type="radio" id="duration-none" name="duration" class="config-radio" value="no-attendance">
+        <label for="duration-none" class="config-radio-label">No attendance</label>
       </div>
       <div class="config-days-field" id="configDaysField" style="display: block;">
         <label class="config-label" for="configDaysCount">Number of days</label>
@@ -620,6 +719,28 @@
 
 <script src="admin-common.js"></script>
 <script>
+  function formatDateTimeHTML(date) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    const hoursStr = String(hours).padStart(2, '0');
+    return `<div>${month} ${day}, ${year}</div><div class="time-part">${hoursStr}:${minutes} ${ampm}</div>`;
+  }
+
+  function updateRowTimestamp(row) {
+    if (!row) return;
+    const updatedAtCell = row.querySelector('.updated-at-cell');
+    if (updatedAtCell) {
+      updatedAtCell.innerHTML = formatDateTimeHTML(new Date());
+    }
+  }
+
   function saveConfig() {
     const duration = document.querySelector('input[name="duration"]:checked').value;
     const format = document.querySelector('input[name="format"]:checked').value;
@@ -731,8 +852,22 @@
   }
 
   function insertHeaderCell(headerRow, th) {
-    const spacer = document.getElementById('scrollbarSpacer');
-    headerRow.insertBefore(th, spacer);
+    const createdAtTh = headerRow.querySelector('.created-at-th');
+    if (createdAtTh) {
+      headerRow.insertBefore(th, createdAtTh);
+    } else {
+      const spacer = document.getElementById('scrollbarSpacer');
+      headerRow.insertBefore(th, spacer);
+    }
+  }
+
+  function insertBodyCell(row, td) {
+    const createdAtTd = row.querySelector('.created-at-cell');
+    if (createdAtTd) {
+      row.insertBefore(td, createdAtTd);
+    } else {
+      row.appendChild(td);
+    }
   }
 
   function renderAttendanceColumn(headerRow, rows, mode, daysCount) {
@@ -771,6 +906,7 @@
           btn.addEventListener('click', () => {
             record.days[i] = !record.days[i];
             btn.classList.toggle('filled', record.days[i]);
+            updateRowTimestamp(row);
           });
 
           group.appendChild(btn);
@@ -778,7 +914,7 @@
 
         wrapper.appendChild(group);
         td.appendChild(wrapper);
-        row.appendChild(td);
+        insertBodyCell(row, td);
       });
 
     } else {
@@ -795,16 +931,20 @@
         input.checked = attendanceData[rowId].single;
         input.addEventListener('change', () => {
           attendanceData[rowId].single = input.checked;
+          updateRowTimestamp(row);
         });
         td.appendChild(input);
-        row.appendChild(td);
+        insertBodyCell(row, td);
       });
 
       wireSelectAll(headerRow, rows,
         row => attendanceData[row.dataset.rowId].single,
         (row, val) => {
-          attendanceData[row.dataset.rowId].single = val;
-          row.querySelector('.attendance-checkbox').checked = val;
+          if (attendanceData[row.dataset.rowId].single !== val) {
+            attendanceData[row.dataset.rowId].single = val;
+            row.querySelector('.attendance-checkbox').checked = val;
+            updateRowTimestamp(row);
+          }
         });
     }
   }
@@ -847,6 +987,7 @@
         btn.addEventListener('click', () => {
           record[i] = !record[i];
           btn.classList.toggle('filled', record[i]);
+          updateRowTimestamp(row);
         });
 
         group.appendChild(btn);
@@ -854,7 +995,7 @@
 
       wrapper.appendChild(group);
       td.appendChild(wrapper);
-      row.appendChild(td);
+      insertBodyCell(row, td);
     });
   }
 
@@ -865,7 +1006,9 @@
     headerRow.querySelectorAll('.attendance-th, .submissions-th').forEach(th => th.remove());
     rows.forEach(row => row.querySelectorAll('.attendance-td, .submissions-td').forEach(td => td.remove()));
 
-    renderAttendanceColumn(headerRow, rows, duration, daysCount);
+    if (duration !== 'no-attendance') {
+      renderAttendanceColumn(headerRow, rows, duration, daysCount);
+    }
     if (hasSubmissions) renderSubmissionsColumn(headerRow, rows, submissionsCount);
 
     syncHeaderWidths();
@@ -899,7 +1042,7 @@
   const STATUS_DESCRIPTIONS = {
     completed: 'Complete attendance and submissions',
     registered: 'Signup form response verified',
-    interacted: 'Clicked the register button',
+    interested: 'Clicked the register button',
   };
 
   function applyStatusTooltips() {
@@ -916,8 +1059,11 @@
   // Runs after admin-common.js's own delegated handler has already updated
   // the pill's data-status for this same click, so the tooltip stays in sync.
   document.addEventListener('click', function(e) {
-    if (e.target.closest('.status-option')) {
+    const opt = e.target.closest('.status-option');
+    if (opt) {
       applyStatusTooltips();
+      const row = opt.closest('tr');
+      updateRowTimestamp(row);
     }
   });
 
@@ -1033,7 +1179,7 @@
   document.querySelectorAll('#signups-table tbody tr').forEach(row => {
     row.addEventListener('click', function(e) {
       const excluded = e.target.closest(
-        '.row-select, .participant-name, .participant-email, .status-pill, .attendance-day-btn, .submission-btn, .attendance-checkbox'
+        '.row-select, .participant-name, .participant-email, .status-pill, .attendance-day-btn, .submission-btn, .attendance-checkbox, .created-at-cell, .updated-at-cell'
       );
       if (excluded) return;
 
