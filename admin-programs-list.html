@@ -167,7 +167,6 @@
         <tr id="headRow">
           <th class="select-col"><input type="checkbox" class="checkbox" id="selectAllRows"></th>
           <th>Program Name</th>
-          <th>Format</th>
           <th>Duration</th>
           <th>Deliverables</th>
           <th>Status</th>
@@ -304,9 +303,9 @@
       <tr data-row-id="${p.id}" data-status="${p.status}">
         <td><input type="checkbox" class="checkbox row-select"></td>
         <td class="program-cell">
-          <a class="program-name-link" href="admin-signups-program.html?program=${encodeURIComponent(p.name)}">${p.name}</a>
+          <div><a class="program-name-link" href="admin-signups-program.html?program=${encodeURIComponent(p.name)}">${p.name}</a></div>
+          <div class="time-part">${formatFormat(p.format)}</div>
         </td>
-        <td>${formatFormat(p.format)}</td>
         <td>${formatDuration(p)}</td>
         <td>${formatDeliverables(p)}</td>
         <td>
@@ -595,6 +594,13 @@
     if (checkbox) {
       checkbox.checked = !checkbox.checked;
       checkbox.dispatchEvent(new Event('change'));
+    }
+  });
+
+  // Close modal when clicking backdrop
+  document.getElementById('programModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeModal('programModal');
     }
   });
 
