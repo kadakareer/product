@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="admin-common.css">
+  <title>Programs List – Manage training programs</title>
+  <style>
+    .program-name-link {
+      color: #0066cc;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.15s;
+    }
+
+    .program-name-link:hover {
+      color: #0052a3;
+      text-decoration: underline;
+    }
+
+    tr.hidden {
+      display: none !important;
+    }
+
+    /* Page shell: the page itself doesn't scroll — only the table's row
+       body does. Header/controls above the table and the footer below it
+       stay fixed on screen; .table-scroll is the one scrollable region. */
+    body {
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .page-header,
+    .controls {
+      flex-shrink: 0;
+    }
+
+    .table-wrapper {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .table-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+    }
+
+    /* Header lives in its own table, outside .table-scroll entirely, so
+       the scrollbar only ever spans the row body — not the header. Widths
+       are synced to the body table's actual columns via JS (see
+       syncHeaderWidths), since the header table has no data of its own to
+       size against. */
+    .table-head-table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      flex-shrink: 0;
+      background: #f5f5f7;
+      position: relative;
+      z-index: 5;
+    }
+
+    .scrollbar-spacer {
+      padding: 0;
+      border: none;
+    }
+
+    .table-footer {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      border-top: 1px solid #e5e7eb;
+      background: #fafafa;
+      font-size: 13px;
+      color: #6e6e73;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-selected-count {
+      color: #0066cc;
+      font-weight: 600;
+    }
+
+    /* Selected-row highlight */
+    #programs-table tbody tr:has(.row-select:checked) {
+      background: #eff6ff;
+    }
+
+    /* Whole-row click selects it — except for links/interactive elements */
+    #programs-table tbody tr {
+      cursor: pointer;
+    }
+
+    #programs-table tbody .program-cell {
+      cursor: auto;
+    }
+
+    .created-at-cell,
+    .updated-at-cell {
+      white-space: nowrap;
+      color: #6e6e73;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .time-part {
+      color: #86868b;
+      font-size: 12px;
+    }
+
+    .select-col {
+      width: 40px;
+    }
+
+    .actions-th,
+    .actions-td {
+      text-align: center;
+      width: 80px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Main Content -->
+<div class="container">
+  <div class="page-header">
+    <div class="page-header-content">
+      <h1 class="page-title">Programs Admin</h1>
+      <p class="page-subtitle">Configure attendance tracking, deliverables, and format for Kadets programs</p>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="filter-section">
+      <span class="filter-label">Filter by Status:</span>
+      <select class="filter-dropdown" id="statusFilter">
+        <option value="all">All statuses</option>
+        <option value="active">Active</option>
+        <option value="draft">Draft</option>
+        <option value="archived">Archived</option>
+      </select>
+      <span class="filter-label" style="margin-left: 20px;">Search:</span>
+      <input type="text" id="searchInput" placeholder="Search by name..." style="padding: 8px 12px; border: 1px solid #d2d2d7; border-radius: 6px; font-size: 14px; width: 220px; outline: none;">
+    </div>
+    <div class="action-buttons">
+      <button class="btn-outline" onclick="openCreateModal()" style="background: #0066cc; color: white; border-color: #0066cc;">+ Create Program</button>
+    </div>
+  </div>
+
+  <!-- Programs Table -->
+  <div class="table-wrapper">
+    <table id="tableHead" class="table-head-table">
+      <thead>
+        <tr id="headRow">
+          <th class="select-col"><input type="checkbox" class="checkbox" id="selectAllRows"></th>
+          <th>Program Name</th>
+          <th>Format</th>
+          <th>Duration</th>
+          <th>Deliverables</th>
+          <th>Status</th>
+          <th class="created-at-th">Created At</th>
+          <th class="updated-at-th">Updated At</th>
+          <th class="actions-th">Actions</th>
+          <th class="scrollbar-spacer" id="scrollbarSpacer"></th>
+        </tr>
+      </thead>
+    </table>
+    <div class="table-scroll">
+      <table id="programs-table">
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-footer" id="tableFooter">
+      <span id="footerText">0 rows</span>
+    </div>
+  </div>
+</div>
+
+<!-- Program Config Modal -->
+<div id="programModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle">Create Program</h2>
+      <button class="modal-close" onclick="closeModal('programModal')">✕</button>
+    </div>
+
+    <input type="hidden" id="programMode" value="create">
+    <input type="hidden" id="editingProgramId" value="">
+
+    <div class="config-group">
+      <label class="config-label" for="programNameInput">Program Name</label>
+      <input type="text" id="programNameInput" class="config-text-input" placeholder="e.g. Software Engineering Boot Camp" style="width: 100%; padding: 8px 12px; border: 1px solid #d2d2d7; border-radius: 6px; font-size: 14px; outline: none;">
+    </div>
+
+    <div class="config-group">
+      <label class="config-label">Duration</label>
+      <div class="config-options">
+        <input type="radio" id="duration-single" name="duration" class="config-radio" value="single-day">
+        <label for="duration-single" class="config-radio-label">Single-day</label>
+
+        <input type="radio" id="duration-multi" name="duration" class="config-radio" value="multi-day" checked>
+        <label for="duration-multi" class="config-radio-label">Multi-day</label>
+
+        <input type="radio" id="duration-none" name="duration" class="config-radio" value="no-attendance">
+        <label for="duration-none" class="config-radio-label">No attendance</label>
+      </div>
+      <div class="config-days-field" id="configDaysField" style="display: block; margin-top: 12px;">
+        <label class="config-label" for="configDaysCount">Number of days</label>
+        <input type="number" id="configDaysCount" class="config-days-input" min="2" max="31" value="7" style="padding: 8px 12px; border: 1px solid #d2d2d7; border-radius: 6px; font-size: 14px; width: 80px; outline: none;">
+      </div>
+    </div>
+
+    <div class="config-group">
+      <label class="config-label">Deliverables</label>
+      <div class="config-options">
+        <input type="radio" id="submissions-yes" name="submissions" class="config-radio" value="has-submissions" checked>
+        <label for="submissions-yes" class="config-radio-label">Has submissions</label>
+
+        <input type="radio" id="submissions-no" name="submissions" class="config-radio" value="no-submissions">
+        <label for="submissions-no" class="config-radio-label">No submissions</label>
+      </div>
+      <div class="config-days-field" id="configSubmissionsField" style="display: block; margin-top: 12px;">
+        <label class="config-label" for="configSubmissionsCount">Number of submissions</label>
+        <input type="number" id="configSubmissionsCount" class="config-days-input" min="1" max="20" value="3" style="padding: 8px 12px; border: 1px solid #d2d2d7; border-radius: 6px; font-size: 14px; width: 80px; outline: none;">
+      </div>
+    </div>
+
+    <div class="config-group">
+      <label class="config-label">Format</label>
+      <div class="config-options">
+        <input type="radio" id="format-online" name="format" class="config-radio" value="online" checked>
+        <label for="format-online" class="config-radio-label">Online</label>
+
+        <input type="radio" id="format-onsite" name="format" class="config-radio" value="onsite">
+        <label for="format-onsite" class="config-radio-label">Onsite</label>
+
+        <input type="radio" id="format-hybrid" name="format" class="config-radio" value="hybrid">
+        <label for="format-hybrid" class="config-radio-label">Hybrid</label>
+      </div>
+    </div>
+
+    <div class="config-group">
+      <label class="config-label">Initial Status</label>
+      <div class="config-options">
+        <input type="radio" id="status-draft" name="status" class="config-radio" value="draft" checked>
+        <label for="status-draft" class="config-radio-label">Draft</label>
+
+        <input type="radio" id="status-active" name="status" class="config-radio" value="active">
+        <label for="status-active" class="config-radio-label">Active</label>
+
+        <input type="radio" id="status-archived" name="status" class="config-radio" value="archived">
+        <label for="status-archived" class="config-radio-label">Archived</label>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('programModal')">Cancel</button>
+      <button class="modal-btn save" onclick="saveProgram()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="admin-programs-data.js"></script>
+<script>
+  function formatDuration(p) {
+    if (p.duration === 'multi-day') {
+      return `<div>Multi-day</div><div class="time-part">${p.daysCount} days</div>`;
+    } else if (p.duration === 'single-day') {
+      return `<div>Single-day</div><div class="time-part">1 day</div>`;
+    } else {
+      return `<div>No attendance</div>`;
+    }
+  }
+
+  function formatDeliverables(p) {
+    if (p.submissions === 'has-submissions') {
+      return `<div>Has submissions</div><div class="time-part">${p.submissionsCount} tasks</div>`;
+    } else {
+      return `<div>No submissions</div>`;
+    }
+  }
+
+  function formatFormat(format) {
+    return format.charAt(0).toUpperCase() + format.slice(1);
+  }
+
+  function renderTable() {
+    const tbody = document.querySelector('#programs-table tbody');
+    tbody.innerHTML = programsData.map(p => `
+      <tr data-row-id="${p.id}" data-status="${p.status}">
+        <td><input type="checkbox" class="checkbox row-select"></td>
+        <td class="program-cell">
+          <a class="program-name-link" href="admin-signups-program.html?program=${encodeURIComponent(p.name)}">${p.name}</a>
+        </td>
+        <td>${formatFormat(p.format)}</td>
+        <td>${formatDuration(p)}</td>
+        <td>${formatDeliverables(p)}</td>
+        <td>
+          <span class="status-pill editable" data-status="${p.status}" onclick="toggleStatusDropdown(event)">
+            <span class="status-pill-label">${p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span>
+            <div class="status-dropdown" data-statuses="active,draft,archived">
+              <div class="status-option" data-status="active">Active</div>
+              <div class="status-option" data-status="draft">Draft</div>
+              <div class="status-option" data-status="archived">Archived</div>
+            </div>
+          </span>
+        </td>
+        <td class="created-at-cell">
+          <div>${p.createdAt.date}</div>
+          <div class="time-part">${p.createdAt.time}</div>
+        </td>
+        <td class="updated-at-cell">
+          <div>${p.updatedAt.date}</div>
+          <div class="time-part">${p.updatedAt.time}</div>
+        </td>
+        <td class="actions-td">
+          <button class="config-btn" onclick="openEditModal('${p.id}')" title="Configure Program" style="width:32px; height:32px; font-size:16px;">⚙️</button>
+        </td>
+      </tr>
+    `).join('');
+
+    // Re-initialize status pill colors using shared admin-common library
+    if (typeof initStatusPills === 'function') {
+      initStatusPills();
+    }
+
+    // Wire selection checkbox listeners
+    document.querySelectorAll('#programs-table tbody .row-select').forEach(cb => {
+      cb.addEventListener('change', updateSelectionUI);
+    });
+
+    updateSelectionUI();
+    applyFilter();
+  }
+
+  // Pre-render immediately so admin-common.js sees the elements
+  renderTable();
+</script>
+<script src="admin-common.js"></script>
+<script>
+  function getFormattedDateTime(date) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[date.getMonth()];
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const hoursStr = String(hours).padStart(2, '0');
+    return {
+      date: `${month} ${day}, ${year}`,
+      time: `${hoursStr}:${minutes} ${ampm}`
+    };
+  }
+
+  function syncHeaderWidths() {
+    const headRow = document.getElementById('headRow');
+    const spacer = document.getElementById('scrollbarSpacer');
+    const scrollEl = document.querySelector('.table-scroll');
+    const firstBodyRow = document.querySelector('#programs-table tbody tr:not(.hidden)');
+
+    if (firstBodyRow) {
+      const headCells = Array.from(headRow.children).filter(el => el !== spacer);
+      const bodyCells = Array.from(firstBodyRow.children);
+      headCells.forEach((th, i) => {
+        if (bodyCells[i]) th.style.width = bodyCells[i].getBoundingClientRect().width + 'px';
+      });
+    }
+
+    spacer.style.width = (scrollEl.offsetWidth - scrollEl.clientWidth) + 'px';
+  }
+
+  window.addEventListener('resize', syncHeaderWidths);
+
+  // Setup modal toggle visibility fields
+  document.querySelectorAll('input[name="duration"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      document.getElementById('configDaysField').style.display = this.value === 'multi-day' ? 'block' : 'none';
+    });
+  });
+
+  document.querySelectorAll('input[name="submissions"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      document.getElementById('configSubmissionsField').style.display = this.value === 'has-submissions' ? 'block' : 'none';
+    });
+  });
+
+  // Modal actions
+  function openCreateModal() {
+    document.getElementById('modalTitle').textContent = 'Create Program';
+    document.getElementById('programMode').value = 'create';
+    document.getElementById('editingProgramId').value = '';
+
+    document.getElementById('programNameInput').value = '';
+    document.getElementById('duration-multi').checked = true;
+    document.getElementById('configDaysField').style.display = 'block';
+    document.getElementById('configDaysCount').value = 7;
+
+    document.getElementById('submissions-yes').checked = true;
+    document.getElementById('configSubmissionsField').style.display = 'block';
+    document.getElementById('configSubmissionsCount').value = 3;
+
+    document.getElementById('format-online').checked = true;
+    document.getElementById('status-draft').checked = true;
+
+    openModal('programModal');
+  }
+
+  function openEditModal(id) {
+    const p = programsData.find(prog => prog.id === id);
+    if (!p) return;
+
+    document.getElementById('modalTitle').textContent = 'Configure Program';
+    document.getElementById('programMode').value = 'edit';
+    document.getElementById('editingProgramId').value = id;
+
+    document.getElementById('programNameInput').value = p.name;
+
+    // Duration mapping
+    const durationRadioId = 'duration-' + (p.duration === 'multi-day' ? 'multi' : (p.duration === 'single-day' ? 'single' : 'none'));
+    document.getElementById(durationRadioId).checked = true;
+    document.getElementById('configDaysField').style.display = p.duration === 'multi-day' ? 'block' : 'none';
+    document.getElementById('configDaysCount').value = p.daysCount || 7;
+
+    // Submissions mapping
+    document.getElementById('submissions-' + (p.submissions === 'has-submissions' ? 'yes' : 'no')).checked = true;
+    document.getElementById('configSubmissionsField').style.display = p.submissions === 'has-submissions' ? 'block' : 'none';
+    document.getElementById('configSubmissionsCount').value = p.submissionsCount || 3;
+
+    // Format & Status mapping
+    document.getElementById('format-' + p.format).checked = true;
+    document.getElementById('status-' + p.status).checked = true;
+
+    openModal('programModal');
+  }
+
+  function saveProgram() {
+    const name = document.getElementById('programNameInput').value.trim();
+    if (!name) {
+      alert('Please enter a program name.');
+      return;
+    }
+
+    const mode = document.getElementById('programMode').value;
+    const duration = document.querySelector('input[name="duration"]:checked').value;
+    const format = document.querySelector('input[name="format"]:checked').value;
+    const submissions = document.querySelector('input[name="submissions"]:checked').value;
+    const daysCount = parseInt(document.getElementById('configDaysCount').value, 10) || 1;
+    const submissionsCount = parseInt(document.getElementById('configSubmissionsCount').value, 10) || 0;
+    const status = document.querySelector('input[name="status"]:checked').value;
+
+    const now = new Date();
+    const formattedNow = getFormattedDateTime(now);
+
+    if (mode === 'create') {
+      const newProgram = {
+        id: 'p_' + Date.now(),
+        name,
+        duration,
+        daysCount: duration === 'multi-day' ? daysCount : (duration === 'single-day' ? 1 : 0),
+        submissions,
+        submissionsCount: submissions === 'has-submissions' ? submissionsCount : 0,
+        format,
+        status,
+        createdAt: formattedNow,
+        updatedAt: formattedNow
+      };
+      programsData.push(newProgram);
+    } else {
+      const id = document.getElementById('editingProgramId').value;
+      const p = programsData.find(prog => prog.id === id);
+      if (p) {
+        p.name = name;
+        p.duration = duration;
+        p.daysCount = duration === 'multi-day' ? daysCount : (duration === 'single-day' ? 1 : 0);
+        p.submissions = submissions;
+        p.submissionsCount = submissions === 'has-submissions' ? submissionsCount : 0;
+        p.format = format;
+        p.status = status;
+        p.updatedAt = formattedNow;
+      }
+    }
+
+    renderTable();
+    closeModal('programModal');
+  }
+
+  // Handle status pill updates from dropdown click
+  document.addEventListener('click', function(e) {
+    const opt = e.target.closest('.status-option');
+    if (opt) {
+      const row = opt.closest('tr');
+      if (row) {
+        const id = row.dataset.rowId;
+        const p = programsData.find(prog => prog.id === id);
+        const pill = row.querySelector('.status-pill');
+        if (p && pill) {
+          p.status = pill.dataset.status;
+          const now = new Date();
+          p.updatedAt = getFormattedDateTime(now);
+          row.dataset.status = p.status;
+
+          const updatedAtCell = row.querySelector('.updated-at-cell');
+          if (updatedAtCell) {
+            updatedAtCell.innerHTML = `<div>${p.updatedAt.date}</div><div class="time-part">${p.updatedAt.time}</div>`;
+          }
+          applyFilter();
+        }
+      }
+    }
+  });
+
+  // Bulk row selection + footer counts
+  const selectAllRows = document.getElementById('selectAllRows');
+  const footerText = document.getElementById('footerText');
+
+  function rowCheckboxes() {
+    return Array.from(document.querySelectorAll('#programs-table tbody tr:not(.hidden) .row-select'));
+  }
+
+  function updateSelectionUI() {
+    const boxes = rowCheckboxes();
+    const total = boxes.length;
+    const selectedCount = boxes.filter(cb => cb.checked).length;
+
+    selectAllRows.checked = total > 0 && selectedCount === total;
+    selectAllRows.indeterminate = selectedCount > 0 && selectedCount < total;
+
+    if (selectedCount > 0) {
+      footerText.innerHTML = '<span class="footer-selected-count">' + selectedCount + ' selected</span> of ' + total + ' rows';
+    } else {
+      footerText.textContent = total + ' rows';
+    }
+  }
+
+  selectAllRows.addEventListener('change', function() {
+    rowCheckboxes().forEach(cb => { cb.checked = this.checked; });
+    updateSelectionUI();
+  });
+
+  function applyFilter() {
+    const filterVal = document.getElementById('statusFilter').value;
+    const searchVal = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('#programs-table tbody tr');
+
+    rows.forEach(row => {
+      const pill = row.querySelector('.status-pill');
+      const status = pill ? pill.dataset.status : '';
+      const nameLink = row.querySelector('.program-name-link');
+      const name = nameLink ? nameLink.textContent.toLowerCase() : '';
+
+      const matchesStatus = (filterVal === 'all' || status === filterVal);
+      const matchesSearch = name.includes(searchVal);
+
+      if (matchesStatus && matchesSearch) {
+        row.classList.remove('hidden');
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+
+    updateSelectionUI();
+    syncHeaderWidths();
+  }
+
+  document.getElementById('statusFilter').addEventListener('change', applyFilter);
+  document.getElementById('searchInput').addEventListener('input', applyFilter);
+
+  // Click row selects checkbox except for interactive zones
+  document.querySelector('#programs-table tbody').addEventListener('click', function(e) {
+    const row = e.target.closest('tr');
+    if (!row) return;
+    const excluded = e.target.closest(
+      '.row-select, .program-name-link, .status-pill, .config-btn, .created-at-cell, .updated-at-cell'
+    );
+    if (excluded) return;
+
+    const checkbox = row.querySelector('.row-select');
+    if (checkbox) {
+      checkbox.checked = !checkbox.checked;
+      checkbox.dispatchEvent(new Event('change'));
+    }
+  });
+
+  // Sync columns once everything is loaded
+  setTimeout(syncHeaderWidths, 100);
+</script>
+
+</body>
+</html>

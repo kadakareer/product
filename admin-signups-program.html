@@ -445,6 +445,11 @@
 
 <script src="admin-signups-program-data.js"></script>
 <script>
+  // Parse program name from URL query parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const programName = urlParams.get('program') || 'Software Engineering Boot Camp';
+  document.querySelector('.page-subtitle').textContent = `Track the progress of kadets for the program ${programName}`;
+
   // Render rows synchronously before admin-common.js loads
   const tbody = document.querySelector('#signups-table tbody');
   tbody.innerHTML = participantsData.map(p => `
