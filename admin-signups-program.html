@@ -342,6 +342,7 @@
         <option>Completed</option>
         <option>Registered</option>
         <option>Interested</option>
+        <option>Dropped out</option>
       </select>
     </div>
     <div class="action-buttons">
@@ -367,285 +368,6 @@
   <div class="table-scroll">
   <table id="signups-table">
     <tbody>
-      <tr data-row-id="r1">
-        <td><input type="checkbox" class="checkbox row-select"></td>
-        <td>
-          <div class="participant-cell">
-            <div><span class="participant-name">Sarah Martinez</span></div>
-            <div><span class="participant-email">sarah.martinez@email.com</span></div>
-          </div>
-        </td>
-        <td>
-          <span class="status-pill editable" data-status="completed" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Completed</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interested">
-              <div class="status-option" data-status="completed">Completed</div>
-              <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interested">Interested</div>
-            </div>
-          </span>
-        </td>
-        <td class="created-at-cell">
-          <div>Dec 15, 2025</div>
-          <div class="time-part">11:30 AM</div>
-        </td>
-        <td class="updated-at-cell">
-          <div>Dec 15, 2025</div>
-          <div class="time-part">11:30 AM</div>
-        </td>
-      </tr>
-
-      <tr data-row-id="r2">
-        <td><input type="checkbox" class="checkbox row-select"></td>
-        <td>
-          <div class="participant-cell">
-            <div><span class="participant-name">James Wilson</span></div>
-            <div><span class="participant-email">james.wilson@gmail.com</span></div>
-          </div>
-        </td>
-        <td>
-          <span class="status-pill editable" data-status="registered" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Registered</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interested">
-              <div class="status-option" data-status="completed">Completed</div>
-              <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interested">Interested</div>
-            </div>
-          </span>
-        </td>
-        <td class="created-at-cell">
-          <div>Dec 12, 2025</div>
-          <div class="time-part">09:15 AM</div>
-        </td>
-        <td class="updated-at-cell">
-          <div>Dec 12, 2025</div>
-          <div class="time-part">04:30 PM</div>
-        </td>
-      </tr>
-
-      <tr data-row-id="r3">
-        <td><input type="checkbox" class="checkbox row-select"></td>
-        <td>
-          <div class="participant-cell">
-            <div><span class="participant-name">Emily Chen</span></div>
-            <div><span class="participant-email">emily.chen@outlook.com</span></div>
-          </div>
-        </td>
-        <td>
-          <span class="status-pill editable" data-status="completed" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Completed</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interested">
-              <div class="status-option" data-status="completed">Completed</div>
-              <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interested">Interested</div>
-            </div>
-          </span>
-        </td>
-        <td class="created-at-cell">
-          <div>Dec 10, 2025</div>
-          <div class="time-part">02:20 PM</div>
-        </td>
-        <td class="updated-at-cell">
-          <div>Dec 10, 2025</div>
-          <div class="time-part">02:20 PM</div>
-        </td>
-      </tr>
-
-      <tr data-row-id="r4">
-        <td><input type="checkbox" class="checkbox row-select"></td>
-        <td>
-          <div class="participant-cell">
-            <div><span class="participant-name">Michael Brown</span></div>
-            <div><span class="participant-email">michael.brown@gmail.com</span></div>
-          </div>
-        </td>
-        <td>
-          <span class="status-pill editable" data-status="interested" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Interested</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interested">
-              <div class="status-option" data-status="completed">Completed</div>
-              <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interested">Interested</div>
-            </div>
-          </span>
-        </td>
-        <td class="created-at-cell">
-          <div>Dec 08, 2025</div>
-          <div class="time-part">10:45 AM</div>
-        </td>
-        <td class="updated-at-cell">
-          <div>Dec 09, 2025</div>
-          <div class="time-part">11:00 AM</div>
-        </td>
-      </tr>
-
-      <tr data-row-id="r5">
-        <td><input type="checkbox" class="checkbox row-select"></td>
-        <td>
-          <div class="participant-cell">
-            <div><span class="participant-name">Alex Rodriguez</span></div>
-            <div><span class="participant-email">alex.rodriguez@email.com</span></div>
-          </div>
-        </td>
-        <td>
-          <span class="status-pill editable" data-status="registered" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Registered</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interested">
-              <div class="status-option" data-status="completed">Completed</div>
-              <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interested">Interested</div>
-            </div>
-          </span>
-        </td>
-        <td class="created-at-cell">
-          <div>Dec 05, 2025</div>
-          <div class="time-part">08:30 AM</div>
-        </td>
-        <td class="updated-at-cell">
-          <div>Dec 05, 2025</div>
-          <div class="time-part">08:30 AM</div>
-        </td>
-      </tr>
-
-      <tr data-row-id="r6">
-        <td><input type="checkbox" class="checkbox row-select"></td>
-        <td>
-          <div class="participant-cell">
-            <div><span class="participant-name">Lisa Thompson</span></div>
-            <div><span class="participant-email">lisa.thompson@email.com</span></div>
-          </div>
-        </td>
-        <td>
-          <span class="status-pill editable" data-status="completed" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Completed</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interested">
-              <div class="status-option" data-status="completed">Completed</div>
-              <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interested">Interested</div>
-            </div>
-          </span>
-        </td>
-        <td class="created-at-cell">
-          <div>Dec 02, 2025</div>
-          <div class="time-part">11:15 AM</div>
-        </td>
-        <td class="updated-at-cell">
-          <div>Dec 03, 2025</div>
-          <div class="time-part">02:45 PM</div>
-        </td>
-      </tr>
-
-      <tr data-row-id="r7">
-        <td><input type="checkbox" class="checkbox row-select"></td>
-        <td>
-          <div class="participant-cell">
-            <div><span class="participant-name">David Kim</span></div>
-            <div><span class="participant-email">david.kim@outlook.com</span></div>
-          </div>
-        </td>
-        <td>
-          <span class="status-pill editable" data-status="interested" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Interested</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interested">
-              <div class="status-option" data-status="completed">Completed</div>
-              <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interested">Interested</div>
-            </div>
-          </span>
-        </td>
-        <td class="created-at-cell">
-          <div>Nov 28, 2025</div>
-          <div class="time-part">09:20 AM</div>
-        </td>
-        <td class="updated-at-cell">
-          <div>Nov 28, 2025</div>
-          <div class="time-part">09:20 AM</div>
-        </td>
-      </tr>
-
-      <tr data-row-id="r8">
-        <td><input type="checkbox" class="checkbox row-select"></td>
-        <td>
-          <div class="participant-cell">
-            <div><span class="participant-name">Rachel Patel</span></div>
-            <div><span class="participant-email">rachel.patel@gmail.com</span></div>
-          </div>
-        </td>
-        <td>
-          <span class="status-pill editable" data-status="completed" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Completed</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interested">
-              <div class="status-option" data-status="completed">Completed</div>
-              <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interested">Interested</div>
-            </div>
-          </span>
-        </td>
-        <td class="created-at-cell">
-          <div>Nov 25, 2025</div>
-          <div class="time-part">04:10 PM</div>
-        </td>
-        <td class="updated-at-cell">
-          <div>Nov 26, 2025</div>
-          <div class="time-part">10:00 AM</div>
-        </td>
-      </tr>
-
-      <tr data-row-id="r9">
-        <td><input type="checkbox" class="checkbox row-select"></td>
-        <td>
-          <div class="participant-cell">
-            <div><span class="participant-name">Kevin Santos</span></div>
-            <div><span class="participant-email">kevin.santos@gmail.com</span></div>
-          </div>
-        </td>
-        <td>
-          <span class="status-pill editable" data-status="registered" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Registered</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interested">
-              <div class="status-option" data-status="completed">Completed</div>
-              <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interested">Interested</div>
-            </div>
-          </span>
-        </td>
-        <td class="created-at-cell">
-          <div>Nov 22, 2025</div>
-          <div class="time-part">02:10 PM</div>
-        </td>
-        <td class="updated-at-cell">
-          <div>Nov 22, 2025</div>
-          <div class="time-part">02:10 PM</div>
-        </td>
-      </tr>
-
-      <tr data-row-id="r10">
-        <td><input type="checkbox" class="checkbox row-select"></td>
-        <td>
-          <div class="participant-cell">
-            <div><span class="participant-name">Jennifer Lee</span></div>
-            <div><span class="participant-email">jennifer.lee@email.com</span></div>
-          </div>
-        </td>
-        <td>
-          <span class="status-pill editable" data-status="interested" onclick="toggleStatusDropdown(event)">
-            <span class="status-pill-label">Interested</span>
-            <div class="status-dropdown" data-statuses="completed,registered,interested">
-              <div class="status-option" data-status="completed">Completed</div>
-              <div class="status-option" data-status="registered">Registered</div>
-              <div class="status-option" data-status="interested">Interested</div>
-            </div>
-          </span>
-        </td>
-        <td class="created-at-cell">
-          <div>Nov 18, 2025</div>
-          <div class="time-part">10:00 AM</div>
-        </td>
-        <td class="updated-at-cell">
-          <div>Nov 18, 2025</div>
-          <div class="time-part">10:00 AM</div>
-        </td>
-      </tr>
     </tbody>
   </table>
   </div>
@@ -717,6 +439,41 @@
   </div>
 </div>
 
+<script src="admin-signups-program-data.js"></script>
+<script>
+  // Render rows synchronously before admin-common.js loads
+  const tbody = document.querySelector('#signups-table tbody');
+  tbody.innerHTML = participantsData.map(p => `
+      <tr data-row-id="${p.id}">
+        <td><input type="checkbox" class="checkbox row-select"></td>
+        <td>
+          <div class="participant-cell">
+            <div><span class="participant-name">${p.name}</span></div>
+            <div><span class="participant-email">${p.email}</span></div>
+          </div>
+        </td>
+        <td>
+          <span class="status-pill editable" data-status="${p.status}" onclick="toggleStatusDropdown(event)">
+            <span class="status-pill-label">${p.status === 'dropped-out' ? 'Dropped out' : p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span>
+            <div class="status-dropdown" data-statuses="completed,registered,interested,dropped-out">
+              <div class="status-option" data-status="completed">Completed</div>
+              <div class="status-option" data-status="registered">Registered</div>
+              <div class="status-option" data-status="interested">Interested</div>
+              <div class="status-option" data-status="dropped-out">Dropped out</div>
+            </div>
+          </span>
+        </td>
+        <td class="created-at-cell">
+          <div>${p.createdAt.date}</div>
+          <div class="time-part">${p.createdAt.time}</div>
+        </td>
+        <td class="updated-at-cell">
+          <div>${p.updatedAt.date}</div>
+          <div class="time-part">${p.updatedAt.time}</div>
+        </td>
+      </tr>
+  `).join('');
+</script>
 <script src="admin-common.js"></script>
 <script>
   function formatDateTimeHTML(date) {
@@ -795,37 +552,8 @@
     return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
   }
 
-  // Demo seed data — in a real app this would come from the backend.
-  // `days` holds up to 7 demo days; a higher configured day count just
-  // shows unmarked buttons past index 6.
-  const attendanceData = {
-    r1:  { single: true,  days: [true,  true,  false, true,  false, true,  true ] },
-    r2:  { single: false, days: [true,  false, false, true,  false, false, true ] },
-    r3:  { single: true,  days: [true,  true,  true,  true,  true,  true,  true ] },
-    r4:  { single: true,  days: [false, true,  true,  false, true,  true,  false] },
-    r5:  { single: false, days: [false, false, true,  false, false, true,  false] },
-    r6:  { single: true,  days: [true,  false, true,  true,  false, true,  true ] },
-    r7:  { single: true,  days: [true,  true,  false, true,  true,  false, false] },
-    r8:  { single: false, days: [true,  false, false, false, true,  false, true ] },
-    r9:  { single: true,  days: [true,  true,  true,  true,  true,  true,  true ] },
-    r10: { single: false, days: [false, true,  false, false, true,  false, false] },
-  };
-
   // Demo seed data for the Submissions column — 3 tasks by default.
   const SUBMISSION_TASKS = ['Week 1 Reflection', 'Midpoint Project', 'Final Submission'];
-
-  const submissionsData = {
-    r1:  [true,  true,  false],
-    r2:  [true,  false, false],
-    r3:  [true,  true,  true ],
-    r4:  [false, true,  true ],
-    r5:  [false, false, false],
-    r6:  [true,  true,  false],
-    r7:  [true,  false, true ],
-    r8:  [false, false, true ],
-    r9:  [true,  true,  true ],
-    r10: [false, true,  false],
-  };
 
   function wireSelectAll(headerRow, rows, getChecked, setChecked) {
     const selectAll = headerRow.querySelector('.attendance-select-all');
@@ -1043,6 +771,7 @@
     completed: 'Complete attendance and submissions',
     registered: 'Signup form response verified',
     interested: 'Clicked the register button',
+    'dropped-out': 'Left the program before completion',
   };
 
   function applyStatusTooltips() {
