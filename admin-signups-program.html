@@ -319,6 +319,10 @@
       color: #86868b;
       font-size: 12px;
     }
+
+    tr.hidden {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
@@ -337,12 +341,12 @@
   <div class="controls">
     <div class="filter-section">
       <span class="filter-label">Filter by Status:</span>
-      <select class="filter-dropdown">
-        <option>All signups</option>
-        <option>Completed</option>
-        <option>Registered</option>
-        <option>Interested</option>
-        <option>Dropped out</option>
+      <select class="filter-dropdown" id="statusFilter">
+        <option value="all">All signups</option>
+        <option value="completed">Completed</option>
+        <option value="registered">Registered</option>
+        <option value="interested">Interested</option>
+        <option value="dropped-out">Dropped out</option>
       </select>
     </div>
     <div class="action-buttons">
@@ -444,7 +448,7 @@
   // Render rows synchronously before admin-common.js loads
   const tbody = document.querySelector('#signups-table tbody');
   tbody.innerHTML = participantsData.map(p => `
-      <tr data-row-id="${p.id}">
+      <tr data-row-id="${p.id}" data-status="${p.status}">
         <td><input type="checkbox" class="checkbox row-select"></td>
         <td>
           <div class="participant-cell">
@@ -750,7 +754,7 @@
     const headRow = document.getElementById('headRow');
     const spacer = document.getElementById('scrollbarSpacer');
     const scrollEl = document.querySelector('.table-scroll');
-    const firstBodyRow = document.querySelector('#signups-table tbody tr');
+    const firstBodyRow = document.querySelector('#signups-table tbody tr:not(.hidden)');
 
     if (firstBodyRow) {
       const headCells = Array.from(headRow.children).filter(el => el !== spacer);
@@ -792,7 +796,14 @@
     if (opt) {
       applyStatusTooltips();
       const row = opt.closest('tr');
-      updateRowTimestamp(row);
+      if (row) {
+        const pill = row.querySelector('.status-pill');
+        if (pill) {
+          row.dataset.status = pill.dataset.status;
+        }
+        updateRowTimestamp(row);
+        applyFilter();
+      }
     }
   });
 
@@ -873,7 +884,7 @@
   const footerText = document.getElementById('footerText');
 
   function rowCheckboxes() {
-    return Array.from(document.querySelectorAll('#signups-table tbody .row-select'));
+    return Array.from(document.querySelectorAll('#signups-table tbody tr:not(.hidden) .row-select'));
   }
 
   function updateSelectionUI() {
@@ -896,9 +907,29 @@
     updateSelectionUI();
   });
 
-  rowCheckboxes().forEach(cb => cb.addEventListener('change', updateSelectionUI));
+  document.querySelectorAll('#signups-table tbody .row-select').forEach(cb => cb.addEventListener('change', updateSelectionUI));
 
   updateSelectionUI();
+
+  function applyFilter() {
+    const filterVal = document.getElementById('statusFilter').value;
+    const rows = document.querySelectorAll('#signups-table tbody tr');
+
+    rows.forEach(row => {
+      const pill = row.querySelector('.status-pill');
+      const status = pill ? pill.dataset.status : '';
+      if (filterVal === 'all' || status === filterVal) {
+        row.classList.remove('hidden');
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+
+    updateSelectionUI();
+    syncHeaderWidths();
+  }
+
+  document.getElementById('statusFilter').addEventListener('change', applyFilter);
 
   // Clicking anywhere on a row toggles its selection, except the checkbox
   // itself (already toggles natively), the Name/email column (needs normal
