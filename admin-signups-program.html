@@ -334,7 +334,7 @@
       <h1 class="page-title">Programs Admin</h1>
       <p class="page-subtitle">Track the progress of kadets for the program {program_name}</p>
     </div>
-    <button class="config-btn" onclick="openModal('configModal')" title="Program settings">⚙️</button>
+    <button class="config-btn" onclick="openConfigModal()" title="Program settings">⚙️</button>
   </div>
 
   <!-- Controls -->
@@ -445,10 +445,142 @@
 
 <script src="admin-signups-program-data.js"></script>
 <script>
-  // Parse program name from URL query parameters
-  const urlParams = new URLSearchParams(window.location.search);
-  const programName = urlParams.get('program') || 'Software Engineering Boot Camp';
-  document.querySelector('.page-subtitle').textContent = `Track the progress of kadets for the program ${programName}`;
+  function getProgramConfigFromURL() {
+    const config = {
+      programName: 'Software Engineering Boot Camp',
+      duration: 'multi-day',
+      daysCount: 7,
+      submissions: 'has-submissions',
+      submissionsCount: 3,
+      format: 'online'
+    };
+
+    const pathname = window.location.pathname || '';
+    const search = window.location.search || '';
+    const hash = window.location.hash || '';
+
+    let pathExtra = '';
+    const htmlIndex = pathname.indexOf('admin-signups-program.html');
+    if (htmlIndex !== -1) {
+      pathExtra = pathname.substring(htmlIndex + 'admin-signups-program.html'.length);
+    } else {
+      pathExtra = pathname;
+    }
+
+    function parseSegments(str) {
+      if (!str) return [];
+      return str.split(/[\/\&\?]+/).filter(Boolean);
+    }
+
+    const pathTokens = parseSegments(pathExtra);
+    const searchParams = new URLSearchParams(search);
+    const hashTokens = parseSegments(hash.startsWith('#') ? hash.slice(1) : hash);
+
+    const tokenKV = {};
+
+    for (let i = 0; i < pathTokens.length; i++) {
+      const token = pathTokens[i];
+      if (token.includes('=')) {
+        const [k, v] = token.split('=');
+        if (k && v) tokenKV[k.toLowerCase()] = decodeURIComponent(v);
+      } else if (i + 1 < pathTokens.length) {
+        const nextToken = pathTokens[i + 1];
+        if (!nextToken.includes('=')) {
+          tokenKV[token.toLowerCase()] = decodeURIComponent(nextToken);
+        }
+      }
+    }
+
+    for (let i = 0; i < hashTokens.length; i++) {
+      const token = hashTokens[i];
+      if (token.includes('=')) {
+        const [k, v] = token.split('=');
+        if (k && v) tokenKV[k.toLowerCase()] = decodeURIComponent(v);
+      } else if (i + 1 < hashTokens.length) {
+        const nextToken = hashTokens[i + 1];
+        if (!nextToken.includes('=')) {
+          tokenKV[token.toLowerCase()] = decodeURIComponent(nextToken);
+        }
+      }
+    }
+
+    for (const [k, v] of searchParams.entries()) {
+      tokenKV[k.toLowerCase()] = v;
+    }
+
+    if (tokenKV['program']) {
+      config.programName = tokenKV['program'];
+    }
+
+    const durVal = tokenKV['duration'] || tokenKV['dur'];
+    if (durVal) {
+      const norm = durVal.toLowerCase();
+      if (['single-day', 'single', '1-day', 'oneday'].includes(norm)) config.duration = 'single-day';
+      else if (['multi-day', 'multi', 'multiday', 'multi-days'].includes(norm)) config.duration = 'multi-day';
+      else if (['no-attendance', 'none', 'no', 'no_attendance'].includes(norm)) config.duration = 'no-attendance';
+    }
+
+    const daysVal = tokenKV['dayscount'] || tokenKV['days'] || tokenKV['days-count'] || tokenKV['days_count'];
+    if (daysVal) {
+      const pDays = parseInt(daysVal, 10);
+      if (!isNaN(pDays) && pDays > 0) config.daysCount = pDays;
+    }
+
+    const subVal = tokenKV['submissions'] || tokenKV['submission'] || tokenKV['deliverables'];
+    if (subVal) {
+      const norm = subVal.toLowerCase();
+      if (['has-submissions', 'has', 'yes', 'true', '1', 'with-submissions'].includes(norm)) config.submissions = 'has-submissions';
+      else if (['no-submissions', 'no', 'none', 'false', '0', 'without-submissions'].includes(norm)) config.submissions = 'no-submissions';
+    }
+
+    const subCountVal = tokenKV['submissionscount'] || tokenKV['submissions-count'] || tokenKV['submissions_count'] || tokenKV['tasks'] || tokenKV['taskcount'];
+    if (subCountVal) {
+      const pSub = parseInt(subCountVal, 10);
+      if (!isNaN(pSub) && pSub >= 0) config.submissionsCount = pSub;
+    }
+
+    const fmtVal = tokenKV['format'] || tokenKV['fmt'];
+    if (fmtVal) {
+      const norm = fmtVal.toLowerCase();
+      if (['online', 'onsite', 'hybrid'].includes(norm)) config.format = norm;
+    }
+
+    const allTokens = [...pathTokens, ...hashTokens];
+    for (const token of allTokens) {
+      const norm = token.toLowerCase();
+      if (!durVal) {
+        if (['single-day', 'single'].includes(norm)) config.duration = 'single-day';
+        if (['multi-day', 'multi'].includes(norm)) config.duration = 'multi-day';
+        if (['no-attendance', 'no_attendance'].includes(norm)) config.duration = 'no-attendance';
+      }
+      if (!subVal) {
+        if (['has-submissions', 'has_submissions'].includes(norm)) config.submissions = 'has-submissions';
+        if (['no-submissions', 'no_submissions'].includes(norm)) config.submissions = 'no-submissions';
+      }
+      if (!fmtVal) {
+        if (['online', 'onsite', 'hybrid'].includes(norm)) config.format = norm;
+      }
+    }
+
+    if (config.duration === 'single-day') {
+      config.daysCount = 1;
+    } else if (config.duration === 'no-attendance') {
+      config.daysCount = 0;
+    } else if (config.daysCount < 2) {
+      config.daysCount = 7;
+    }
+
+    if (config.submissions === 'no-submissions') {
+      config.submissionsCount = 0;
+    } else if (config.submissionsCount < 1) {
+      config.submissionsCount = 3;
+    }
+
+    return config;
+  }
+
+  let currentConfig = getProgramConfigFromURL();
+  document.querySelector('.page-subtitle').textContent = `Track the progress of kadets for the program ${currentConfig.programName}`;
 
   // Render rows synchronously before admin-common.js loads
   const tbody = document.querySelector('#signups-table tbody');
@@ -507,6 +639,76 @@
     }
   }
 
+  function updateURLFromConfig(config) {
+    let basePath = window.location.pathname;
+    const htmlIndex = basePath.indexOf('admin-signups-program.html');
+    if (htmlIndex !== -1) {
+      basePath = basePath.substring(0, htmlIndex + 'admin-signups-program.html'.length);
+    }
+
+    const pathParams = `/duration/${config.duration}/days/${config.daysCount}/submissions/${config.submissions}/submissionsCount/${config.submissionsCount}/format/${config.format}`;
+    const queryParams = `?program=${encodeURIComponent(config.programName)}&duration=${config.duration}&daysCount=${config.daysCount}&submissions=${config.submissions}&submissionsCount=${config.submissionsCount}&format=${config.format}`;
+
+    // If running under file:// protocol, modifying pathname after file name throws SecurityError in browsers.
+    // Try pathParams + queryParams first for web server environments, then fall back to queryParams or hash.
+    if (window.location.protocol !== 'file:') {
+      try {
+        window.history.pushState(config, '', basePath + pathParams + queryParams);
+        return;
+      } catch (e) {
+        console.warn('Unable to push pathParams state, falling back to queryParams:', e);
+      }
+    }
+
+    try {
+      window.history.pushState(config, '', basePath + queryParams);
+      return;
+    } catch (e) {
+      console.warn('Unable to push queryParams state, falling back to hash:', e);
+    }
+
+    try {
+      window.location.hash = `duration/${config.duration}/days/${config.daysCount}/submissions/${config.submissions}/submissionsCount/${config.submissionsCount}/format/${config.format}`;
+    } catch (e) {
+      console.warn('Unable to update hash:', e);
+    }
+  }
+
+  function populateModalFromConfig(config) {
+    const durationRadioId = 'duration-' + (config.duration === 'multi-day' ? 'multi' : (config.duration === 'single-day' ? 'single' : 'none'));
+    const durRadio = document.getElementById(durationRadioId);
+    if (durRadio) durRadio.checked = true;
+
+    const daysInput = document.getElementById('configDaysCount');
+    if (daysInput) daysInput.value = config.daysCount > 0 ? config.daysCount : 7;
+    const daysField = document.getElementById('configDaysField');
+    if (daysField) daysField.style.display = config.duration === 'multi-day' ? 'block' : 'none';
+
+    const subRadioId = config.submissions === 'has-submissions' ? 'submissions-yes' : 'submissions-no';
+    const subRadio = document.getElementById(subRadioId);
+    if (subRadio) subRadio.checked = true;
+
+    const subInput = document.getElementById('configSubmissionsCount');
+    if (subInput) subInput.value = config.submissionsCount > 0 ? config.submissionsCount : 3;
+    const subField = document.getElementById('configSubmissionsField');
+    if (subField) subField.style.display = config.submissions === 'has-submissions' ? 'block' : 'none';
+
+    const fmtRadioId = 'format-' + config.format;
+    const fmtRadio = document.getElementById(fmtRadioId);
+    if (fmtRadio) fmtRadio.checked = true;
+  }
+
+  function applyConfigToUI(config) {
+    document.querySelector('.page-subtitle').textContent = `Track the progress of kadets for the program ${config.programName}`;
+    populateModalFromConfig(config);
+    refreshTableColumns(config.duration, config.daysCount, config.submissions === 'has-submissions', config.submissionsCount);
+  }
+
+  function openConfigModal() {
+    populateModalFromConfig(currentConfig);
+    openModal('configModal');
+  }
+
   function saveConfig() {
     const duration = document.querySelector('input[name="duration"]:checked').value;
     const format = document.querySelector('input[name="format"]:checked').value;
@@ -514,8 +716,15 @@
     const daysCount = parseInt(document.getElementById('configDaysCount').value, 10) || 1;
     const submissionsCount = parseInt(document.getElementById('configSubmissionsCount').value, 10) || 1;
 
-    console.log('Config saved:', { duration, format, submissions, daysCount, submissionsCount });
-    refreshTableColumns(duration, daysCount, submissions === 'has-submissions', submissionsCount);
+    currentConfig.duration = duration;
+    currentConfig.format = format;
+    currentConfig.submissions = submissions;
+    currentConfig.daysCount = duration === 'multi-day' ? daysCount : (duration === 'single-day' ? 1 : 0);
+    currentConfig.submissionsCount = submissions === 'has-submissions' ? submissionsCount : 0;
+
+    console.log('Config saved:', currentConfig);
+    refreshTableColumns(currentConfig.duration, currentConfig.daysCount, currentConfig.submissions === 'has-submissions', currentConfig.submissionsCount);
+    updateURLFromConfig(currentConfig);
     closeModal('configModal');
   }
 
@@ -772,7 +981,12 @@
     spacer.style.width = (scrollEl.offsetWidth - scrollEl.clientWidth) + 'px';
   }
 
-  refreshTableColumns('multi-day', 7, true, 3);
+  applyConfigToUI(currentConfig);
+
+  window.addEventListener('popstate', function() {
+    currentConfig = getProgramConfigFromURL();
+    applyConfigToUI(currentConfig);
+  });
   window.addEventListener('resize', syncHeaderWidths);
 
   /* Helper tooltips on the status pill + its dropdown options. */

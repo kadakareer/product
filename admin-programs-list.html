@@ -303,7 +303,7 @@
       <tr data-row-id="${p.id}" data-status="${p.status}">
         <td><input type="checkbox" class="checkbox row-select"></td>
         <td class="program-cell">
-          <div><a class="program-name-link" href="admin-signups-program.html?program=${encodeURIComponent(p.name)}">${p.name}</a></div>
+          <div><a class="program-name-link" href="admin-signups-program.html?program=${encodeURIComponent(p.name)}&duration=${p.duration}&daysCount=${p.daysCount}&submissions=${p.submissions}&submissionsCount=${p.submissionsCount}&format=${p.format}">${p.name}</a></div>
           <div class="time-part">${formatFormat(p.format)}</div>
         </td>
         <td>${formatDuration(p)}</td>
