@@ -323,6 +323,42 @@
     tr.hidden {
       display: none !important;
     }
+
+    /* Sortable Column Headers */
+    .sortable-th {
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .sortable-th:hover {
+      background: #ebebeb;
+      color: #1d1d1f;
+    }
+
+    .sortable-th[data-sort-dir="asc"],
+    .sortable-th[data-sort-dir="desc"] {
+      color: #0066cc;
+    }
+
+    .sort-icon {
+      display: inline-block;
+      margin-left: 4px;
+      font-size: 11px;
+      color: #86868b;
+      font-weight: normal;
+      transition: color 0.15s;
+    }
+
+    .sortable-th:hover .sort-icon {
+      color: #1d1d1f;
+    }
+
+    .sortable-th[data-sort-dir="asc"] .sort-icon,
+    .sortable-th[data-sort-dir="desc"] .sort-icon {
+      color: #0066cc;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -361,10 +397,10 @@
     <thead>
       <tr id="headRow">
         <th class="select-col"><input type="checkbox" class="checkbox" id="selectAllRows"></th>
-        <th>Name</th>
-        <th>Status</th>
-        <th class="created-at-th">Created At</th>
-        <th class="updated-at-th">Updated At</th>
+        <th class="sortable-th" data-sort-key="name">Name <span class="sort-icon">↕</span></th>
+        <th class="sortable-th" data-sort-key="status">Status <span class="sort-icon">↕</span></th>
+        <th class="created-at-th sortable-th" data-sort-key="createdAt">Created At <span class="sort-icon">↕</span></th>
+        <th class="updated-at-th sortable-th" data-sort-key="updatedAt">Updated At <span class="sort-icon">↕</span></th>
         <th class="scrollbar-spacer" id="scrollbarSpacer"></th>
       </tr>
     </thead>
@@ -452,8 +488,8 @@
 
   // Render rows synchronously before admin-common.js loads
   const tbody = document.querySelector('#signups-table tbody');
-  tbody.innerHTML = participantsData.map(p => `
-      <tr data-row-id="${p.id}" data-status="${p.status}">
+  tbody.innerHTML = participantsData.map((p, index) => `
+      <tr data-row-id="${p.id}" data-status="${p.status}" data-original-index="${index}">
         <td><input type="checkbox" class="checkbox row-select"></td>
         <td>
           <div class="participant-cell">
@@ -609,11 +645,12 @@
 
   function renderAttendanceColumn(headerRow, rows, mode, daysCount) {
     const th = document.createElement('th');
-    th.className = 'attendance-th';
+    th.className = 'attendance-th sortable-th';
+    th.dataset.sortKey = 'attendance';
     insertHeaderCell(headerRow, th);
 
     if (mode === 'multi-day') {
-      th.textContent = 'Attendance';
+      th.innerHTML = 'Attendance <span class="sort-icon">↕</span>';
 
       rows.forEach(row => {
         const rowId = row.dataset.rowId;
@@ -644,6 +681,7 @@
             record.days[i] = !record.days[i];
             btn.classList.toggle('filled', record.days[i]);
             updateRowTimestamp(row);
+            if (currentSort.key && currentSort.dir !== 'none') sortRows();
           });
 
           group.appendChild(btn);
@@ -656,7 +694,7 @@
 
     } else {
       // single-day
-      th.innerHTML = '<label class="attendance-th-label"><input type="checkbox" class="checkbox attendance-select-all"> Attendance</label>';
+      th.innerHTML = '<label class="attendance-th-label"><input type="checkbox" class="checkbox attendance-select-all" onclick="event.stopPropagation()"> Attendance</label> <span class="sort-icon">↕</span>';
 
       rows.forEach(row => {
         const rowId = row.dataset.rowId;
@@ -669,6 +707,7 @@
         input.addEventListener('change', () => {
           attendanceData[rowId].single = input.checked;
           updateRowTimestamp(row);
+          if (currentSort.key && currentSort.dir !== 'none') sortRows();
         });
         td.appendChild(input);
         insertBodyCell(row, td);
@@ -692,8 +731,9 @@
 
   function renderSubmissionsColumn(headerRow, rows, submissionsCount) {
     const th = document.createElement('th');
-    th.className = 'submissions-th';
-    th.textContent = 'Submissions';
+    th.className = 'submissions-th sortable-th';
+    th.dataset.sortKey = 'submissions';
+    th.innerHTML = 'Submissions <span class="sort-icon">↕</span>';
     insertHeaderCell(headerRow, th);
 
     rows.forEach(row => {
@@ -725,6 +765,7 @@
           record[i] = !record[i];
           btn.classList.toggle('filled', record[i]);
           updateRowTimestamp(row);
+          if (currentSort.key && currentSort.dir !== 'none') sortRows();
         });
 
         group.appendChild(btn);
@@ -735,6 +776,143 @@
       insertBodyCell(row, td);
     });
   }
+
+  /* Table Column Sorting */
+  let currentSort = {
+    key: null,
+    dir: 'none' // 'none' -> 'asc' -> 'desc' -> 'none'
+  };
+
+  function updateSortHeaderUI() {
+    document.querySelectorAll('#headRow .sortable-th').forEach(th => {
+      const key = th.dataset.sortKey;
+      const icon = th.querySelector('.sort-icon');
+      if (key === currentSort.key && currentSort.dir !== 'none') {
+        th.setAttribute('data-sort-dir', currentSort.dir);
+        if (icon) icon.textContent = currentSort.dir === 'asc' ? ' ↑' : ' ↓';
+      } else {
+        th.removeAttribute('data-sort-dir');
+        if (icon) icon.textContent = ' ↕';
+      }
+    });
+  }
+
+  function getRowValue(tr, key) {
+    const rowId = tr.dataset.rowId;
+    switch (key) {
+      case 'name': {
+        const nameEl = tr.querySelector('.participant-name');
+        return nameEl ? nameEl.textContent.trim().toLowerCase() : '';
+      }
+      case 'status': {
+        return (tr.dataset.status || '').toLowerCase();
+      }
+      case 'attendance': {
+        const att = attendanceData[rowId];
+        if (!att) return 0;
+        if (Array.isArray(att.days)) {
+          return att.days.filter(Boolean).length;
+        }
+        return att.single ? 1 : 0;
+      }
+      case 'submissions': {
+        const subs = submissionsData[rowId];
+        if (!subs) return 0;
+        return subs.filter(Boolean).length;
+      }
+      case 'createdAt': {
+        const cell = tr.querySelector('.created-at-cell');
+        if (!cell) return 0;
+        const divs = cell.querySelectorAll('div');
+        const dateStr = divs[0] ? divs[0].textContent.trim() : '';
+        const timeStr = divs[1] ? divs[1].textContent.trim() : '';
+        const parsed = Date.parse(`${dateStr} ${timeStr}`);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      case 'updatedAt': {
+        const cell = tr.querySelector('.updated-at-cell');
+        if (!cell) return 0;
+        const divs = cell.querySelectorAll('div');
+        const dateStr = divs[0] ? divs[0].textContent.trim() : '';
+        const timeStr = divs[1] ? divs[1].textContent.trim() : '';
+        const parsed = Date.parse(`${dateStr} ${timeStr}`);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      default:
+        return '';
+    }
+  }
+
+  function compareRows(a, b, key, dir) {
+    const valA = getRowValue(a, key);
+    const valB = getRowValue(b, key);
+
+    let result = 0;
+    if (typeof valA === 'number' && typeof valB === 'number') {
+      result = valA - valB;
+    } else {
+      result = String(valA).localeCompare(String(valB), undefined, { numeric: true, sensitivity: 'base' });
+    }
+
+    if (result === 0) {
+      const idxA = parseInt(a.dataset.originalIndex, 10) || 0;
+      const idxB = parseInt(b.dataset.originalIndex, 10) || 0;
+      result = idxA - idxB;
+    }
+
+    return dir === 'desc' ? -result : result;
+  }
+
+  function sortRows() {
+    const tbody = document.querySelector('#signups-table tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    if (!currentSort.key || currentSort.dir === 'none') {
+      rows.sort((a, b) => {
+        const idxA = parseInt(a.dataset.originalIndex, 10) || 0;
+        const idxB = parseInt(b.dataset.originalIndex, 10) || 0;
+        return idxA - idxB;
+      });
+    } else {
+      rows.sort((a, b) => compareRows(a, b, currentSort.key, currentSort.dir));
+    }
+
+    rows.forEach(row => tbody.appendChild(row));
+
+    updateSelectionUI();
+    syncHeaderWidths();
+  }
+
+  function handleHeaderClick(sortKey) {
+    if (currentSort.key === sortKey) {
+      if (currentSort.dir === 'none') {
+        currentSort.dir = 'asc';
+      } else if (currentSort.dir === 'asc') {
+        currentSort.dir = 'desc';
+      } else {
+        currentSort.key = null;
+        currentSort.dir = 'none';
+      }
+    } else {
+      currentSort.key = sortKey;
+      currentSort.dir = 'asc';
+    }
+
+    updateSortHeaderUI();
+    sortRows();
+  }
+
+  document.getElementById('headRow').addEventListener('click', function(e) {
+    if (e.target.closest('.checkbox, label, input')) return;
+
+    const th = e.target.closest('.sortable-th');
+    if (!th) return;
+
+    const sortKey = th.dataset.sortKey;
+    if (!sortKey) return;
+
+    handleHeaderClick(sortKey);
+  });
 
   function refreshTableColumns(duration, daysCount, hasSubmissions, submissionsCount) {
     const headerRow = document.getElementById('headRow');
@@ -748,7 +926,12 @@
     }
     if (hasSubmissions) renderSubmissionsColumn(headerRow, rows, submissionsCount);
 
-    syncHeaderWidths();
+    updateSortHeaderUI();
+    if (currentSort.key && currentSort.dir !== 'none') {
+      sortRows();
+    } else {
+      syncHeaderWidths();
+    }
   }
 
   // The header table has no data of its own, so its column widths are
@@ -808,6 +991,9 @@
         }
         updateRowTimestamp(row);
         applyFilter();
+        if (currentSort.key && currentSort.dir !== 'none') {
+          sortRows();
+        }
       }
     }
   });
