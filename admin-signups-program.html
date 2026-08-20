@@ -33,6 +33,118 @@
       text-overflow: ellipsis;
     }
 
+    /* Info filter button */
+    .info-filter-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+    }
+    .info-filter-btn.filter-active {
+      background: #0066cc;
+      color: white;
+      border-color: #0066cc;
+    }
+    .info-filter-badge {
+      display: none;
+      background: white;
+      color: #0066cc;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 1px 6px;
+      line-height: 1.4;
+    }
+    .info-filter-btn.filter-active .info-filter-badge {
+      display: inline-block;
+    }
+
+    /* Info filter modal — wider, three-column layout */
+    .modal-content-wide {
+      max-width: 720px;
+      width: 90vw;
+    }
+    .info-filter-sections {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+    }
+    .info-filter-section {
+      padding: 0 20px 4px;
+      border-right: 1px solid #f0f0f0;
+    }
+    .info-filter-section:first-child {
+      padding-left: 0;
+    }
+    .info-filter-section:last-child {
+      padding-right: 0;
+      border-right: none;
+    }
+    .info-filter-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .info-filter-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1d1d1f;
+    }
+    .info-filter-section-actions {
+      display: flex;
+      gap: 4px;
+    }
+    .info-filter-quick-btn {
+      font-size: 11px;
+      color: #0066cc;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .info-filter-quick-btn:hover {
+      background: #e8f0fb;
+    }
+    .info-filter-divider {
+      font-size: 11px;
+      color: #d2d2d7;
+      line-height: 1;
+    }
+    .info-filter-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    .info-filter-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: #1d1d1f;
+      cursor: pointer;
+      padding: 5px 6px;
+      border-radius: 5px;
+      line-height: 1.4;
+    }
+    .info-filter-option:hover {
+      background: #f5f5f7;
+    }
+    .info-filter-option input[type="checkbox"] {
+      margin-top: 1px;
+      flex-shrink: 0;
+      accent-color: #0066cc;
+    }
+    .info-filter-option.excluded {
+      color: #86868b;
+      text-decoration: line-through;
+    }
+
     /* Search input in controls bar */
     .search-input {
       padding: 7px 10px;
@@ -468,6 +580,9 @@
         <option value="dropped-out">Dropped out</option>
       </select>
       <input type="search" class="search-input" id="searchFilter" placeholder="Search name, university, degree, location…">
+      <button class="btn-outline info-filter-btn" id="infoFilterBtn" onclick="openInfoFilterModal()">
+        Filter by info <span class="info-filter-badge" id="infoFilterBadge"></span>
+      </button>
     </div>
     <div class="action-buttons">
       <button class="btn-outline" onclick="importCSV()">↓ Import CSV</button>
@@ -575,6 +690,21 @@
   </div>
 </div>
 
+<!-- Info Filter Modal -->
+<div id="infoFilterModal" class="modal">
+  <div class="modal-content modal-content-wide">
+    <div class="modal-header">
+      <h2 class="modal-title">Filter by Participant Info</h2>
+      <button class="modal-close" onclick="closeModal('infoFilterModal')">✕</button>
+    </div>
+    <div id="infoFilterSections" class="info-filter-sections"></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="resetInfoFilter()">Reset all</button>
+      <button class="modal-btn save" onclick="closeModal('infoFilterModal')">Done</button>
+    </div>
+  </div>
+</div>
+
 <script src="admin-signups-program-data.js"></script>
 <script>
   // Parse program name from URL query parameters
@@ -639,6 +769,37 @@
     }
   }
 
+  const CONFIG_KEY = 'kadakareer_program_config';
+
+  const CONFIG_DEFAULTS = {
+    duration: 'multi-day',
+    format: 'online',
+    submissions: 'has-submissions',
+    daysCount: 7,
+    submissionsCount: 3,
+    showParticipantInfo: false,
+  };
+
+  function loadConfig() {
+    try {
+      const stored = localStorage.getItem(CONFIG_KEY);
+      return stored ? { ...CONFIG_DEFAULTS, ...JSON.parse(stored) } : { ...CONFIG_DEFAULTS };
+    } catch {
+      return { ...CONFIG_DEFAULTS };
+    }
+  }
+
+  function applyConfigToModal(cfg) {
+    document.querySelector(`input[name="duration"][value="${cfg.duration}"]`).checked = true;
+    document.querySelector(`input[name="format"][value="${cfg.format}"]`).checked = true;
+    document.querySelector(`input[name="submissions"][value="${cfg.submissions}"]`).checked = true;
+    document.getElementById('configDaysCount').value = cfg.daysCount;
+    document.getElementById('configSubmissionsCount').value = cfg.submissionsCount;
+    document.getElementById('configShowInfo').checked = cfg.showParticipantInfo;
+    document.getElementById('configDaysField').style.display = cfg.duration === 'multi-day' ? 'block' : 'none';
+    document.getElementById('configSubmissionsField').style.display = cfg.submissions === 'has-submissions' ? 'block' : 'none';
+  }
+
   function saveConfig() {
     const duration = document.querySelector('input[name="duration"]:checked').value;
     const format = document.querySelector('input[name="format"]:checked').value;
@@ -647,7 +808,8 @@
     const submissionsCount = parseInt(document.getElementById('configSubmissionsCount').value, 10) || 1;
     const showParticipantInfo = document.getElementById('configShowInfo').checked;
 
-    console.log('Config saved:', { duration, format, submissions, daysCount, submissionsCount, showParticipantInfo });
+    const cfg = { duration, format, submissions, daysCount, submissionsCount, showParticipantInfo };
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
     refreshTableColumns(duration, daysCount, submissions === 'has-submissions', submissionsCount, showParticipantInfo);
     closeModal('configModal');
   }
@@ -1094,7 +1256,11 @@
     spacer.style.width = (scrollEl.offsetWidth - scrollEl.clientWidth) + 'px';
   }
 
-  refreshTableColumns('multi-day', 7, true, 3, false);
+  (function initConfig() {
+    const cfg = loadConfig();
+    applyConfigToModal(cfg);
+    refreshTableColumns(cfg.duration, cfg.daysCount, cfg.submissions === 'has-submissions', cfg.submissionsCount, cfg.showParticipantInfo);
+  })();
   window.addEventListener('resize', syncHeaderWidths);
 
   /* Helper tooltips on the status pill + its dropdown options. */
@@ -1249,6 +1415,118 @@
 
   updateSelectionUI();
 
+  /* ── Info filter ──────────────────────────────────────────────────────── */
+  const INFO_FIELDS = [
+    { key: 'university', label: 'University', dataKey: 'school'    },
+    { key: 'degree',     label: 'Degree',     dataKey: 'course'    },
+    { key: 'location',   label: 'Location',   dataKey: 'location'  },
+  ];
+
+  // Unique sorted values for each field derived from the data
+  const infoValues = {};
+  INFO_FIELDS.forEach(({ key, dataKey }) => {
+    infoValues[key] = [...new Set(participantsData.map(p => p[dataKey]).filter(Boolean))].sort();
+  });
+
+  // Included values per field — full set = no filtering on that field
+  const infoFilterState = {};
+  INFO_FIELDS.forEach(({ key }) => {
+    infoFilterState[key] = new Set(infoValues[key]);
+  });
+
+  function isInfoFilterActive() {
+    return INFO_FIELDS.some(({ key }) => infoFilterState[key].size < infoValues[key].length);
+  }
+
+  function updateInfoFilterButton() {
+    const btn = document.getElementById('infoFilterBtn');
+    const badge = document.getElementById('infoFilterBadge');
+    const active = isInfoFilterActive();
+    btn.classList.toggle('filter-active', active);
+    if (active) {
+      const excluded = INFO_FIELDS.reduce((n, { key }) => n + (infoValues[key].length - infoFilterState[key].size), 0);
+      badge.textContent = excluded;
+    }
+  }
+
+  function buildInfoFilterModal() {
+    const container = document.getElementById('infoFilterSections');
+    container.innerHTML = '';
+
+    INFO_FIELDS.forEach(({ key, label }) => {
+      const values = infoValues[key];
+
+      const section = document.createElement('div');
+      section.className = 'info-filter-section';
+
+      const header = document.createElement('div');
+      header.className = 'info-filter-section-header';
+      header.innerHTML = `
+        <span class="info-filter-section-title">${label}</span>
+        <div class="info-filter-section-actions">
+          <button type="button" class="info-filter-quick-btn" data-action="all" data-field="${key}">All</button>
+          <span class="info-filter-divider">·</span>
+          <button type="button" class="info-filter-quick-btn" data-action="none" data-field="${key}">None</button>
+        </div>`;
+      section.appendChild(header);
+
+      const list = document.createElement('div');
+      list.className = 'info-filter-list';
+
+      values.forEach(val => {
+        const lbl = document.createElement('label');
+        lbl.className = 'info-filter-option' + (infoFilterState[key].has(val) ? '' : ' excluded');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = infoFilterState[key].has(val);
+        cb.addEventListener('change', () => {
+          if (cb.checked) {
+            infoFilterState[key].add(val);
+            lbl.classList.remove('excluded');
+          } else {
+            infoFilterState[key].delete(val);
+            lbl.classList.add('excluded');
+          }
+          applyFilter();
+          updateInfoFilterButton();
+        });
+        lbl.appendChild(cb);
+        lbl.appendChild(document.createTextNode(' ' + val));
+        list.appendChild(lbl);
+      });
+
+      section.appendChild(list);
+      container.appendChild(section);
+
+      header.querySelectorAll('.info-filter-quick-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const all = btn.dataset.action === 'all';
+          infoFilterState[key] = all ? new Set(values) : new Set();
+          list.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = all; });
+          list.querySelectorAll('.info-filter-option').forEach(lbl => {
+            lbl.classList.toggle('excluded', !all);
+          });
+          applyFilter();
+          updateInfoFilterButton();
+        });
+      });
+    });
+  }
+
+  function openInfoFilterModal() {
+    buildInfoFilterModal();
+    openModal('infoFilterModal');
+  }
+
+  function resetInfoFilter() {
+    INFO_FIELDS.forEach(({ key }) => {
+      infoFilterState[key] = new Set(infoValues[key]);
+    });
+    buildInfoFilterModal();
+    applyFilter();
+    updateInfoFilterButton();
+  }
+
   function applyFilter() {
     const filterVal = document.getElementById('statusFilter').value;
     const searchVal = document.getElementById('searchFilter').value.trim().toLowerCase();
@@ -1271,7 +1549,17 @@
                       location.includes(searchVal);
       }
 
-      row.classList.toggle('hidden', !(statusMatch && searchMatch));
+      let infoMatch = true;
+      if (isInfoFilterActive()) {
+        const info = participantInfoMap[row.dataset.rowId] || {};
+        infoMatch = INFO_FIELDS.every(({ key, dataKey }) => {
+          const state = infoFilterState[key];
+          if (state.size === infoValues[key].length) return true; // full set = no filter
+          return state.has(info[dataKey] || '');
+        });
+      }
+
+      row.classList.toggle('hidden', !(statusMatch && searchMatch && infoMatch));
     });
 
     updateSelectionUI();
