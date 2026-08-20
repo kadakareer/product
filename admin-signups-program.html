@@ -18,6 +18,84 @@
       color: #6e6e73;
     }
 
+    /* Participant info columns (University, Degree, Location) */
+    .university-th, .university-td,
+    .degree-th, .degree-td,
+    .location-th, .location-td {
+      min-width: 160px;
+      max-width: 240px;
+    }
+    .university-td, .degree-td, .location-td {
+      font-size: 13px;
+      color: #1d1d1f;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Search input in controls bar */
+    .search-input {
+      padding: 7px 10px;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #1d1d1f;
+      background: white;
+      width: 220px;
+      outline: none;
+    }
+    .search-input:focus {
+      border-color: #0066cc;
+    }
+    .search-input::placeholder {
+      color: #86868b;
+    }
+
+    /* Toggle switch (Program Configuration) */
+    .config-switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .config-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .config-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .config-switch-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #d2d2d7;
+      border-radius: 24px;
+      transition: background 0.2s;
+    }
+    .config-switch-slider::before {
+      content: '';
+      position: absolute;
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .config-switch input:checked + .config-switch-slider {
+      background: #0066cc;
+    }
+    .config-switch input:checked + .config-switch-slider::before {
+      transform: translateX(20px);
+    }
+
     /* Attendance column(s) — shape depends on the configured program
        duration (see .config-radio[name="duration"] in the modal below). */
     .attendance-th,
@@ -257,14 +335,19 @@
        are synced to the body table's actual columns via JS (see
        syncHeaderWidths), since the header table has no data of its own to
        size against. */
-    .table-head-table {
-      width: 100%;
-      table-layout: fixed;
-      border-collapse: collapse;
+    .table-head-scroll {
+      overflow: hidden;
       flex-shrink: 0;
-      background: #f5f5f7;
       position: relative;
       z-index: 5;
+    }
+
+    .table-head-table {
+      width: 100%;
+      min-width: max-content;
+      table-layout: fixed;
+      border-collapse: collapse;
+      background: #f5f5f7;
     }
 
     .scrollbar-spacer {
@@ -384,6 +467,7 @@
         <option value="interested">Interested</option>
         <option value="dropped-out">Dropped out</option>
       </select>
+      <input type="search" class="search-input" id="searchFilter" placeholder="Search name, university, degree, location…">
     </div>
     <div class="action-buttons">
       <button class="btn-outline" onclick="importCSV()">↓ Import CSV</button>
@@ -393,6 +477,7 @@
 
   <!-- Signups Table -->
   <div class="table-wrapper">
+  <div class="table-head-scroll">
   <table id="tableHead" class="table-head-table">
     <thead>
       <tr id="headRow">
@@ -405,6 +490,7 @@
       </tr>
     </thead>
   </table>
+  </div>
   <div class="table-scroll">
   <table id="signups-table">
     <tbody>
@@ -469,6 +555,16 @@
 
         <input type="radio" id="format-hybrid" name="format" class="config-radio" value="hybrid">
         <label for="format-hybrid" class="config-radio-label">Hybrid</label>
+      </div>
+    </div>
+
+    <div class="config-group">
+      <div class="config-switch-row">
+        <label class="config-label" for="configShowInfo" style="margin-bottom: 0;">Show participant info</label>
+        <label class="config-switch">
+          <input type="checkbox" id="configShowInfo">
+          <span class="config-switch-slider"></span>
+        </label>
       </div>
     </div>
 
@@ -549,9 +645,10 @@
     const submissions = document.querySelector('input[name="submissions"]:checked').value;
     const daysCount = parseInt(document.getElementById('configDaysCount').value, 10) || 1;
     const submissionsCount = parseInt(document.getElementById('configSubmissionsCount').value, 10) || 1;
+    const showParticipantInfo = document.getElementById('configShowInfo').checked;
 
-    console.log('Config saved:', { duration, format, submissions, daysCount, submissionsCount });
-    refreshTableColumns(duration, daysCount, submissions === 'has-submissions', submissionsCount);
+    console.log('Config saved:', { duration, format, submissions, daysCount, submissionsCount, showParticipantInfo });
+    refreshTableColumns(duration, daysCount, submissions === 'has-submissions', submissionsCount, showParticipantInfo);
     closeModal('configModal');
   }
 
@@ -807,6 +904,18 @@
       case 'status': {
         return (tr.dataset.status || '').toLowerCase();
       }
+      case 'university': {
+        const cell = tr.querySelector('.university-td');
+        return cell ? cell.textContent.trim().toLowerCase() : '';
+      }
+      case 'degree': {
+        const cell = tr.querySelector('.degree-td');
+        return cell ? cell.textContent.trim().toLowerCase() : '';
+      }
+      case 'location': {
+        const cell = tr.querySelector('.location-td');
+        return cell ? cell.textContent.trim().toLowerCase() : '';
+      }
       case 'attendance': {
         const att = attendanceData[rowId];
         if (!att) return 0;
@@ -914,13 +1023,43 @@
     handleHeaderClick(sortKey);
   });
 
-  function refreshTableColumns(duration, daysCount, hasSubmissions, submissionsCount) {
+  const participantInfoMap = {};
+  participantsData.forEach(p => {
+    participantInfoMap[p.id] = { school: p.school, course: p.course, location: p.location };
+  });
+
+  function renderParticipantInfoColumns(headerRow, rows) {
+    const cols = [
+      { key: 'university', label: 'University', cls: 'university', field: 'school' },
+      { key: 'degree',     label: 'Degree',     cls: 'degree',     field: 'course' },
+      { key: 'location',   label: 'Location',   cls: 'location',   field: 'location' },
+    ];
+
+    cols.forEach(({ key, label, cls, field }) => {
+      const th = document.createElement('th');
+      th.className = `${cls}-th sortable-th`;
+      th.dataset.sortKey = key;
+      th.innerHTML = `${label} <span class="sort-icon">↕</span>`;
+      insertHeaderCell(headerRow, th);
+
+      rows.forEach(row => {
+        const info = participantInfoMap[row.dataset.rowId] || {};
+        const td = document.createElement('td');
+        td.className = `${cls}-td`;
+        td.textContent = info[field] || '';
+        insertBodyCell(row, td);
+      });
+    });
+  }
+
+  function refreshTableColumns(duration, daysCount, hasSubmissions, submissionsCount, showParticipantInfo) {
     const headerRow = document.getElementById('headRow');
     const rows = document.querySelectorAll('#signups-table tbody tr');
 
-    headerRow.querySelectorAll('.attendance-th, .submissions-th').forEach(th => th.remove());
-    rows.forEach(row => row.querySelectorAll('.attendance-td, .submissions-td').forEach(td => td.remove()));
+    headerRow.querySelectorAll('.university-th, .degree-th, .location-th, .attendance-th, .submissions-th').forEach(th => th.remove());
+    rows.forEach(row => row.querySelectorAll('.university-td, .degree-td, .location-td, .attendance-td, .submissions-td').forEach(td => td.remove()));
 
+    if (showParticipantInfo) renderParticipantInfoColumns(headerRow, rows);
     if (duration !== 'no-attendance') {
       renderAttendanceColumn(headerRow, rows, duration, daysCount);
     }
@@ -955,7 +1094,7 @@
     spacer.style.width = (scrollEl.offsetWidth - scrollEl.clientWidth) + 'px';
   }
 
-  refreshTableColumns('multi-day', 7, true, 3);
+  refreshTableColumns('multi-day', 7, true, 3, false);
   window.addEventListener('resize', syncHeaderWidths);
 
   /* Helper tooltips on the status pill + its dropdown options. */
@@ -1051,8 +1190,16 @@
     }
   });
 
-  // Hide or reposition tooltip on scroll inside the table body
+  // Sync header horizontal scroll with body scroll
+  const tableHeadScroll = document.querySelector('.table-head-scroll');
   const tableScroll = document.querySelector('.table-scroll');
+  if (tableScroll && tableHeadScroll) {
+    tableScroll.addEventListener('scroll', () => {
+      tableHeadScroll.scrollLeft = tableScroll.scrollLeft;
+    });
+  }
+
+  // Hide or reposition tooltip on scroll inside the table body
   if (tableScroll) {
     tableScroll.addEventListener('scroll', () => {
       if (activeTooltipTarget) {
@@ -1104,16 +1251,27 @@
 
   function applyFilter() {
     const filterVal = document.getElementById('statusFilter').value;
+    const searchVal = document.getElementById('searchFilter').value.trim().toLowerCase();
     const rows = document.querySelectorAll('#signups-table tbody tr');
 
     rows.forEach(row => {
       const pill = row.querySelector('.status-pill');
       const status = pill ? pill.dataset.status : '';
-      if (filterVal === 'all' || status === filterVal) {
-        row.classList.remove('hidden');
-      } else {
-        row.classList.add('hidden');
+      const statusMatch = filterVal === 'all' || status === filterVal;
+
+      let searchMatch = true;
+      if (searchVal) {
+        const name       = (row.querySelector('.participant-name')?.textContent  || '').toLowerCase();
+        const email      = (row.querySelector('.participant-email')?.textContent || '').toLowerCase();
+        const university = (row.querySelector('.university-td')?.textContent     || '').toLowerCase();
+        const degree     = (row.querySelector('.degree-td')?.textContent         || '').toLowerCase();
+        const location   = (row.querySelector('.location-td')?.textContent       || '').toLowerCase();
+        searchMatch = name.includes(searchVal) || email.includes(searchVal) ||
+                      university.includes(searchVal) || degree.includes(searchVal) ||
+                      location.includes(searchVal);
       }
+
+      row.classList.toggle('hidden', !(statusMatch && searchMatch));
     });
 
     updateSelectionUI();
@@ -1121,6 +1279,7 @@
   }
 
   document.getElementById('statusFilter').addEventListener('change', applyFilter);
+  document.getElementById('searchFilter').addEventListener('input', applyFilter);
 
   // Clicking anywhere on a row toggles its selection, except the checkbox
   // itself (already toggles natively), the Name/email column (needs normal
@@ -1130,7 +1289,7 @@
   document.querySelectorAll('#signups-table tbody tr').forEach(row => {
     row.addEventListener('click', function(e) {
       const excluded = e.target.closest(
-        '.row-select, .participant-name, .participant-email, .status-pill, .attendance-day-btn, .submission-btn, .attendance-checkbox, .created-at-cell, .updated-at-cell'
+        '.row-select, .participant-name, .participant-email, .status-pill, .attendance-day-btn, .submission-btn, .attendance-checkbox, .university-td, .degree-td, .location-td, .created-at-cell, .updated-at-cell'
       );
       if (excluded) return;
 
