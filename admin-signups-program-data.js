@@ -28,7 +28,11 @@ const participantsData = [
     createdAt: { date: 'Nov 15, 2025', time: '11:00 AM' },
     updatedAt: { date: 'Nov 16, 2025', time: '03:45 PM' },
     attendance: { single: false, days: [false, false, false, false, false, false, false] },
-    submissions: [false, false, false]
+    submissions: [false, false, false],
+    history: [
+      { status: 'interested', admin: 'maria.cruz@kadakareer.com', date: 'Nov 15, 2025', time: '11:00 AM' },
+      { status: 'dropped-out', admin: 'jonas.reyes@kadakareer.com', date: 'Nov 16, 2025', time: '03:45 PM' }
+    ]
   },
   {
     id: 'r3',
@@ -63,7 +67,7 @@ const participantsData = [
     school: 'Polytechnic University of the Philippines',
     course: 'BS Computer Engineering',
     location: 'Sta. Mesa, Manila',
-    status: 'registered',
+    status: 'approved',
     createdAt: { date: 'Dec 05, 2025', time: '08:30 AM' },
     updatedAt: { date: 'Dec 05, 2025', time: '08:30 AM' },
     attendance: { single: false, days: [false, false, true, false, false, true, false] },
@@ -80,7 +84,13 @@ const participantsData = [
     createdAt: { date: 'Dec 02, 2025', time: '11:15 AM' },
     updatedAt: { date: 'Dec 03, 2025', time: '02:45 PM' },
     attendance: { single: true, days: [true, false, true, true, false, true, true] },
-    submissions: [true, true, false]
+    submissions: [true, true, false],
+    history: [
+      { status: 'interested', admin: 'maria.cruz@kadakareer.com', date: 'Dec 02, 2025', time: '11:15 AM' },
+      { status: 'applied', admin: 'maria.cruz@kadakareer.com', date: 'Dec 02, 2025', time: '04:50 PM' },
+      { status: 'approved', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 03, 2025', time: '09:10 AM' },
+      { status: 'completed', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 03, 2025', time: '02:45 PM' }
+    ]
   },
   {
     id: 'r7',
@@ -106,7 +116,12 @@ const participantsData = [
     createdAt: { date: 'Nov 25, 2025', time: '04:10 PM' },
     updatedAt: { date: 'Nov 26, 2025', time: '10:00 AM' },
     attendance: { single: false, days: [true, false, false, false, true, false, true] },
-    submissions: [false, false, true]
+    submissions: [false, false, true],
+    history: [
+      { status: 'applied', admin: 'jonas.reyes@kadakareer.com', date: 'Nov 25, 2025', time: '04:10 PM' },
+      { status: 'approved', admin: 'jonas.reyes@kadakareer.com', date: 'Nov 25, 2025', time: '06:30 PM' },
+      { status: 'completed', admin: 'maria.cruz@kadakareer.com', date: 'Nov 26, 2025', time: '10:00 AM' }
+    ]
   },
   {
     id: 'r9',
@@ -115,7 +130,7 @@ const participantsData = [
     school: 'Adamson University',
     course: 'BS Computer Engineering',
     location: 'Ermita, Manila',
-    status: 'registered',
+    status: 'applied',
     createdAt: { date: 'Nov 22, 2025', time: '02:10 PM' },
     updatedAt: { date: 'Nov 22, 2025', time: '02:10 PM' },
     attendance: { single: true, days: [true, true, true, true, true, true, true] },
@@ -141,11 +156,15 @@ const participantsData = [
     school: 'University of the East',
     course: 'BS Information Technology',
     location: 'Caloocan City, Metro Manila',
-    status: 'registered',
+    status: 'approved',
     createdAt: { date: 'Dec 12, 2025', time: '09:15 AM' },
     updatedAt: { date: 'Dec 12, 2025', time: '04:30 PM' },
     attendance: { single: false, days: [true, false, false, true, false, false, true] },
-    submissions: [true, false, false]
+    submissions: [true, false, false],
+    history: [
+      { status: 'applied', admin: 'maria.cruz@kadakareer.com', date: 'Dec 12, 2025', time: '09:15 AM' },
+      { status: 'approved', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 12, 2025', time: '04:30 PM' }
+    ]
   }
 ];
 
