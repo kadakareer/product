@@ -1,0 +1,47 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Asana__get_me",
+      "mcp__claude_ai_Asana__get_task",
+      "mcp__claude_ai_Asana__get_tasks",
+      "mcp__claude_ai_Asana__get_task_stories",
+      "mcp__claude_ai_Asana__get_my_tasks",
+      "mcp__claude_ai_Asana__get_project",
+      "mcp__claude_ai_Asana__get_project_internal",
+      "mcp__claude_ai_Asana__get_projects",
+      "mcp__claude_ai_Asana__get_portfolio",
+      "mcp__claude_ai_Asana__get_portfolios",
+      "mcp__claude_ai_Asana__get_items_for_portfolio",
+      "mcp__claude_ai_Asana__get_status_overview",
+      "mcp__claude_ai_Asana__get_teams",
+      "mcp__claude_ai_Asana__get_user",
+      "mcp__claude_ai_Asana__get_users",
+      "mcp__claude_ai_Asana__get_workspace_agents",
+      "mcp__claude_ai_Asana__get_agent",
+      "mcp__claude_ai_Asana__get_attachments",
+      "mcp__claude_ai_Asana__search_objects",
+      "mcp__claude_ai_Asana__search_objects_internal",
+      "mcp__claude_ai_Asana__search_tasks",
+      "mcp__claude_ai_Asana__search_tasks_preview",
+      "mcp__claude_ai_Asana__create_project_preview_v3",
+      "mcp__claude_ai_Asana__create_task_preview_v4",
+      "mcp__claude_ai_Asana__log_widget_event"
+    ],
+    "ask": [
+      "mcp__claude_ai_Asana__create_project",
+      "mcp__claude_ai_Asana__create_tasks",
+      "mcp__claude_ai_Asana__create_project_status_update",
+      "mcp__claude_ai_Asana__update_project",
+      "mcp__claude_ai_Asana__update_tasks",
+      "mcp__claude_ai_Asana__add_comment"
+    ],
+    "deny": [
+      "mcp__claude_ai_Asana__delete_task",
+      "mcp__claude_ai_Asana__create_project_confirm",
+      "mcp__claude_ai_Asana__create_project_confirm_populate",
+      "mcp__claude_ai_Asana__create_task_confirm",
+      "mcp__claude_ai_Asana__save_project_changes_confirm",
+      "mcp__claude_ai_Asana__save_task_changes_confirm"
+    ]
+  }
+}
