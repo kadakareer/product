@@ -47,6 +47,10 @@ More bullets don't always help — a branching flow, a tradeoff, a relationship 
 
 If most lines start with a bolded phrase, something's wrong.
 
+## Keep exact references out of the flow
+
+File paths, exact routes, line numbers, IDs — put them in a reference/index at the end, not woven into the explanation. Inline technical pointers break the reading flow of the concept; a reader after "how does this work" shouldn't have to step over `functions/src/api/challenges/challenges.controller.ts:60` to get there. Explain the concept clean, then let them look up exact locations only when they need to go implement or verify.
+
 ## Examples over explanation
 
 Dense:
