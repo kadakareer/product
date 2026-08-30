@@ -3,18 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="admin-common.css">
     <title>Home Page</title>
+    <style>
+        .container {
+            max-width: 720px;
+        }
+
+        .group {
+            background: white;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .group-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #6e6e73;
+            padding: 16px 20px 12px;
+        }
+
+        .group-list {
+            list-style: none;
+        }
+
+        .group-list a {
+            display: block;
+            padding: 14px 20px;
+            color: #1d1d1f;
+            text-decoration: none;
+            border-top: 1px solid #f0f0f2;
+        }
+
+        .group-list a:hover {
+            background: #f5f5f7;
+            color: #0066cc;
+        }
+    </style>
 </head>
 <body>
 
-    <h1>Prototypes</h1>
-    <ul>
-        <li><a href="signups-events.html">Sign-ups - Events</a></li>
-        <li><a href="admin-signups-coach.html">Admin Sign-ups Coach</a></li>
-        <li><a href="admin-programs-list.html">Admin Programs List</a></li>
-        <li><a href="admin-signups-program.html">Admin Program Signups</a></li>
-        <li><a href="admin-submissions.html">Admin Submissions</a></li>
-    </ul>
+    <div class="container">
+        <div class="page-header-content" style="margin-bottom: 32px;">
+            <h1 class="page-title">Prototypes</h1>
+            <p class="page-subtitle">Kadakareer product prototypes</p>
+        </div>
+
+        <div class="group">
+            <div class="group-title">Admin</div>
+            <ul class="group-list">
+                <li><a href="admin-programs-list.html">Programs List</a></li>
+                <li><a href="admin-signups-program.html">Program Signups</a></li>
+                <li><a href="admin-signups-coach.html">Sign-ups &ndash; Coach</a></li>
+                <li><a href="admin-submissions.html">Submissions</a></li>
+            </ul>
+        </div>
+
+        <div class="group">
+            <div class="group-title">Sign-ups</div>
+            <ul class="group-list">
+                <li><a href="signups-events.html">Events</a></li>
+            </ul>
+        </div>
+    </div>
 
 </body>
 </html>
