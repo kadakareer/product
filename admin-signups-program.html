@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="stylesheet" href="admin-common.css">
+  <link rel="stylesheet" href="assets/admin-common.css">
   <title>Programs Admin – Track progress of kadets</title>
   <style>
     /* Page-specific: this page's filter dropdown hides the native chevron */
@@ -832,7 +832,7 @@
   </div>
 </div>
 
-<script src="admin-signups-program-data.js"></script>
+<script src="assets/admin-signups-program-data.js"></script>
 <script>
   // Parse program name from URL query parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -898,7 +898,7 @@
       : [{ status: p.status, admin: 'System', date: p.createdAt.date, time: p.createdAt.time }];
   });
 </script>
-<script src="admin-common.js"></script>
+<script src="assets/admin-common.js"></script>
 <script>
   function formatDateTimeParts(date) {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
