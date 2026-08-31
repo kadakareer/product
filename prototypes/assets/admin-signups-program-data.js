@@ -165,6 +165,24 @@ const participantsData = [
       { status: 'applied', admin: 'maria.cruz@kadakareer.com', date: 'Dec 12, 2025', time: '09:15 AM' },
       { status: 'approved', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 12, 2025', time: '04:30 PM' }
     ]
+  },
+  {
+    id: 'r12',
+    name: 'Nathan Cruz',
+    email: 'nathan.cruz@gmail.com',
+    school: 'University of Makati',
+    course: 'BS Computer Science',
+    location: 'Makati City, Metro Manila',
+    status: 'rejected',
+    rejectReason: 'Did not meet the minimum year-level requirement for this program',
+    createdAt: { date: 'Dec 20, 2025', time: '01:40 PM' },
+    updatedAt: { date: 'Dec 21, 2025', time: '09:05 AM' },
+    attendance: { single: false, days: [false, false, false, false, false, false, false] },
+    submissions: [false, false, false],
+    history: [
+      { status: 'applied', admin: 'maria.cruz@kadakareer.com', date: 'Dec 20, 2025', time: '01:40 PM' },
+      { status: 'rejected', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 21, 2025', time: '09:05 AM' }
+    ]
   }
 ];
 

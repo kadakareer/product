@@ -17,6 +17,8 @@ Once something concrete emerges (a specific field to add, a specific flow to bui
 
 `tickets/<epic-name>/<piece-name>.html` — e.g. `tickets/virapp-admin/backend-changes.html`. As more pieces of the same epic crystallize, they become sibling files in the same folder, not sections bolted onto one growing doc. New epics become sibling folders under `tickets/`.
 
+`tickets/index.html` lists every epic and its pieces (mirrors the root `index.html` prototype listing). Add a link there whenever a new epic folder or a new piece file is created — it's hand-maintained, not generated.
+
 ## HTML, not markdown
 
 A scoped piece is reader-facing — it needs to open for anyone, formatted, with zero tooling (no MD viewer, no git host rendering it). A single self-contained `.html` file with light inline `<style>` does that; a raw `.md` file opened directly just shows as plain text.

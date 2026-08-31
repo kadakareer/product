@@ -13,6 +13,19 @@ function closeModal(id) {
   document.getElementById(id).classList.remove('show');
 }
 
+// Click the backdrop (the .modal itself, not its .modal-content) or press
+// Escape to close whichever modal is open.
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('modal') && e.target.classList.contains('show')) {
+    e.target.classList.remove('show');
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  document.querySelectorAll('.modal.show').forEach(modal => modal.classList.remove('show'));
+});
+
 /* Editable status-pill pattern: click a pill to reveal a dropdown of
    alternate statuses. A pill declares its current value via data-status;
    its dropdown declares the full vocabulary via data-statuses="a,b,c".

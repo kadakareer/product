@@ -170,6 +170,10 @@
       justify-content: space-between;
       gap: 12px;
     }
+    .participant-info-toggle {
+      flex-shrink: 0;
+      justify-content: flex-start;
+    }
     .config-switch {
       position: relative;
       display: inline-block;
@@ -493,8 +497,9 @@
       background: #eff6ff;
     }
 
-    /* Whole-row click selects it — except the Name/email column, which
-       needs normal text selection (e.g. double-click to copy). */
+    /* Row click opens status history — except the Name/email column, which
+       needs normal text selection (e.g. double-click to copy). Selection
+       itself only happens via the checkbox column. */
     #signups-table tbody tr {
       cursor: pointer;
     }
@@ -510,73 +515,18 @@
       font-size: 13px;
       line-height: 1.4;
     }
+    .reject-reason-cell {
+      max-width: 220px;
+      white-space: normal;
+      color: #6e6e73;
+      font-size: 13px;
+      line-height: 1.4;
+    }
     .time-part {
       color: #86868b;
       font-size: 12px;
     }
 
-    /* Actions column */
-    .actions-cell {
-      text-align: center;
-    }
-    .actions-th {
-      text-align: center;
-    }
-    /* Sized to the button itself (not the wider/taller <td>) so the
-       dropdown below is positioned relative to the button, not the cell. */
-    .actions-menu {
-      position: relative;
-      display: inline-block;
-    }
-    .actions-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: #6e6e73;
-      padding: 4px 8px;
-      border-radius: 6px;
-      line-height: 1;
-      display: inline-flex;
-      align-items: center;
-    }
-    .actions-btn:hover {
-      background-color: #f5f5f7;
-      color: #1d1d1f;
-    }
-    .actions-btn svg {
-      width: 16px;
-      height: 16px;
-      display: block;
-    }
-    .actions-dropdown {
-      display: none;
-      position: absolute;
-      top: 100%;
-      right: 0;
-      margin-top: 4px;
-      z-index: 10000;
-      background: white;
-      border: 1px solid #e5e5ea;
-      border-radius: 8px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-      min-width: 140px;
-      padding: 4px;
-      text-align: left;
-    }
-    .actions-dropdown.show {
-      display: block;
-    }
-    .actions-option {
-      padding: 8px 10px;
-      font-size: 13px;
-      color: #1d1d1f;
-      border-radius: 6px;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .actions-option:hover {
-      background-color: #f5f5f7;
-    }
 
     /* Status history modal */
     .history-list {
@@ -693,15 +643,19 @@
         <option value="approved">Approved</option>
         <option value="completed">Completed</option>
         <option value="dropped-out">Dropped out</option>
+        <option value="rejected">Rejected</option>
       </select>
       <input type="search" class="search-input" id="searchFilter" placeholder="Search name, university, degree, location…">
       <button class="btn-outline info-filter-btn" id="infoFilterBtn" onclick="openInfoFilterModal()">
         Filter by info <span class="info-filter-badge" id="infoFilterBadge"></span>
       </button>
-    </div>
-    <div class="action-buttons">
-      <button class="btn-outline" onclick="importCSV()">↓ Import CSV</button>
-      <button class="btn-outline" onclick="exportCSV()">↑ Export CSV</button>
+      <div class="config-switch-row participant-info-toggle">
+        <label class="config-label" for="participantInfoToggle" style="margin-bottom: 0;">Show participant info</label>
+        <label class="config-switch">
+          <input type="checkbox" id="participantInfoToggle">
+          <span class="config-switch-slider"></span>
+        </label>
+      </div>
     </div>
   </div>
 
@@ -716,7 +670,7 @@
         <th class="sortable-th" data-sort-key="status">Status <span class="sort-icon">↕</span></th>
         <th class="created-at-th sortable-th" data-sort-key="createdAt">Created At <span class="sort-icon">↕</span></th>
         <th class="updated-at-th sortable-th" data-sort-key="updatedAt">Updated At <span class="sort-icon">↕</span></th>
-        <th class="actions-th">Actions</th>
+        <th class="reject-reason-th">Reject Reason</th>
         <th class="scrollbar-spacer" id="scrollbarSpacer"></th>
       </tr>
     </thead>
@@ -789,16 +743,6 @@
       </div>
     </div>
 
-    <div class="config-group">
-      <div class="config-switch-row">
-        <label class="config-label" for="configShowInfo" style="margin-bottom: 0;">Show participant info</label>
-        <label class="config-switch">
-          <input type="checkbox" id="configShowInfo">
-          <span class="config-switch-slider"></span>
-        </label>
-      </div>
-    </div>
-
     <div class="modal-actions">
       <button class="modal-btn cancel" onclick="closeModal('configModal')">Cancel</button>
       <button class="modal-btn save" onclick="saveConfig()">Save</button>
@@ -843,8 +787,8 @@
   const tbody = document.querySelector('#signups-table tbody');
   tbody.innerHTML = participantsData.map((p, index) => `
       <tr data-row-id="${p.id}" data-status="${p.status}" data-original-index="${index}">
-        <td><input type="checkbox" class="checkbox row-select"></td>
-        <td>
+        <td class="select-col"><input type="checkbox" class="checkbox row-select"></td>
+        <td class="participant-cell">
           <div class="participant-cell">
             <div><span class="participant-name">${p.name}</span></div>
             <div><span class="participant-email">${p.email}</span></div>
@@ -853,12 +797,13 @@
         <td>
           <span class="status-pill editable" data-status="${p.status}" onclick="toggleStatusDropdown(event)">
             <span class="status-pill-label">${p.status === 'dropped-out' ? 'Dropped out' : p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span>
-            <div class="status-dropdown" data-statuses="interested,applied,approved,completed,dropped-out">
+            <div class="status-dropdown" data-statuses="interested,applied,approved,completed,dropped-out,rejected">
               <div class="status-option" data-status="interested">Interested</div>
               <div class="status-option" data-status="applied">Applied</div>
               <div class="status-option" data-status="approved">Approved</div>
               <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="dropped-out">Dropped out</div>
+              <div class="status-option" data-status="rejected">Rejected</div>
             </div>
           </span>
         </td>
@@ -870,20 +815,7 @@
           <div>${p.updatedAt.date}</div>
           <div class="time-part">${p.updatedAt.time}</div>
         </td>
-        <td class="actions-cell">
-          <span class="actions-menu">
-            <button class="actions-btn" onclick="toggleActionsDropdown(event)" aria-label="Actions">
-              <svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9.5 3.6c.9-.5 2.2-.3 2.6.5.4.7 0 1.9-1 2.2-1 .3-2.3-.2-2.5-1.1-.2-.7.2-1.2.9-1.6z"/>
-                <path d="M9.1 9.3c1-.6 2.4-.3 2.8.5.4.8-.1 2-1.2 2.3-1.1.3-2.4-.3-2.6-1.3-.1-.7.3-1.2 1-1.5z"/>
-                <path d="M8.7 15.2c.9-.5 2.2-.3 2.6.5.4.7 0 1.9-1 2.2-1.1.3-2.3-.2-2.5-1.2-.2-.7.2-1.2.9-1.5z"/>
-              </svg>
-            </button>
-            <div class="actions-dropdown">
-              <div class="actions-option" data-action="history">History</div>
-            </div>
-          </span>
-        </td>
+        <td class="reject-reason-cell">${p.status === 'rejected' ? (p.rejectReason || '') : '—'}</td>
       </tr>
   `).join('');
 
@@ -897,6 +829,29 @@
       ? p.history.slice()
       : [{ status: p.status, admin: 'System', date: p.createdAt.date, time: p.createdAt.time }];
   });
+
+  // Rejection reason per participant, keyed by row id. Seeded from mock
+  // `rejectReason` where provided; kept even if the status later changes
+  // away from Rejected, so flipping back doesn't lose it.
+  const rejectReasonStore = {};
+  participantsData.forEach(p => {
+    rejectReasonStore[p.id] = p.rejectReason || '';
+  });
+
+  function updateRejectReasonCell(row, status) {
+    const cell = row.querySelector('.reject-reason-cell');
+    if (!cell) return;
+
+    if (status !== 'rejected') {
+      cell.textContent = '—';
+      return;
+    }
+
+    const existing = rejectReasonStore[row.dataset.rowId] || '';
+    const reason = prompt('Reason for rejection:', existing);
+    rejectReasonStore[row.dataset.rowId] = reason || '';
+    cell.textContent = reason || '';
+  }
 </script>
 <script src="assets/admin-common.js"></script>
 <script>
@@ -953,7 +908,7 @@
     document.querySelector(`input[name="submissions"][value="${cfg.submissions}"]`).checked = true;
     document.getElementById('configDaysCount').value = cfg.daysCount;
     document.getElementById('configSubmissionsCount').value = cfg.submissionsCount;
-    document.getElementById('configShowInfo').checked = cfg.showParticipantInfo;
+    document.getElementById('participantInfoToggle').checked = cfg.showParticipantInfo;
     document.getElementById('configDaysField').style.display = cfg.duration === 'multi-day' ? 'block' : 'none';
     document.getElementById('configSubmissionsField').style.display = cfg.submissions === 'has-submissions' ? 'block' : 'none';
   }
@@ -964,7 +919,7 @@
     const submissions = document.querySelector('input[name="submissions"]:checked').value;
     const daysCount = parseInt(document.getElementById('configDaysCount').value, 10) || 1;
     const submissionsCount = parseInt(document.getElementById('configSubmissionsCount').value, 10) || 1;
-    const showParticipantInfo = document.getElementById('configShowInfo').checked;
+    const showParticipantInfo = document.getElementById('participantInfoToggle').checked;
 
     const cfg = { duration, format, submissions, daysCount, submissionsCount, showParticipantInfo };
     localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
@@ -972,13 +927,14 @@
     closeModal('configModal');
   }
 
-  function importCSV() {
-    alert('Import CSV functionality');
-  }
-
-  function exportCSV() {
-    alert('Export CSV functionality');
-  }
+  // "Show participant info" now lives in the filter row, not the config
+  // modal — it applies immediately on toggle instead of waiting for Save.
+  document.getElementById('participantInfoToggle').addEventListener('change', function() {
+    const cfg = loadConfig();
+    cfg.showParticipantInfo = this.checked;
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+    refreshTableColumns(cfg.duration, cfg.daysCount, cfg.submissions === 'has-submissions', cfg.submissionsCount, cfg.showParticipantInfo);
+  });
 
   // Show the "Number of days" field only when Multi-day is selected.
   document.querySelectorAll('input[name="duration"]').forEach(radio => {
@@ -1428,6 +1384,7 @@
     approved: 'Sign-up form response reviewed and confirmed eligible, but hasn’t started yet',
     completed: 'Complete attendance and/or submissions',
     'dropped-out': 'Left the program before completion',
+    rejected: 'Sign-up form response reviewed and found ineligible',
   };
 
   function applyStatusTooltips() {
@@ -1454,7 +1411,9 @@
           row.dataset.status = pill.dataset.status;
         }
         updateRowTimestamp(row);
-        logStatusChange(row.dataset.rowId, pill ? pill.dataset.status : row.dataset.status);
+        const newStatus = pill ? pill.dataset.status : row.dataset.status;
+        logStatusChange(row.dataset.rowId, newStatus);
+        updateRejectReasonCell(row, newStatus);
         applyFilter();
         if (currentSort.key && currentSort.dir !== 'none') {
           sortRows();
@@ -1496,49 +1455,6 @@
       </div>
     `).join('');
   }
-
-  // Mirrors admin-common.js's status-dropdown pattern: a row with an open
-  // dropdown gets .dropdown-active so its z-index rises above the rows
-  // below it — without this, the dropdown (which overflows past the row's
-  // own bottom edge) paints *behind* the next row's opaque background,
-  // reads as flickering on hover, and looks "displaced".
-  function closeAllActionsDropdowns() {
-    document.querySelectorAll('.actions-dropdown.show').forEach(dd => {
-      dd.classList.remove('show');
-      const ddRow = dd.closest('tr');
-      if (ddRow) ddRow.classList.remove('dropdown-active');
-    });
-  }
-
-  function toggleActionsDropdown(event) {
-    event.stopPropagation();
-    const btn = event.currentTarget;
-    const dropdown = btn.nextElementSibling;
-    const row = btn.closest('tr');
-    const isOpening = !dropdown.classList.contains('show');
-
-    closeAllActionsDropdowns();
-
-    dropdown.classList.toggle('show', isOpening);
-    if (row) row.classList.toggle('dropdown-active', isOpening);
-  }
-
-  document.addEventListener('click', function(e) {
-    const option = e.target.closest('.actions-option');
-    if (option) {
-      e.stopPropagation();
-      const row = option.closest('tr');
-      closeAllActionsDropdowns();
-      if (row && option.dataset.action === 'history') {
-        const name = row.querySelector('.participant-name');
-        renderHistoryModal(row.dataset.rowId, name ? name.textContent : '');
-        openModal('historyModal');
-      }
-      return;
-    }
-
-    closeAllActionsDropdowns();
-  });
 
   document.getElementById('historyModal').addEventListener('click', function(e) {
     if (e.target === this) closeModal('historyModal');
@@ -1810,21 +1726,32 @@
   document.getElementById('statusFilter').addEventListener('change', applyFilter);
   document.getElementById('searchFilter').addEventListener('input', applyFilter);
 
-  // Clicking anywhere on a row toggles its selection, except the checkbox
-  // itself (already toggles natively), the Name/email column (needs normal
-  // text selection for copying), and any interactive control within the
-  // row (status pill/dropdown, attendance/submission buttons) — those
-  // should only do their own thing, not also flip row selection.
+  // Selection is scoped to the checkbox column only — clicking anywhere in
+  // that cell (not just the checkbox itself) toggles it. Clicking the rest
+  // of the row opens that participant's status history instead, except the
+  // Name/email column (needs normal text selection for copying) and
+  // interactive controls within the row (status pill/dropdown,
+  // attendance/submission buttons) — those should only do their own thing,
+  // not also open history.
   document.querySelectorAll('#signups-table tbody tr').forEach(row => {
     row.addEventListener('click', function(e) {
+      const selectCell = e.target.closest('.select-col');
+      if (selectCell) {
+        if (e.target.classList.contains('row-select')) return; // native toggle already handles this
+        const checkbox = row.querySelector('.row-select');
+        checkbox.checked = !checkbox.checked;
+        checkbox.dispatchEvent(new Event('change'));
+        return;
+      }
+
       const excluded = e.target.closest(
-        '.row-select, .participant-name, .participant-email, .status-pill, .attendance-day-btn, .submission-btn, .attendance-checkbox, .university-td, .degree-td, .location-td, .created-at-cell, .updated-at-cell, .actions-cell'
+        '.participant-cell, .status-pill, .attendance-day-btn, .submission-btn, .attendance-checkbox'
       );
       if (excluded) return;
 
-      const checkbox = row.querySelector('.row-select');
-      checkbox.checked = !checkbox.checked;
-      checkbox.dispatchEvent(new Event('change'));
+      const name = row.querySelector('.participant-name');
+      renderHistoryModal(row.dataset.rowId, name ? name.textContent : '');
+      openModal('historyModal');
     });
   });
 </script>
