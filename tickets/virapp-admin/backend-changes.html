@@ -4,57 +4,144 @@
 <meta charset="utf-8">
 <title>VirApp admin — backend changes</title>
 <style>
-  body { font: 16px/1.5 -apple-system, system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
-  h2 { margin-top: 2rem; }
+  body { font: 16px/1.5 -apple-system, system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; background: #f0f0f0; }
+  h2 { margin-top: 0; }
+  section.card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
   table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
   th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #ddd; vertical-align: top; }
   th { background: #f5f5f5; }
   code { background: #f0f0f0; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.9em; }
+  td ul { margin: 0; padding-left: 1.1rem; }
+  td li { margin: 0.2rem 0; }
+  td .note { display: block; margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; font-size: 0.9em; }
+  td .path { display: block; margin-top: 0.15rem; color: #666; }
 </style>
 </head>
 <body>
 
-<h2>Add rejected reason field</h2>
+<section class="card">
+  <h2>Add rejected reason field</h2>
 
-<h3>Technical solution</h3>
+  <h3>Technical solution</h3>
 
-<table>
-  <tr><th>What</th><th>Where</th></tr>
-  <tr>
-    <td>Add the field</td>
-    <td><code>UserChallengeGroup</code> entity — <code>functions/src/api/challenges/entities/challenge.entity.ts</code></td>
-  </tr>
-  <tr>
-    <td>Accept it from the API</td>
-    <td><code>UpdateEnrollmentStatusDto</code> / <code>UpdateEnrollmentStatusForPairsDto</code> — <code>functions/src/api/users/dto/user-enrollment-status.dto.ts</code></td>
-  </tr>
-  <tr>
-    <td>Actually persist it</td>
-    <td><code>updateEnrollmentStatus</code> — <code>functions/src/api/users/users-challenges-new.service.ts</code> (currently only takes <code>status</code>, sets it, calls <code>.update()</code>)</td>
-  </tr>
-  <tr>
-    <td>Plumb the param through</td>
-    <td><code>batchUpdateEnrollmentStatus</code> / <code>batchUpdateEnrollmentStatusForPairs</code>, same file</td>
-  </tr>
-</table>
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr>
+      <td>Add the field</td>
+      <td>
+        <code>UserChallengeGroup</code> entity
+        <span class="path"><code>functions/src/api/challenges/entities/challenge.entity.ts</code></span>
+      </td>
+    </tr>
+    <tr>
+      <td>Accept it from the API</td>
+      <td>
+        <ul>
+          <li><code>UpdateEnrollmentStatusDto</code></li>
+          <li><code>UpdateEnrollmentStatusForPairsDto</code></li>
+        </ul>
+        <code>functions/src/api/users/dto/user-enrollment-status.dto.ts</code>
+      </td>
+    </tr>
+    <tr>
+      <td>Actually persist it</td>
+      <td>
+        <code>updateEnrollmentStatus</code>
+        <span class="path"><code>functions/src/api/users/users-challenges-new.service.ts</code></span>
+        <span class="note">currently only takes <code>status</code>, sets it, calls <code>.update()</code></span>
+      </td>
+    </tr>
+    <tr>
+      <td>Plumb the param through</td>
+      <td>
+        <ul>
+          <li><code>batchUpdateEnrollmentStatus</code></li>
+          <li><code>batchUpdateEnrollmentStatusForPairs</code></li>
+        </ul>
+        <code>functions/src/api/users/users-challenges-new.service.ts</code>
+      </td>
+    </tr>
+  </table>
+</section>
 
-<h2>CC programs on accept/reject email</h2>
+<section class="card">
+  <h2>Add createdAt / updatedAt to signups</h2>
 
-<p>CC <code>programs@kadakareer.com</code> so program manager can confirm the applicant's accept/reject email actually sent. Fixed address for every send, not per-request — no new API field needed.</p>
+  <p>Admin wants a "date applied" column — when the user signed up, not when it was approved/rejected. Neither timestamp exists on the signup record today; adding both now (not just <code>createdAt</code>) means a future "date decided" column doesn't need a second entity change.</p>
 
-<h3>Technical solution</h3>
+  <h3>Technical solution</h3>
 
-<table>
-  <tr><th>What</th><th>Where</th></tr>
-  <tr>
-    <td>Add the field to the mail options interface</td>
-    <td><code>IVirappApplicationResultOptions</code> — <code>functions/src/core/mail/mail.interfaces.ts</code> (add <code>cc?: string | string[]</code>)</td>
-  </tr>
-  <tr>
-    <td>Set the CC on send</td>
-    <td><code>sendVirappApplicationResultEmail</code> — <code>functions/src/core/mail/mail.service.ts</code>, or the call site in <code>batchUpdateEnrollmentStatusForPairs</code> (<code>functions/src/api/users/users-challenges-new.service.ts</code>) — hardcode <code>cc: 'programs@kadakareer.com'</code></td>
-  </tr>
-</table>
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr>
+      <td>Add the fields</td>
+      <td>
+        <code>UserChallengeGroup</code> entity
+        <span class="path"><code>functions/src/api/challenges/entities/challenge.entity.ts</code></span>
+        <ul>
+          <li><code>createdAt</code></li>
+          <li><code>updatedAt</code></li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td>Set <code>createdAt</code> on signup</td>
+      <td>
+        <code>#addUserToChallengeGroup</code>
+        <span class="path"><code>functions/src/api/users/users-challenges-new.service.ts</code></span>
+      </td>
+    </tr>
+    <tr>
+      <td>Set <code>updatedAt</code> on status change</td>
+      <td>
+        <code>functions/src/api/users/users-challenges-new.service.ts</code>
+        <ul>
+          <li><code>updateEnrollmentStatus</code></li>
+          <li><code>batchUpdateEnrollmentStatusForPairs</code></li>
+        </ul>
+        <span class="note">same <code>.update()</code> call sites already touched for the rejected-reason field</span>
+      </td>
+    </tr>
+  </table>
+
+  <p>No controller change needed — <code>GET /challenges/signups</code> already spreads the full entity, so both fields flow through automatically.</p>
+</section>
+
+<section class="card">
+  <h2>CC programs on accept/reject email</h2>
+
+  <p>CC <code>programs@kadakareer.com</code> so program manager can confirm the applicant's accept/reject email actually sent. Fixed address for every send, not per-request — no new API field needed.</p>
+
+  <h3>Technical solution</h3>
+
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr>
+      <td>Add the field to the mail options interface</td>
+      <td>
+        <code>IVirappApplicationResultOptions</code>
+        <span class="path"><code>functions/src/core/mail/mail.interfaces.ts</code></span>
+        <span class="note">add <code>cc?: string | string[]</code></span>
+      </td>
+    </tr>
+    <tr>
+      <td>Set the CC on send (pick one)</td>
+      <td>
+        <ul>
+          <li>
+            <code>sendVirappApplicationResultEmail</code>
+            <span class="path"><code>functions/src/core/mail/mail.service.ts</code></span>
+          </li>
+          <li>
+            the call site in <code>batchUpdateEnrollmentStatusForPairs</code>
+            <span class="path"><code>functions/src/api/users/users-challenges-new.service.ts</code></span>
+          </li>
+        </ul>
+        <span class="note">hardcode <code>cc: 'programs@kadakareer.com'</code></span>
+      </td>
+    </tr>
+  </table>
+</section>
 
 </body>
 </html>

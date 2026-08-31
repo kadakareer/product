@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>[Epic name] — [piece name]</title>
+<style>
+  body { font: 16px/1.5 -apple-system, system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; background: #f0f0f0; }
+  h2 { margin-top: 0; }
+  section.card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #ddd; vertical-align: top; }
+  th { background: #f5f5f5; }
+  code { background: #f0f0f0; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.9em; }
+  td ul { margin: 0; padding-left: 1.1rem; }
+  td li { margin: 0.2rem 0; }
+  td .note { display: block; margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; font-size: 0.9em; }
+  td .path { display: block; margin-top: 0.15rem; color: #666; }
+</style>
+</head>
+<body>
+
+<!-- One <section class="card"> per crystallized piece. Copy this block for each additional item. -->
+<section class="card">
+  <h2>[What this change does, named plainly]</h2>
+
+  <!-- Optional: one short paragraph of context/why, only if it's not obvious from the h2 -->
+  <p>[Why this is needed — omit this paragraph if the heading already says it all]</p>
+
+  <!-- Optional: a screenshot, mockup, or simple diagram of what the admin will see/do. Delete this block if there's nothing to show. -->
+  <p><img src="path/to/screenshot.png" alt="[what this shows]" style="max-width: 100%; border: 1px solid #ddd; border-radius: 4px;"></p>
+
+  <h3>Technical solution</h3>
+
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+
+    <!-- Single reference, single field -->
+    <tr>
+      <td>[Step description]</td>
+      <td>
+        <code>[EntityOrMethodName]</code>
+        <span class="path"><code>path/to/file.ts</code></span>
+      </td>
+    </tr>
+
+    <!-- Single reference, with a qualifying detail (caveat/current behavior) -->
+    <tr>
+      <td>[Step description]</td>
+      <td>
+        <code>[methodName]</code>
+        <span class="path"><code>path/to/file.ts</code></span>
+        <span class="note">[detail that qualifies this reference, not a pointer to another one]</span>
+      </td>
+    </tr>
+
+    <!-- Multiple references in the same location -->
+    <tr>
+      <td>[Step description]</td>
+      <td>
+        <span class="path"><code>path/to/file.ts</code></span>
+        <ul>
+          <li><code>[methodOrFieldA]</code></li>
+          <li><code>[methodOrFieldB]</code></li>
+        </ul>
+      </td>
+    </tr>
+
+    <!-- Multiple alternative locations (pick one) -->
+    <tr>
+      <td>[Step description] (pick one)</td>
+      <td>
+        <ul>
+          <li>
+            <code>[optionA]</code>
+            <span class="path"><code>path/to/file-a.ts</code></span>
+          </li>
+          <li>
+            <code>[optionB]</code>
+            <span class="path"><code>path/to/file-b.ts</code></span>
+          </li>
+        </ul>
+      </td>
+    </tr>
+  </table>
+</section>
+
+</body>
+</html>

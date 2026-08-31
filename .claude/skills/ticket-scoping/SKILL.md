@@ -25,9 +25,15 @@ This is specific to scoped-piece deliverables. Skills, `CLAUDE.md`, and context 
 
 ## Shape of a scoped piece
 
-Same structure writing-style.md already calls for, in HTML tags instead of markdown syntax:
-- `<h2>`: the specific change, named plainly (what it does, not a ticket number).
-- `<h3>` subsections as needed — e.g. "Technical solution" holding a reference `<table>` (what/where), matching writing-style's "keep exact references out of the flow."
-- Keep the CSS minimal — readable typography and table borders, nothing more. This is a scoping note, not a designed page.
+Copy `template.html` (in this skill's folder) as the starting point for any new ticket file — it has the card layout, the What/Where table, and the reference/note/path patterns already wired up. Don't rebuild this structure from scratch each time.
 
-Don't add sections nothing asked for (acceptance criteria, estimates, background story) unless the user wants them — this mirrors the user's actual scoping process, not a template.
+What each part is for:
+- One `<section class="card">` per crystallized piece — each item its own visually separated card, not sections bolted onto one long scroll.
+- `<h2>`: the specific change, named plainly (what it does, not a ticket number).
+- Optional visual (screenshot, mockup, small diagram) right after the intro, before "Technical solution" — only when there's something to actually show; delete the placeholder otherwise.
+- The "Technical solution" table matches writing-style's "keep exact references out of the flow" — a reference (name + file path) never sits inline in prose.
+- A "Where" cell with more than one file/method: bullet them, one per line — never crammed onto one line with `/` or commas.
+- A reference's name and its file path stack on separate lines (the template's `.path` span) — never joined with an em dash, which wraps badly on long paths.
+- A clause that qualifies a reference rather than naming another one (a caveat, current behavior) is subordinate to it — the template's `.note` callout, not tacked onto the reference line.
+
+Don't add sections nothing asked for (acceptance criteria, estimates, background story) unless the user wants them — this mirrors the user's actual scoping process, not a template to fill in blindly.
