@@ -30,7 +30,7 @@ const participantsData = [
     attendance: { single: false, days: [false, false, false, false, false, false, false] },
     submissions: [false, false, false],
     history: [
-      { status: 'interested', admin: 'maria.cruz@kadakareer.com', date: 'Nov 15, 2025', time: '11:00 AM' },
+      { status: 'interested', admin: 'christian.perez@email.com', date: 'Nov 15, 2025', time: '11:00 AM' },
       { status: 'dropped-out', admin: 'jonas.reyes@kadakareer.com', date: 'Nov 16, 2025', time: '03:45 PM' }
     ]
   },
@@ -86,9 +86,10 @@ const participantsData = [
     attendance: { single: true, days: [true, false, true, true, false, true, true] },
     submissions: [true, true, false],
     history: [
-      { status: 'interested', admin: 'maria.cruz@kadakareer.com', date: 'Dec 02, 2025', time: '11:15 AM' },
-      { status: 'applied', admin: 'maria.cruz@kadakareer.com', date: 'Dec 02, 2025', time: '04:50 PM' },
+      { status: 'interested', admin: 'lisa.thompson@email.com', date: 'Dec 02, 2025', time: '11:15 AM' },
+      { status: 'applied', admin: 'lisa.thompson@email.com', date: 'Dec 02, 2025', time: '04:50 PM' },
       { status: 'approved', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 03, 2025', time: '09:10 AM' },
+      { type: 'email', label: 'Acceptance email sent', admin: 'System', date: 'Dec 03, 2025', time: '09:10 AM' },
       { status: 'completed', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 03, 2025', time: '02:45 PM' }
     ]
   },
@@ -118,8 +119,9 @@ const participantsData = [
     attendance: { single: false, days: [true, false, false, false, true, false, true] },
     submissions: [false, false, true],
     history: [
-      { status: 'applied', admin: 'jonas.reyes@kadakareer.com', date: 'Nov 25, 2025', time: '04:10 PM' },
+      { status: 'applied', admin: 'rachel.patel@gmail.com', date: 'Nov 25, 2025', time: '04:10 PM' },
       { status: 'approved', admin: 'jonas.reyes@kadakareer.com', date: 'Nov 25, 2025', time: '06:30 PM' },
+      { type: 'email', label: 'Acceptance email sent', admin: 'System', date: 'Nov 25, 2025', time: '06:30 PM' },
       { status: 'completed', admin: 'maria.cruz@kadakareer.com', date: 'Nov 26, 2025', time: '10:00 AM' }
     ]
   },
@@ -162,8 +164,9 @@ const participantsData = [
     attendance: { single: false, days: [true, false, false, true, false, false, true] },
     submissions: [true, false, false],
     history: [
-      { status: 'applied', admin: 'maria.cruz@kadakareer.com', date: 'Dec 12, 2025', time: '09:15 AM' },
-      { status: 'approved', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 12, 2025', time: '04:30 PM' }
+      { status: 'applied', admin: 'james.wilson@gmail.com', date: 'Dec 12, 2025', time: '09:15 AM' },
+      { status: 'approved', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 12, 2025', time: '04:30 PM' },
+      { type: 'email', label: 'Acceptance email sent', admin: 'System', date: 'Dec 12, 2025', time: '04:30 PM' }
     ]
   },
   {
@@ -180,8 +183,87 @@ const participantsData = [
     attendance: { single: false, days: [false, false, false, false, false, false, false] },
     submissions: [false, false, false],
     history: [
-      { status: 'applied', admin: 'maria.cruz@kadakareer.com', date: 'Dec 20, 2025', time: '01:40 PM' },
-      { status: 'rejected', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 21, 2025', time: '09:05 AM' }
+      { status: 'applied', admin: 'nathan.cruz@gmail.com', date: 'Dec 20, 2025', time: '01:40 PM' },
+      { status: 'rejected', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 21, 2025', time: '09:05 AM' },
+      { type: 'email', label: 'Rejection email sent', admin: 'System', date: 'Dec 21, 2025', time: '09:05 AM' }
+    ]
+  },
+  {
+    id: 'r13',
+    name: 'Camille Bautista',
+    email: 'camille.bautista@gmail.com',
+    school: 'University of San Carlos',
+    course: 'BS Information Technology',
+    location: 'Cebu City, Cebu',
+    status: 'rejected',
+    rejectReason: 'Program is limited to Metro Manila-based applicants for this cohort',
+    createdAt: { date: 'Dec 18, 2025', time: '10:05 AM' },
+    updatedAt: { date: 'Dec 19, 2025', time: '11:20 AM' },
+    attendance: { single: false, days: [false, false, false, false, false, false, false] },
+    submissions: [false, false, false],
+    history: [
+      { status: 'interested', admin: 'camille.bautista@gmail.com', date: 'Dec 18, 2025', time: '10:05 AM' },
+      { status: 'applied', admin: 'camille.bautista@gmail.com', date: 'Dec 18, 2025', time: '02:30 PM' },
+      { status: 'rejected', admin: 'maria.cruz@kadakareer.com', date: 'Dec 19, 2025', time: '11:20 AM' },
+      { type: 'email', label: 'Rejection email sent', admin: 'System', date: 'Dec 19, 2025', time: '11:20 AM' }
+    ]
+  },
+  {
+    id: 'r14',
+    name: 'Marco Villanueva',
+    email: 'marco.villanueva@outlook.com',
+    school: 'Bulacan State University',
+    course: 'BS Computer Engineering',
+    location: 'Malolos, Bulacan',
+    status: 'rejected',
+    rejectReason: 'Incomplete sign-up form — missing resume attachment',
+    createdAt: { date: 'Dec 14, 2025', time: '03:50 PM' },
+    updatedAt: { date: 'Dec 15, 2025', time: '09:40 AM' },
+    attendance: { single: false, days: [false, false, false, false, false, false, false] },
+    submissions: [false, false, false],
+    history: [
+      { status: 'applied', admin: 'marco.villanueva@outlook.com', date: 'Dec 14, 2025', time: '03:50 PM' },
+      { status: 'rejected', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 15, 2025', time: '09:40 AM' },
+      { type: 'email', label: 'Rejection email sent', admin: 'System', date: 'Dec 15, 2025', time: '09:40 AM' }
+    ]
+  },
+  {
+    id: 'r15',
+    name: 'Angela Reyes',
+    email: 'angela.reyes@email.com',
+    school: 'Cavite State University',
+    course: 'BS Information Systems',
+    location: 'Indang, Cavite',
+    status: 'rejected',
+    rejectReason: 'Duplicate application — already enrolled in a concurrent cohort',
+    createdAt: { date: 'Dec 09, 2025', time: '01:10 PM' },
+    updatedAt: { date: 'Dec 10, 2025', time: '08:55 AM' },
+    attendance: { single: false, days: [false, false, false, false, false, false, false] },
+    submissions: [false, false, false],
+    history: [
+      { status: 'interested', admin: 'angela.reyes@email.com', date: 'Dec 09, 2025', time: '01:10 PM' },
+      { status: 'applied', admin: 'angela.reyes@email.com', date: 'Dec 09, 2025', time: '01:15 PM' },
+      { status: 'rejected', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 10, 2025', time: '08:55 AM' },
+      { type: 'email', label: 'Rejection email sent', admin: 'System', date: 'Dec 10, 2025', time: '08:55 AM' }
+    ]
+  },
+  {
+    id: 'r16',
+    name: 'Patrick Aquino',
+    email: 'patrick.aquino@gmail.com',
+    school: 'Batangas State University',
+    course: 'BS Computer Science',
+    location: 'Batangas City, Batangas',
+    status: 'rejected',
+    rejectReason: 'Did not pass the technical screening questions on the sign-up form',
+    createdAt: { date: 'Nov 30, 2025', time: '09:25 AM' },
+    updatedAt: { date: 'Dec 01, 2025', time: '02:15 PM' },
+    attendance: { single: false, days: [false, false, false, false, false, false, false] },
+    submissions: [false, false, false],
+    history: [
+      { status: 'applied', admin: 'patrick.aquino@gmail.com', date: 'Nov 30, 2025', time: '09:25 AM' },
+      { status: 'rejected', admin: 'maria.cruz@kadakareer.com', date: 'Dec 01, 2025', time: '02:15 PM' },
+      { type: 'email', label: 'Rejection email sent', admin: 'System', date: 'Dec 01, 2025', time: '02:15 PM' }
     ]
   }
 ];

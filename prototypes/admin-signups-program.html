@@ -497,15 +497,10 @@
       background: #eff6ff;
     }
 
-    /* Row click opens status history — except the Name/email column, which
-       needs normal text selection (e.g. double-click to copy). Selection
-       itself only happens via the checkbox column. */
+    /* Row click opens the participant detail modal. Selection itself only
+       happens via the checkbox column. */
     #signups-table tbody tr {
       cursor: pointer;
-    }
-
-    #signups-table tbody .participant-cell {
-      cursor: auto;
     }
 
     .created-at-cell,
@@ -517,7 +512,9 @@
     }
     .reject-reason-cell {
       max-width: 220px;
-      white-space: normal;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       color: #6e6e73;
       font-size: 13px;
       line-height: 1.4;
@@ -528,7 +525,119 @@
     }
 
 
-    /* Status history modal */
+    /* Participant detail modal */
+    #historyModal .modal-content {
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .modal-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .status-pill.small {
+      padding: 3px 10px;
+      font-size: 11px;
+    }
+    .detail-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      padding: 8px 4px;
+      border-bottom: 1px solid #f0f0f2;
+    }
+    .detail-label {
+      font-size: 13px;
+      color: #6e6e73;
+      flex-shrink: 0;
+    }
+    .detail-value {
+      font-size: 14px;
+      color: #1d1d1f;
+      text-align: right;
+    }
+    .detail-row-widget {
+      align-items: center;
+    }
+    .detail-chip-row {
+      display: inline-flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .detail-chip {
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      border: 1px solid #d2d2d7;
+      background: white;
+      color: #86868b;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .detail-chip.filled-attendance {
+      background: #10b981;
+      color: white;
+      border-color: #10b981;
+    }
+    .detail-chip.filled-submission {
+      background: #f59e0b;
+      color: white;
+      border-color: #f59e0b;
+    }
+    .detail-badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #f0f0f2;
+      color: #6e6e73;
+    }
+    .detail-badge.present {
+      background: #10b981;
+      color: white;
+    }
+    .detail-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #6e6e73;
+      margin-top: 28px;
+      margin-bottom: 10px;
+    }
+    #detailList > .detail-section-title:first-child {
+      margin-top: 0;
+    }
+    .detail-section-title.collapsible {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+    .detail-section-chevron {
+      font-size: 11px;
+      color: #86868b;
+      transition: transform 0.15s;
+    }
+    .detail-section-title.collapsed .detail-section-chevron {
+      transform: rotate(-90deg);
+    }
+    .detail-section-title.collapsed + * {
+      display: none;
+    }
+
     .history-list {
       display: flex;
       flex-direction: column;
@@ -554,20 +663,24 @@
       min-width: 0;
     }
     .history-status {
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 600;
       color: #1d1d1f;
       white-space: nowrap;
     }
+    .history-status.history-email {
+      font-weight: 500;
+      color: #6e6e73;
+    }
     .history-admin {
-      font-size: 13px;
+      font-size: 11px;
       color: #6e6e73;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .history-timestamp {
-      font-size: 12px;
+      font-size: 11px;
       color: #86868b;
       white-space: nowrap;
       text-align: right;
@@ -702,13 +815,13 @@
         <input type="radio" id="duration-single" name="duration" class="config-radio" value="single-day">
         <label for="duration-single" class="config-radio-label">Single-day</label>
 
-        <input type="radio" id="duration-multi" name="duration" class="config-radio" value="multi-day" checked>
+        <input type="radio" id="duration-multi" name="duration" class="config-radio" value="multi-day">
         <label for="duration-multi" class="config-radio-label">Multi-day</label>
 
-        <input type="radio" id="duration-none" name="duration" class="config-radio" value="no-attendance">
+        <input type="radio" id="duration-none" name="duration" class="config-radio" value="no-attendance" checked>
         <label for="duration-none" class="config-radio-label">No attendance</label>
       </div>
-      <div class="config-days-field" id="configDaysField" style="display: block;">
+      <div class="config-days-field" id="configDaysField" style="display: none;">
         <label class="config-label" for="configDaysCount">Number of days</label>
         <input type="number" id="configDaysCount" class="config-days-input" min="2" max="31" value="7">
       </div>
@@ -717,13 +830,13 @@
     <div class="config-group">
       <label class="config-label">Deliverables</label>
       <div class="config-options">
-        <input type="radio" id="submissions-yes" name="submissions" class="config-radio" value="has-submissions" checked>
+        <input type="radio" id="submissions-yes" name="submissions" class="config-radio" value="has-submissions">
         <label for="submissions-yes" class="config-radio-label">Has submissions</label>
 
-        <input type="radio" id="submissions-no" name="submissions" class="config-radio" value="no-submissions">
+        <input type="radio" id="submissions-no" name="submissions" class="config-radio" value="no-submissions" checked>
         <label for="submissions-no" class="config-radio-label">No submissions</label>
       </div>
-      <div class="config-days-field" id="configSubmissionsField" style="display: block;">
+      <div class="config-days-field" id="configSubmissionsField" style="display: none;">
         <label class="config-label" for="configSubmissionsCount">Number of submissions</label>
         <input type="number" id="configSubmissionsCount" class="config-days-input" min="1" max="20" value="3">
       </div>
@@ -765,12 +878,20 @@
   </div>
 </div>
 
-<!-- Status History Modal -->
+<!-- Participant Detail Modal -->
 <div id="historyModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h2 class="modal-title" id="historyModalTitle">Status History</h2>
+      <div class="modal-title-group">
+        <h2 class="modal-title" id="historyModalTitle">Participant</h2>
+        <span id="modalStatusPill"></span>
+      </div>
       <button class="modal-close" onclick="closeModal('historyModal')">✕</button>
+    </div>
+    <div id="detailList" class="detail-list"></div>
+    <div class="detail-section-title collapsible" onclick="toggleDetailSection(this)">
+      <span>History</span>
+      <span class="detail-section-chevron">▾</span>
     </div>
     <div id="historyList" class="history-list"></div>
   </div>
@@ -782,6 +903,11 @@
   const urlParams = new URLSearchParams(window.location.search);
   const programName = urlParams.get('program') || 'Software Engineering Boot Camp';
   document.querySelector('.page-subtitle').textContent = `Track the progress of kadets for the program ${programName}`;
+
+  // Declared before the row-rendering map below, which calls
+  // truncateRejectReason() (defined later in this script, but that
+  // function's body reads this const, so it must exist before then).
+  const REJECT_REASON_PREVIEW_LENGTH = 90;
 
   // Render rows synchronously before admin-common.js loads
   const tbody = document.querySelector('#signups-table tbody');
@@ -815,7 +941,7 @@
           <div>${p.updatedAt.date}</div>
           <div class="time-part">${p.updatedAt.time}</div>
         </td>
-        <td class="reject-reason-cell">${p.status === 'rejected' ? (p.rejectReason || '') : '—'}</td>
+        <td class="reject-reason-cell">${p.status === 'rejected' ? truncateRejectReason(p.rejectReason || '') : '—'}</td>
       </tr>
   `).join('');
 
@@ -825,9 +951,12 @@
   const CURRENT_ADMIN = 'you@kadakareer.com';
   const statusHistoryStore = {};
   participantsData.forEach(p => {
+    // Interested/applied are self-service — the applicant did this via the
+    // public sign-up flow, not an admin, so they're the "admin" of record.
+    const isSelfService = p.status === 'interested' || p.status === 'applied';
     statusHistoryStore[p.id] = p.history && p.history.length
       ? p.history.slice()
-      : [{ status: p.status, admin: 'System', date: p.createdAt.date, time: p.createdAt.time }];
+      : [{ status: p.status, admin: isSelfService ? p.email : 'System', date: p.createdAt.date, time: p.createdAt.time }];
   });
 
   // Rejection reason per participant, keyed by row id. Seeded from mock
@@ -837,6 +966,14 @@
   participantsData.forEach(p => {
     rejectReasonStore[p.id] = p.rejectReason || '';
   });
+
+  // Cell shows a short preview only — no title attribute, since that would
+  // add a native hover tooltip that's redundant with the participant detail
+  // modal (opened by clicking the row), which already shows the full reason.
+  function truncateRejectReason(text) {
+    if (text.length <= REJECT_REASON_PREVIEW_LENGTH) return text;
+    return text.slice(0, REJECT_REASON_PREVIEW_LENGTH) + '…';
+  }
 
   function updateRejectReasonCell(row, status) {
     const cell = row.querySelector('.reject-reason-cell');
@@ -850,8 +987,13 @@
     const existing = rejectReasonStore[row.dataset.rowId] || '';
     const reason = prompt('Reason for rejection:', existing);
     rejectReasonStore[row.dataset.rowId] = reason || '';
-    cell.textContent = reason || '';
+    cell.textContent = truncateRejectReason(reason || '');
   }
+
+  // Tracks which participant's detail modal is currently open, if any — a
+  // status change made from inside the modal isn't inside a <tr>, so this
+  // is how that click gets linked back to its underlying row.
+  let currentDetailRow = null;
 </script>
 <script src="assets/admin-common.js"></script>
 <script>
@@ -885,9 +1027,9 @@
   const CONFIG_KEY = 'kadakareer_program_config';
 
   const CONFIG_DEFAULTS = {
-    duration: 'multi-day',
+    duration: 'no-attendance',
     format: 'online',
-    submissions: 'has-submissions',
+    submissions: 'no-submissions',
     daysCount: 7,
     submissionsCount: 3,
     showParticipantInfo: false,
@@ -1151,9 +1293,11 @@
   }
 
   /* Table Column Sorting */
+  // Default to Status descending so Rejected rows (last alphabetically)
+  // surface at the top on load.
   let currentSort = {
-    key: null,
-    dir: 'none' // 'none' -> 'asc' -> 'desc' -> 'none'
+    key: 'status',
+    dir: 'desc' // 'none' -> 'asc' -> 'desc' -> 'none'
   };
 
   function updateSortHeaderUI() {
@@ -1370,6 +1514,12 @@
     spacer.style.width = (scrollEl.offsetWidth - scrollEl.clientWidth) + 'px';
   }
 
+  // Declared before initConfig() below, since the default sort
+  // (currentSort starts on 'status') triggers a sortRows() ->
+  // updateSelectionUI() call during that IIFE, which reads these.
+  const selectAllRows = document.getElementById('selectAllRows');
+  const footerText = document.getElementById('footerText');
+
   (function initConfig() {
     const cfg = loadConfig();
     applyConfigToModal(cfg);
@@ -1399,26 +1549,49 @@
   applyStatusTooltips();
 
   // Runs after admin-common.js's own delegated handler has already updated
-  // the pill's data-status for this same click, so the tooltip stays in sync.
+  // the *clicked* pill's data-status for this same click, so the tooltip
+  // stays in sync. The pill lives either in a table row, or — when this
+  // click came from the detail modal instead — nowhere near a <tr> at all,
+  // so currentDetailRow is how that case still finds its row.
   document.addEventListener('click', function(e) {
     const opt = e.target.closest('.status-option');
-    if (opt) {
-      applyStatusTooltips();
-      const row = opt.closest('tr');
-      if (row) {
-        const pill = row.querySelector('.status-pill');
-        if (pill) {
-          row.dataset.status = pill.dataset.status;
-        }
-        updateRowTimestamp(row);
-        const newStatus = pill ? pill.dataset.status : row.dataset.status;
-        logStatusChange(row.dataset.rowId, newStatus);
-        updateRejectReasonCell(row, newStatus);
-        applyFilter();
-        if (currentSort.key && currentSort.dir !== 'none') {
-          sortRows();
-        }
+    if (!opt) return;
+
+    applyStatusTooltips();
+
+    const tableRow = opt.closest('tr');
+    const row = tableRow || currentDetailRow;
+    if (!row) return;
+
+    const newStatus = opt.dataset.status;
+
+    if (!tableRow) {
+      // Change came from the modal's own pill — admin-common.js already
+      // updated that pill, but the table row's separate pill instance
+      // still needs to be mirrored to match.
+      const rowPill = row.querySelector('.status-pill');
+      if (rowPill) {
+        rowPill.dataset.status = newStatus;
+        applyPillColor(rowPill);
+        const label = rowPill.querySelector('.status-pill-label');
+        if (label) label.textContent = statusLabel(newStatus);
       }
+    }
+
+    row.dataset.status = newStatus;
+    updateRowTimestamp(row);
+    logStatusChange(row.dataset.rowId, newStatus);
+    if (newStatus === 'approved' || newStatus === 'rejected') {
+      logEmailSent(row.dataset.rowId, newStatus);
+    }
+    updateRejectReasonCell(row, newStatus);
+    applyFilter();
+    if (currentSort.key && currentSort.dir !== 'none') {
+      sortRows();
+    }
+
+    if (currentDetailRow === row && document.getElementById('historyModal').classList.contains('show')) {
+      renderDetailModal(row);
     }
   });
 
@@ -1429,14 +1602,117 @@
   function logStatusChange(rowId, status) {
     const parts = formatDateTimeParts(new Date());
     const history = statusHistoryStore[rowId] || (statusHistoryStore[rowId] = []);
-    history.push({ status, admin: CURRENT_ADMIN, date: parts.date, time: parts.time });
+    history.push({ type: 'status', status, admin: CURRENT_ADMIN, date: parts.date, time: parts.time });
   }
 
-  function renderHistoryModal(rowId, participantName) {
-    document.getElementById('historyModalTitle').textContent = participantName
-      ? `Status History — ${participantName}`
-      : 'Status History';
+  // Simulates the automatic accept/reject notification email — not an
+  // admin action, so it's logged with admin: 'System', same as the mock
+  // seed data's synthesized entries.
+  function logEmailSent(rowId, status) {
+    const parts = formatDateTimeParts(new Date());
+    const history = statusHistoryStore[rowId] || (statusHistoryStore[rowId] = []);
+    const label = status === 'approved' ? 'Acceptance email sent' : 'Rejection email sent';
+    history.push({ type: 'email', label, admin: 'System', date: parts.date, time: parts.time });
+  }
 
+  // Reads a created/updated cell's date + time parts directly, rather than
+  // relying on incidental whitespace between them in textContent — that
+  // whitespace only exists in the initial server-rendered markup and is
+  // gone from updateRowTimestamp()'s no-whitespace replacement.
+  function formatCellDateTime(cell) {
+    if (!cell) return '';
+    const time = cell.querySelector('.time-part');
+    const date = cell.firstElementChild;
+    return time ? `${date.textContent}, ${time.textContent}` : (date ? date.textContent : '');
+  }
+
+  function toggleDetailSection(titleEl) {
+    titleEl.classList.toggle('collapsed');
+  }
+
+  function renderDetailModal(row) {
+    currentDetailRow = row;
+    const rowId = row.dataset.rowId;
+    const p = participantsData.find(x => x.id === rowId);
+    document.getElementById('historyModalTitle').textContent = p ? p.name : 'Participant';
+
+    const status = row.dataset.status;
+    const createdCell = row.querySelector('.created-at-cell');
+    const cfg = loadConfig();
+
+    document.getElementById('modalStatusPill').innerHTML = `
+      <span class="status-pill editable small" data-status="${status}" onclick="toggleStatusDropdown(event)">
+        <span class="status-pill-label">${statusLabel(status)}</span>
+        <div class="status-dropdown" data-statuses="interested,applied,approved,completed,dropped-out,rejected">
+          <div class="status-option" data-status="interested">Interested</div>
+          <div class="status-option" data-status="applied">Applied</div>
+          <div class="status-option" data-status="approved">Approved</div>
+          <div class="status-option" data-status="completed">Completed</div>
+          <div class="status-option" data-status="dropped-out">Dropped out</div>
+          <div class="status-option" data-status="rejected">Rejected</div>
+        </div>
+      </span>`;
+
+    const rejectReasonRow = status === 'rejected'
+      ? `<div class="detail-row"><span class="detail-label">Reject reason</span><span class="detail-value">${rejectReasonStore[rowId] || '—'}</span></div>`
+      : '';
+
+    let attendanceRow = '';
+    if (cfg.duration === 'single-day') {
+      const present = attendanceData[rowId].single;
+      attendanceRow = `
+        <div class="detail-row detail-row-widget">
+          <span class="detail-label">Attendance</span>
+          <span class="detail-badge ${present ? 'present' : ''}">${present ? 'Present' : 'Absent'}</span>
+        </div>`;
+    } else if (cfg.duration === 'multi-day') {
+      const chips = attendanceData[rowId].days.map((filled, i) => `
+        <span class="detail-chip ${filled ? 'filled-attendance' : ''}" data-tooltip="${formatDayDate(i)}">${i + 1}</span>
+      `).join('');
+      attendanceRow = `
+        <div class="detail-row detail-row-widget">
+          <span class="detail-label">Attendance</span>
+          <span class="detail-chip-row">${chips}</span>
+        </div>`;
+    }
+
+    let submissionsRow = '';
+    if (cfg.submissions === 'has-submissions') {
+      const chips = submissionsData[rowId].map((done, i) => `
+        <span class="detail-chip ${done ? 'filled-submission' : ''}" data-tooltip="${taskLabel(i)}">${i + 1}</span>
+      `).join('');
+      submissionsRow = `
+        <div class="detail-row detail-row-widget">
+          <span class="detail-label">Submissions</span>
+          <span class="detail-chip-row">${chips}</span>
+        </div>`;
+    }
+
+    document.getElementById('detailList').innerHTML = `
+      ${rejectReasonRow ? `<div class="detail-group">${rejectReasonRow}</div>` : ''}
+      <div class="detail-section-title collapsible" onclick="toggleDetailSection(this)">
+        <span>Info</span>
+        <span class="detail-section-chevron">▾</span>
+      </div>
+      <div class="detail-group">
+        <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${p.email}</span></div>
+        <div class="detail-row"><span class="detail-label">School</span><span class="detail-value">${p.school}</span></div>
+        <div class="detail-row"><span class="detail-label">Course</span><span class="detail-value">${p.course}</span></div>
+        <div class="detail-row"><span class="detail-label">Location</span><span class="detail-value">${p.location}</span></div>
+        <div class="detail-row"><span class="detail-label">Created</span><span class="detail-value">${formatCellDateTime(createdCell)}</span></div>
+        ${attendanceRow}
+        ${submissionsRow}
+      </div>
+    `;
+
+    applyStatusTooltips();
+    const newPill = document.getElementById('modalStatusPill').querySelector('.status-pill');
+    if (newPill) applyPillColor(newPill);
+
+    renderHistoryList(rowId);
+  }
+
+  function renderHistoryList(rowId) {
     const history = statusHistoryStore[rowId] || [];
     const listEl = document.getElementById('historyList');
 
@@ -1445,15 +1721,21 @@
       return;
     }
 
-    listEl.innerHTML = history.slice().reverse().map(entry => `
-      <div class="history-entry">
-        <div class="history-entry-main">
-          <span class="history-status">${statusLabel(entry.status)}</span>
-          <span class="history-admin">${entry.admin}</span>
+    listEl.innerHTML = history.slice().reverse().map(entry => {
+      const statusText = entry.type === 'email'
+        ? `<span class="history-status history-email">✉ ${entry.label}</span>`
+        : `<span class="history-status">${statusLabel(entry.status)}</span>`;
+
+      return `
+        <div class="history-entry">
+          <div class="history-entry-main">
+            ${statusText}
+            <span class="history-admin">${entry.admin}</span>
+          </div>
+          <div class="history-timestamp">${entry.date}, ${entry.time}</div>
         </div>
-        <div class="history-timestamp">${entry.date}, ${entry.time}</div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   document.getElementById('historyModal').addEventListener('click', function(e) {
@@ -1541,9 +1823,6 @@
   window.addEventListener('resize', hideTooltip);
 
   /* Bulk row selection + footer counts. */
-  const selectAllRows = document.getElementById('selectAllRows');
-  const footerText = document.getElementById('footerText');
-
   function rowCheckboxes() {
     return Array.from(document.querySelectorAll('#signups-table tbody tr:not(.hidden) .row-select'));
   }
@@ -1727,12 +2006,11 @@
   document.getElementById('searchFilter').addEventListener('input', applyFilter);
 
   // Selection is scoped to the checkbox column only — clicking anywhere in
-  // that cell (not just the checkbox itself) toggles it. Clicking the rest
-  // of the row opens that participant's status history instead, except the
-  // Name/email column (needs normal text selection for copying) and
-  // interactive controls within the row (status pill/dropdown,
-  // attendance/submission buttons) — those should only do their own thing,
-  // not also open history.
+  // that cell (not just the checkbox itself) toggles it. Clicking anywhere
+  // else in the row, including the Name/email column, opens that
+  // participant's detail modal — except interactive controls within the
+  // row (status pill/dropdown, attendance/submission buttons), which
+  // should only do their own thing, not also open the modal.
   document.querySelectorAll('#signups-table tbody tr').forEach(row => {
     row.addEventListener('click', function(e) {
       const selectCell = e.target.closest('.select-col');
@@ -1745,12 +2023,11 @@
       }
 
       const excluded = e.target.closest(
-        '.participant-cell, .status-pill, .attendance-day-btn, .submission-btn, .attendance-checkbox'
+        '.status-pill, .attendance-day-btn, .submission-btn, .attendance-checkbox'
       );
       if (excluded) return;
 
-      const name = row.querySelector('.participant-name');
-      renderHistoryModal(row.dataset.rowId, name ? name.textContent : '');
+      renderDetailModal(row);
       openModal('historyModal');
     });
   });

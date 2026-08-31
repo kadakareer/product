@@ -4,8 +4,18 @@
 <meta charset="utf-8">
 <title>[Epic name] — [piece name]</title>
 <style>
-  body { font: 16px/1.5 -apple-system, system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; background: #f0f0f0; }
-  h2 { margin-top: 0; }
+  body { font: 16px/1.5 -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f0f0f0; margin: 0; }
+  /* Single-column layout (2 or fewer cards): drop .layout/.toc below and use this instead —
+     body { max-width: 720px; margin: 2rem auto; padding: 0 1rem; } */
+  .layout { max-width: 1040px; margin: 2rem auto; padding: 0 1rem; display: flex; gap: 2rem; align-items: flex-start; }
+  nav.toc { flex: 0 0 220px; position: sticky; top: 2rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1rem 1.25rem; }
+  nav.toc h3 { margin: 0 0 0.5rem; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.04em; color: #888; }
+  nav.toc ol { margin: 0; padding-left: 1.1rem; }
+  nav.toc li { margin: 0.5rem 0; }
+  nav.toc a { color: #1a1a1a; text-decoration: none; }
+  nav.toc a:hover { color: #3b82f6; text-decoration: underline; }
+  main { flex: 1 1 auto; min-width: 0; }
+  h2 { margin-top: 0; scroll-margin-top: 1.5rem; }
   section.card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
   table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
   th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #ddd; vertical-align: top; }
@@ -19,8 +29,24 @@
 </head>
 <body>
 
-<!-- One <section class="card"> per crystallized piece. Copy this block for each additional item. -->
-<section class="card">
+<!-- TOC + .layout/.toc/<main> wrapper: only add this when the doc has more than 2 cards.
+     At 2 or fewer, skip straight to <section class="card"> below with no wrapper, and use
+     the single-column body rule commented above instead. -->
+<div class="layout">
+
+<nav class="toc">
+  <h3>On this page</h3>
+  <ol>
+    <li><a href="#anchor-slug-a">[Card A title]</a></li>
+    <li><a href="#anchor-slug-b">[Card B title]</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- One <section class="card"> per crystallized piece. Copy this block for each additional item.
+     Give each an id="anchor-slug" matching its TOC entry above (only needed when the TOC is present). -->
+<section class="card" id="anchor-slug-a">
   <h2>[What this change does, named plainly]</h2>
 
   <!-- Optional: one short paragraph of context/why, only if it's not obvious from the h2 -->
@@ -84,5 +110,7 @@
   </table>
 </section>
 
+</main>
+</div>
 </body>
 </html>

@@ -38,4 +38,8 @@ What each part is for:
 - A reference's name and its file path stack on separate lines (the template's `.path` span) — never joined with an em dash, which wraps badly on long paths.
 - A clause that qualifies a reference rather than naming another one (a caveat, current behavior) is subordinate to it — the template's `.note` callout, not tacked onto the reference line.
 
+## TOC sidebar — only past 2 cards
+
+At 3+ cards, add the template's optional left-side TOC (`.layout`/`.toc`/`<main>` wrapper) so the reader sees every item at a glance and can jump to one. At 2 or fewer, skip it — a sidebar next to one or two cards is just empty chrome; use the template's single-column `body` rule instead. Each card needs a matching `id` for the TOC links to anchor to.
+
 Don't add sections nothing asked for (acceptance criteria, estimates, background story) unless the user wants them — this mirrors the user's actual scoping process, not a template to fill in blindly.
