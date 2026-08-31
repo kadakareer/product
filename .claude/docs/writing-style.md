@@ -43,6 +43,18 @@ A "one-liner" that wraps to three lines from word count is the same bloat as a w
 
 More bullets don't always help — a branching flow, a tradeoff, a relationship between parts can get harder to follow as a list. That's the signal for a table, a comparison matrix, a small diagram, or an analogy instead. Different shape, not more words in the same shape.
 
+## Headings name the category, not the instance
+
+A heading labels what follows — it isn't the place for the specific value inside it. An exact address, name, or number belongs in the body, stated once, not in the `#`/`##` line.
+
+Dense:
+> ## CC programs@kadakareer.com on accept/reject notification
+
+Scannable:
+> ## CC programs on accept/reject email
+>
+> CC `programs@kadakareer.com` so the program manager can confirm the send.
+
 ## Bold is for emphasis, not every label
 
 If most lines start with a bolded phrase, something's wrong.
