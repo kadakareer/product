@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>What's New Banner — add registrationCloseDate to Event</title>
+<style>
+  body { font: 16px/1.5 -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f0f0f0; margin: 0; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  h2 { margin-top: 0; scroll-margin-top: 1.5rem; }
+  section.card { position: relative; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .copy-btn { position: absolute; top: 1rem; right: 1.25rem; font: inherit; font-size: 0.8em; padding: 0.25rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #444; cursor: pointer; }
+  .copy-btn:hover { background: #f5f5f7; }
+  .copy-btn.copied { color: #16a34a; border-color: #16a34a; }
+  table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #ddd; vertical-align: top; }
+  th { background: #f5f5f5; }
+  code { background: #f0f0f0; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.9em; }
+  td ul { margin: 0; padding-left: 1.1rem; }
+  td li { margin: 0.2rem 0; }
+  td .note { display: block; margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; font-size: 0.9em; }
+  td .path { display: block; margin-top: 0.15rem; color: #666; }
+  .back-link { font-size: 0.9em; color: #666; text-decoration: none; display: inline-block; margin-bottom: 1rem; }
+  .back-link:hover { color: #3b82f6; text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<a class="back-link" href="../index.html">&larr; Back to tickets</a>
+
+<section class="card" id="registration-close-date">
+  <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+  <h2>Add registrationCloseDate to Event</h2>
+
+  <p>The What's New banner needs to stop surfacing an event once its registration window closes. No such field exists on the Event resource today — only <code>startTime</code>/<code>endTime</code>. Event content is authored in Contentful, not through a KadaKareer admin write API, so this is a content-model change plus a read-surface change, not a typical entity migration.</p>
+
+  <h3>Technical solution</h3>
+
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr>
+      <td>Add the field to the content model</td>
+      <td>
+        Contentful <code>event</code> content type
+        <span class="note">CMS-side change, not in this repo — needs whoever manages the Contentful space</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Surface it on the API interface</td>
+      <td>
+        <code>EventEntryFields</code>
+        <span class="path"><code>functions/src/api/events/interfaces/event-entry.interface.ts</code></span>
+      </td>
+    </tr>
+    <tr>
+      <td>Surface it on the response DTO</td>
+      <td>
+        <code>EventResponseDto</code>
+        <span class="path"><code>functions/src/api/events/dto/event-response.dto.ts</code></span>
+        <span class="note">add <code>registrationCloseDate: string</code> with <code>@ApiProperty()</code> / <code>@IsISO8601()</code>, matching how <code>startTime</code>/<code>endTime</code> are declared</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Map it through to the response</td>
+      <td>
+        <code>EventsService</code>
+        <span class="path"><code>functions/src/api/events/events.service.ts</code></span>
+        <span class="note">the DTO-mapping method used by <code>getEventById</code> / <code>getFilteredEvents</code></span>
+      </td>
+    </tr>
+    <tr>
+      <td>Add it to the frontend's informal Event type</td>
+      <td>
+        <code>EventCardProps</code> / events view props
+        <span class="path"><code>app-playground/src/pages/events/components/events-card/events-card.component.tsx</code></span>
+        <span class="note">events aren't part of app-playground's orval-generated client (they're fetched via a hand-rolled <code>useApi</code> hook), so no client regen step — just extend this hand-written type</span>
+      </td>
+    </tr>
+  </table>
+
+  <p><span class="note">No create/update DTO exists for events anywhere in the backend — confirm with whoever owns the Contentful space that they'll populate this field per event, since there's no admin UI path for it yet.</span></p>
+</section>
+
+<script>
+function copyCard(btn) {
+  const card = btn.closest('.card');
+  const clone = card.cloneNode(true);
+  clone.querySelectorAll('.copy-btn').forEach(el => el.remove());
+  const text = clone.innerText.trim();
+  const restore = btn.textContent;
+  const onDone = () => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = restore; btn.classList.remove('copied'); }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(onDone).catch(() => fallbackCopy(text, onDone));
+  } else {
+    fallbackCopy(text, onDone);
+  }
+}
+function fallbackCopy(text, onDone) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); onDone(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+</script>
+</body>
+</html>

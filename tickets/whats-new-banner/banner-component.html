@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>What's New Banner — dismissible event banner</title>
+<style>
+  body { font: 16px/1.5 -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f0f0f0; margin: 0; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  h2 { margin-top: 0; scroll-margin-top: 1.5rem; }
+  section.card { position: relative; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .copy-btn { position: absolute; top: 1rem; right: 1.25rem; font: inherit; font-size: 0.8em; padding: 0.25rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #444; cursor: pointer; }
+  .copy-btn:hover { background: #f5f5f7; }
+  .copy-btn.copied { color: #16a34a; border-color: #16a34a; }
+  table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #ddd; vertical-align: top; }
+  th { background: #f5f5f5; }
+  code { background: #f0f0f0; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.9em; }
+  td ul { margin: 0; padding-left: 1.1rem; }
+  td li { margin: 0.2rem 0; }
+  td .note { display: block; margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; font-size: 0.9em; }
+  td .path { display: block; margin-top: 0.15rem; color: #666; }
+  .back-link { font-size: 0.9em; color: #666; text-decoration: none; display: inline-block; margin-bottom: 1rem; }
+  .back-link:hover { color: #3b82f6; text-decoration: underline; }
+  img.mock { max-width: 100%; border: 1px solid #ddd; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<a class="back-link" href="../index.html">&larr; Back to tickets</a>
+
+<section class="card" id="banner-component">
+  <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+  <h2>Dismissible What's New banner</h2>
+
+  <p>Per-event dismissible banner strip, capped at 3 on desktop / 1 on mobile, that stops surfacing an event once dismissed or past <code>registrationCloseDate</code>.</p>
+
+  <h3>Technical solution</h3>
+
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+
+    <tr>
+      <td>Mount point</td>
+      <td>
+        <code>App.jsx</code>
+        <span class="note">global, right under <code>&lt;NavBar/&gt;</code> — every page except <code>/events</code>, matching the design doc's "daily platform and website traffic" framing (showing it on the What's New page itself would be redundant, since that's the destination it drives to)</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Fetch eligible events</td>
+      <td>
+        <code>useApi({ url: '/api/v2/events/' })</code>
+        <span class="path"><code>src/pages/events/events.hooks.jsx</code></span>
+        <span class="note">reuse this fetch pattern in the banner's own hook; filter client-side to events where <code>registrationCloseDate</code> is in the future (mirrors <code>isPastEvent</code> in <code>src/utils/events.ts</code>) — depends on <a href="registration-close-date.html">registrationCloseDate</a> existing on the response</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Per-event dismiss state</td>
+      <td>
+        <code>getLocalStorage</code> / <code>setLocalStorage</code>
+        <span class="path"><code>src/services/local-storage.js</code></span>
+        <span class="note">store an array of dismissed event IDs under one key, not the draft's single boolean flag</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Desktop/mobile cap + overflow</td>
+      <td>
+        <code>useIsMobile</code> / <code>useIsDesktop</code>
+        <span class="path"><code>src/hooks/use-breakpoint.jsx</code></span>
+        <ul>
+          <li>desktop: up to 2 individual event banners + a 3rd overflow banner ("N new events") linking to <code>/events</code> when more than 3 are eligible</li>
+          <li>mobile: 1 banner only</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td>Copy truncation</td>
+      <td>
+        New util, colocated with the banner component
+        <span class="note">desktop: 60 chars, one line, ellipsis; mobile: ≤30 chars one line, 31–60 wraps to two lines, beyond that truncates</span>
+      </td>
+    </tr>
+    <tr>
+      <td>CTA / dismiss controls</td>
+      <td>
+        <ul>
+          <li><code>ButtonLink</code> (<span class="path"><code>src/components/atoms/buttons/index.jsx</code></span>) for "Check it out"</li>
+          <li>dismiss "X": new plain styled button (no border/background) — no existing component to reuse for this</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td>Analytics</td>
+      <td>
+        <code>captureAnalyticsEvent</code>
+        <span class="path"><code>src/services/analytics.js</code></span>
+        <ul>
+          <li><code>'Viewed Whats New Banner'</code>, <code>'Clicked Whats New Banner'</code>, <code>'Dismissed Whats New Banner'</code> — each with <code>{ eventId, position }</code></li>
+        </ul>
+        <span class="note">tagging the registration-submit action with the originating banner wasn't scoped this pass — its capture call site wasn't located; needs a quick look before implementing that part</span>
+      </td>
+    </tr>
+  </table>
+</section>
+
+<script>
+function copyCard(btn) {
+  const card = btn.closest('.card');
+  const clone = card.cloneNode(true);
+  clone.querySelectorAll('.copy-btn').forEach(el => el.remove());
+  const text = clone.innerText.trim();
+  const restore = btn.textContent;
+  const onDone = () => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = restore; btn.classList.remove('copied'); }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(onDone).catch(() => fallbackCopy(text, onDone));
+  } else {
+    fallbackCopy(text, onDone);
+  }
+}
+function fallbackCopy(text, onDone) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); onDone(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+</script>
+</body>
+</html>
