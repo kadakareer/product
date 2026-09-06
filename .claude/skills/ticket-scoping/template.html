@@ -16,7 +16,10 @@
   nav.toc a:hover { color: #3b82f6; text-decoration: underline; }
   main { flex: 1 1 auto; min-width: 0; }
   h2 { margin-top: 0; scroll-margin-top: 1.5rem; }
-  section.card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  section.card { position: relative; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .copy-btn { position: absolute; top: 1rem; right: 1.25rem; font: inherit; font-size: 0.8em; padding: 0.25rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #444; cursor: pointer; }
+  .copy-btn:hover { background: #f5f5f7; }
+  .copy-btn.copied { color: #16a34a; border-color: #16a34a; }
   table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
   th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #ddd; vertical-align: top; }
   th { background: #f5f5f5; }
@@ -25,9 +28,18 @@
   td li { margin: 0.2rem 0; }
   td .note { display: block; margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; font-size: 0.9em; }
   td .path { display: block; margin-top: 0.15rem; color: #666; }
+  .back-link-wrap { max-width: 1040px; margin: 1.5rem auto 0; padding: 0 1rem; }
+  /* Single-column layout: drop .back-link-wrap and instead give .back-link itself
+     `display: inline-block; margin-bottom: 1rem;` — body's own max-width already
+     constrains it, no wrapper needed. */
+  .back-link { font-size: 0.9em; color: #666; text-decoration: none; }
+  .back-link:hover { color: #3b82f6; text-decoration: underline; }
 </style>
 </head>
 <body>
+
+<!-- Every ticket file links back to the epic index, one level up. -->
+<p class="back-link-wrap"><a class="back-link" href="../index.html">&larr; Back to tickets</a></p>
 
 <!-- TOC + .layout/.toc/<main> wrapper: only add this when the doc has more than 2 cards.
      At 2 or fewer, skip straight to <section class="card"> below with no wrapper, and use
@@ -47,6 +59,7 @@
 <!-- One <section class="card"> per crystallized piece. Copy this block for each additional item.
      Give each an id="anchor-slug" matching its TOC entry above (only needed when the TOC is present). -->
 <section class="card" id="anchor-slug-a">
+  <button class="copy-btn" onclick="copyCard(this)">Copy</button>
   <h2>[What this change does, named plainly]</h2>
 
   <!-- Optional: one short paragraph of context/why, only if it's not obvious from the h2 -->
@@ -112,5 +125,37 @@
 
 </main>
 </div>
+
+<!-- Copies one card's text (minus the button itself) to the clipboard — for pasting into
+     Slack/email/a tracker when handing a piece to an engineer. Include this script once per file. -->
+<script>
+function copyCard(btn) {
+  const card = btn.closest('.card');
+  const clone = card.cloneNode(true);
+  clone.querySelectorAll('.copy-btn').forEach(el => el.remove());
+  const text = clone.innerText.trim();
+  const restore = btn.textContent;
+  const onDone = () => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = restore; btn.classList.remove('copied'); }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(onDone).catch(() => fallbackCopy(text, onDone));
+  } else {
+    fallbackCopy(text, onDone);
+  }
+}
+function fallbackCopy(text, onDone) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); onDone(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+</script>
 </body>
 </html>

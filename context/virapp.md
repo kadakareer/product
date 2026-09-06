@@ -19,11 +19,16 @@ Every enrollment creates a **new group**, even solo — you're always a "group o
 
 Enroll flow: user submits → group gets created → the enrolling user gets added to it with status Pending.
 
+## Signup intake — two paths exist, only one is actually used
+
+- **Tally webhook (the real path)** — applicant fills out the Tally form, which submits straight to the backend and enrolls them immediately. No manual step in between. This is where applicant screening data actually comes from: why they want to join, self-reflection/confidence ratings, resume, whether they want an internship, first-work-experience flag, how they heard about VirApp. Useful for admin decisions beyond just name/email — there's real signal here for evaluating fit.
+- **CSV bulk upload (exists, not used in practice)** — a separate admin tool to bulk-upload a spreadsheet of accept/reject decisions. Only carries name/email/challenge/decision — none of the richer Tally screening data. Don't treat this as the signup flow; it isn't how applicants actually get into the system day to day.
+
 ## Admin-gated capabilities (found 2026-08-30)
 
 - **View sign-ups** — list all user-challenge groups. Roles: Admin, Program Manager.
-- **Update enrollment status** — approve/reject, single-challenge batch or arbitrary user×challenge pairs. Permission: Edit Signups.
-- **Bulk email from CSV** — role: Admin.
+- **Update enrollment status** — approve/reject, single-challenge batch or arbitrary user×challenge pairs. Permission: Edit Signups. This is the path actually used for accept/reject, including its email-sending.
+- **Bulk email from CSV** — role: Admin, exists but not part of the real workflow (see above).
 - Adjacent but not VirApp-specific: coach allowlisting/activation (Admin-only) — a separate concern from application review.
 
 ## Email sending — acceptance/rejection
@@ -54,6 +59,8 @@ Enroll flow: user submits → group gets created → the enrolling user gets add
 | `PATCH /users/:uid/challengesNew/:challengeId/enrollmentStatus` | `users-challenges-new.controller.ts:527` |
 | `PATCH /users/:uid/challengesNew/batchEnrollmentStatus` | `users-challenges-new.controller.ts:564` |
 | `POST /challenges/send-email` | `challenges.controller.ts:89` |
+| Tally signup webhook (`formSubmissionAndEnroll`) | `webhooks.controller.ts:31`, mapping in `webhooks.service.ts` |
+| `enrollSelfAndInvite` (what the webhook calls) | `users-challenges-new.service.ts:243` |
 | `sendVirappApplicationResultEmail` | `mail.service.ts:183` |
 | `batchUpdateEnrollmentStatusForPairs` (email-sending logic) | `users-challenges-new.service.ts:1552-1618` |
 | Mail config / SMTP creds (`getMailConfig`) | `config.service.ts:200-225` |

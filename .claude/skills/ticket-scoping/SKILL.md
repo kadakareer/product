@@ -15,7 +15,7 @@ Once something concrete emerges (a specific field to add, a specific flow to bui
 
 ## Folder per epic, file per piece
 
-`tickets/<epic-name>/<piece-name>.html` — e.g. `tickets/virapp-admin/backend-changes.html`. As more pieces of the same epic crystallize, they become sibling files in the same folder, not sections bolted onto one growing doc. New epics become sibling folders under `tickets/`.
+`tickets/<epic-name>/<piece-name>.html` — e.g. `tickets/virapp-admin/new-fields.html`. As more pieces of the same epic crystallize, they become sibling files in the same folder, not sections bolted onto one growing doc. New epics become sibling folders under `tickets/`.
 
 `tickets/index.html` lists every epic and its pieces (mirrors the root `index.html` prototype listing). Add a link there whenever a new epic folder or a new piece file is created — it's hand-maintained, not generated.
 
@@ -30,7 +30,9 @@ This is specific to scoped-piece deliverables. Skills, `CLAUDE.md`, and context 
 Copy `template.html` (in this skill's folder) as the starting point for any new ticket file — it has the card layout, the What/Where table, and the reference/note/path patterns already wired up. Don't rebuild this structure from scratch each time.
 
 What each part is for:
+- A "Back to tickets" link (`.back-link`) at the top, pointing to `../index.html` — every piece file links back to the epic index.
 - One `<section class="card">` per crystallized piece — each item its own visually separated card, not sections bolted onto one long scroll.
+- A `.copy-btn` in the top-right of every card, copying that card's text to the clipboard — for pasting into Slack/email/a tracker when handing the piece to an engineer. The `copyCard`/`fallbackCopy` script at the end of the template does the work; add the button and rely on the shared script rather than re-implementing it.
 - `<h2>`: the specific change, named plainly (what it does, not a ticket number).
 - Optional visual (screenshot, mockup, small diagram) right after the intro, before "Technical solution" — only when there's something to actually show; delete the placeholder otherwise.
 - The "Technical solution" table matches writing-style's "keep exact references out of the flow" — a reference (name + file path) never sits inline in prose.

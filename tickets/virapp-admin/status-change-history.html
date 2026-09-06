@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VirApp admin — Track status changes and email sends per applicant</title>
+<style>
+  body { font: 16px/1.5 -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f0f0f0; margin: 0; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  h2 { margin-top: 0; scroll-margin-top: 1.5rem; }
+  section.card { position: relative; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .copy-btn { position: absolute; top: 1rem; right: 1.25rem; font: inherit; font-size: 0.8em; padding: 0.25rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #444; cursor: pointer; }
+  .copy-btn:hover { background: #f5f5f7; }
+  .copy-btn.copied { color: #16a34a; border-color: #16a34a; }
+  table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #ddd; vertical-align: top; }
+  th { background: #f5f5f5; }
+  code { background: #f0f0f0; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.9em; }
+  td ul { margin: 0; padding-left: 1.1rem; }
+  td li { margin: 0.2rem 0; }
+  td .note { display: block; margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; font-size: 0.9em; }
+  td .path { display: block; margin-top: 0.15rem; color: #666; }
+  .back-link { display: inline-block; margin-bottom: 1rem; font-size: 0.9em; color: #666; text-decoration: none; }
+  .back-link:hover { color: #3b82f6; text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<a class="back-link" href="../index.html">&larr; Back to tickets</a>
+
+<section class="card" id="status-history-tracking">
+  <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+  <h2>Track status changes and email sends per applicant</h2>
+
+  <p>Admin wants an audit trail of when an applicant's status changed (and by whom), plus whether the accept/reject email actually sent — currently neither is tracked, and email-sending itself is inconsistent across the three call sites that can change status.</p>
+
+  <h3>Technical solution</h3>
+
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr>
+      <td>New history entity, one doc per status change</td>
+      <td>
+        New flat top-level collection <code>user_challenge_status_history</code>
+        <span class="note">codebase has no subcollection convention (fireorm, no <code>@SubCollection</code> in use anywhere) — mirror the existing flat-collection pattern instead of inventing one</span>
+        <ul>
+          <li><code>userChallengeGroupId</code> — FK to the <code>UserChallengeGroup</code> doc</li>
+          <li><code>previousStatus</code> / <code>newStatus</code></li>
+          <li><code>changedBy</code> — admin id</li>
+          <li><code>changedAt</code></li>
+          <li><code>emailRequested</code> — bool, did the caller ask for an email</li>
+          <li><code>emailSent</code> — bool, did it actually go out</li>
+          <li><code>emailSentAt</code> — nullable</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td>Consolidate status-change + email logic into one path</td>
+      <td>
+        <code>functions/src/api/users/users-challenges-new.service.ts</code>
+        <ul>
+          <li><code>updateEnrollmentStatus</code> — has send calls commented out/dead</li>
+          <li><code>batchUpdateEnrollmentStatus</code> — never sends</li>
+          <li><code>batchUpdateEnrollmentStatusForPairs</code> — sends only if <code>sendEmail: true</code></li>
+        </ul>
+        <span class="note">route all three through one function that updates status, sends the email when requested, then writes a single history row with the actual email outcome — so the row is written once, self-contained, not split across two writes</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Wire up the send call in the currently-dead path</td>
+      <td>
+        <code>mailService.sendVirappApplicationResultEmail</code>
+        <span class="path"><code>functions/src/core/mail/mail.service.ts</code></span>
+        <span class="note">needs <code>applicantName</code> (from <code>usersService.findOne</code>) and <code>virappChallengeName</code> (from <code>cmsService.getChallengeDashboard</code>) — both extra fetches not otherwise available inside <code>updateEnrollmentStatus</code> today</span>
+      </td>
+    </tr>
+  </table>
+</section>
+
+<script>
+function copyCard(btn) {
+  const card = btn.closest('.card');
+  const clone = card.cloneNode(true);
+  clone.querySelectorAll('.copy-btn').forEach(el => el.remove());
+  const text = clone.innerText.trim();
+  const restore = btn.textContent;
+  const onDone = () => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = restore; btn.classList.remove('copied'); }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(onDone).catch(() => fallbackCopy(text, onDone));
+  } else {
+    fallbackCopy(text, onDone);
+  }
+}
+function fallbackCopy(text, onDone) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); onDone(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+</script>
+</body>
+</html>

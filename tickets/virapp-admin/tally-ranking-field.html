@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VirApp — Tally ranking field change</title>
+<style>
+  body { font: 16px/1.5 -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f0f0f0; margin: 0; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  h2 { margin-top: 0; scroll-margin-top: 1.5rem; }
+  section.card { position: relative; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .copy-btn { position: absolute; top: 1rem; right: 1.25rem; font: inherit; font-size: 0.8em; padding: 0.25rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #444; cursor: pointer; }
+  .copy-btn:hover { background: #f5f5f7; }
+  .copy-btn.copied { color: #16a34a; border-color: #16a34a; }
+  table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #ddd; vertical-align: top; }
+  th { background: #f5f5f5; }
+  code { background: #f0f0f0; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.9em; }
+  td ul { margin: 0; padding-left: 1.1rem; }
+  td li { margin: 0.2rem 0; }
+  td .note { display: block; margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; font-size: 0.9em; }
+  td .path { display: block; margin-top: 0.15rem; color: #666; }
+  .back-link { display: inline-block; margin-bottom: 1rem; font-size: 0.9em; color: #666; text-decoration: none; }
+  .back-link:hover { color: #3b82f6; text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<a class="back-link" href="../index.html">&larr; Back to tickets</a>
+
+<section class="card" id="tally-ranking-field">
+  <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+  <h2>Handle ranking-type <code>reasonsForProgramParticipation</code> field</h2>
+
+  <p>This question is currently a <code>MATRIX</code> grid (screenshot below) — rows are the ~10 reasons, columns are Reason #1/#2/#3, one radio per cell. Two problems: nothing stops a respondent from picking more than 3 total, and adding/editing a reason means touching all 3 columns of the grid. Switching to Tally's native ranking field (drag/select top 3 of ~8, one list) fixes both — but it's a different field entirely, so the webhook mapping needs to be rewritten for it, not patched to fit the grid.</p>
+
+  <p><img src="images/tally-ranking-field-form.png" alt="Current Tally form: reasons-for-joining question as a matrix grid with Reason #1/#2/#3 columns and a radio per row" style="max-width: 100%; border: 1px solid #ddd; border-radius: 4px;"></p>
+
+  <h3>Technical solution</h3>
+
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr>
+      <td>Current mapping only understands flat option lists</td>
+      <td>
+        <code>reasonsForProgramParticipation</code> mapping in <code>transformTallyFormData</code>
+        <span class="path"><code>functions/src/api/webhooks/webhooks.service.ts</code></span>
+        <span class="note">filters <code>field.options</code> by which are present in <code>field.value</code> — doesn't fit the current <code>MATRIX</code> grid (rows/columns, no flat <code>options</code>) or the incoming ranking type either, so this needs rewriting regardless</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Switch the field type on the Tally form</td>
+      <td>
+        Tally form — <code>reasonsForProgramParticipation</code> question
+        <span class="note">replace the matrix grid with Tally's native ranking field, capped to top 3 of the ~8 options — do this first, since the payload-shape check below needs a real submission against the new field</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Confirm the actual payload shape before writing the fix</td>
+      <td>
+        <code>POST /webhooks/inspect</code> diagnostic endpoint
+        <span class="path"><code>webhooks.controller.ts:114</code></span>
+        <span class="note">unlike <code>MATRIX</code> (already modeled via <code>MatrixValue</code>/<code>MatrixRow</code>/<code>MatrixColumn</code> in <code>functions/types/tally.ts</code>), there's no existing type for Tally's ranking field — send a real submission through this endpoint to confirm whether <code>value</code> holds option ids or text, and whether it's already ordered/capped to 3</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Update the mapping to read the ranking field</td>
+      <td>
+        Same <code>reasonsForProgramParticipation</code> block
+        <span class="path"><code>functions/src/api/webhooks/webhooks.service.ts</code></span>
+        <span class="note">map over <code>field.value</code> directly (order preserved) instead of filtering <code>options</code>; look up each entry's display text from <code>options</code> matching by id or text, per the confirmed shape; slice to top 3 as a safety cap regardless of what Tally sends</span>
+      </td>
+    </tr>
+  </table>
+</section>
+
+<script>
+function copyCard(btn) {
+  const card = btn.closest('.card');
+  const clone = card.cloneNode(true);
+  clone.querySelectorAll('.copy-btn').forEach(el => el.remove());
+  const text = clone.innerText.trim();
+  const restore = btn.textContent;
+  const onDone = () => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = restore; btn.classList.remove('copied'); }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(onDone).catch(() => fallbackCopy(text, onDone));
+  } else {
+    fallbackCopy(text, onDone);
+  }
+}
+function fallbackCopy(text, onDone) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); onDone(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+</script>
+</body>
+</html>
