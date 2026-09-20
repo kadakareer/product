@@ -44,6 +44,23 @@
             background: #f5f5f7;
             color: #0066cc;
         }
+
+        .group-note {
+            font-size: 13px;
+            color: #6e6e73;
+            padding: 12px 20px;
+            border-top: 1px solid #f0f0f2;
+            background: #fafafa;
+        }
+
+        .group-note ul {
+            margin: 0;
+            padding-left: 1.1rem;
+        }
+
+        .group-note li {
+            margin: 0.4rem 0;
+        }
     </style>
 </head>
 <body>
@@ -69,6 +86,12 @@
                 <li><a href="whats-new-banner/registration-close-date.html">Add registrationCloseDate to Event</a></li>
                 <li><a href="whats-new-banner/banner-component.html">Dismissible What's New Banner</a></li>
             </ul>
+            <div class="group-note">
+                <ul>
+                    <li>Registration cutoff is defined manually in Contentful — already the central place to manage everything else about an event, so this is one more field there, not a new system. Not pulled live from Tally: its only integration in the monorepo is inbound (webhook on form submit), no outbound API to read a form's own accept-cutoff from.</li>
+                    <li>Open: PM to check how VirApp's existing Tally form embed behaves once it stops accepting responses — informs what UX to expect when the Events banner CTA lands on a form past its cutoff.</li>
+                </ul>
+            </div>
         </div>
     </div>
 

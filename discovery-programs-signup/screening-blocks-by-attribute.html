@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Screening Blocks by Attribute</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F5F7F4;
+    --card: #FFFFFF;
+    --ink: #1E2A24;
+    --muted: #667169;
+    --hairline: #E1E5DF;
+    --forest: #2F6F52;
+    --forest-fill: #E3F1E8;
+    --off: #C9CFC9;
+    --off-fill: #F2F3F1;
+    --amber: #C79A2E;
+    --amber-fill: #FBF3E1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--ink);
+    padding: 40px 20px;
+  }
+  .sheet {
+    max-width: 940px;
+    margin: 0 auto;
+    background: var(--card);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    padding: 44px 40px 40px;
+  }
+  h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    font-size: 29px;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    font-size: 18px;
+    margin: 36px 0 4px;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.55;
+    max-width: 660px;
+    margin: 0 0 24px;
+  }
+  .section-note {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 660px;
+    margin: 0 0 18px;
+  }
+  .attr-defs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .attr-def {
+    background: var(--foundation, #EFF3EC);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .attr-def .attr-name { font-weight: 600; font-size: 12.5px; }
+  .attr-def .attr-desc { font-size: 11.5px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+
+  .col-headings {
+    display: grid;
+    grid-template-columns: 210px repeat(5, 1fr);
+    min-width: 760px;
+    padding: 0 4px 10px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 4px;
+  }
+  .col-headings span { font-size: 11.5px; font-weight: 600; text-align: center; line-height: 1.3; }
+  .scroller { overflow-x: auto; margin: 0 -4px; padding: 0 4px; }
+  .block { min-width: 760px; border-bottom: 1px solid var(--hairline); }
+  .block-row {
+    display: grid;
+    grid-template-columns: 210px repeat(5, 1fr);
+    align-items: center;
+    padding: 14px 0;
+    cursor: pointer;
+    user-select: none;
+  }
+  .block-row:hover { background: #FAFBF9; }
+  .row-label { display: flex; align-items: flex-start; gap: 10px; padding-right: 10px; }
+  .caret {
+    font-size: 11px; color: var(--muted); margin-top: 3px;
+    transition: transform 0.18s ease; flex-shrink: 0; display: inline-block;
+  }
+  .block.open .caret { transform: rotate(90deg); }
+  .row-text .row-name { font-weight: 600; font-size: 14px; }
+  .row-text .row-desc { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 2px; }
+  .cell { display: flex; justify-content: center; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.on { background: var(--forest); }
+  .dot.off { background: var(--off); }
+  .panel { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
+  .block.open .panel { max-height: 320px; }
+  .panel-inner { padding: 4px 0 20px 34px; }
+  .panel-inner .field-note { font-size: 11.5px; color: var(--muted); margin-bottom: 8px; }
+  .panel-inner ul { margin: 0; padding-left: 16px; font-size: 13px; line-height: 1.85; color: var(--ink); }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 22px;
+    margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--hairline);
+    font-size: 12.5px; color: var(--muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 8px; }
+
+  .note {
+    margin-top: 8px; font-size: 13px; color: var(--muted);
+    background: var(--amber-fill); border-left: 3px solid var(--amber);
+    padding: 12px 16px; border-radius: 0 8px 8px 0; line-height: 1.6;
+  }
+  .note b { color: var(--ink); }
+
+  .instances { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+  .instance-card {
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .instance-card .instance-name { font-weight: 600; font-size: 14px; margin-bottom: 10px; }
+  .attr-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .attr-tag {
+    font-size: 11.5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .attr-tag.yes { background: var(--forest-fill); color: var(--forest); }
+  .attr-tag.no { background: var(--off-fill); color: var(--muted); }
+  .attr-tag .tag-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .attr-tag.yes .tag-dot { background: var(--forest); }
+  .attr-tag.no .tag-dot { background: var(--off); }
+  .result-line { font-size: 13px; line-height: 1.6; }
+  .result-line b { font-weight: 600; }
+  .gap-flag { font-size: 12.5px; color: var(--amber); margin-top: 8px; font-style: italic; }
+
+  @media (max-width: 600px) {
+    .sheet { padding: 28px 20px; }
+    h1 { font-size: 23px; }
+  }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <h1>Screening Blocks, by Attribute</h1>
+    <p class="subtitle">Instead of five brand columns, blocks key off what an instance of a program actually is. A brand name is just a label for whatever bundle of attributes that run happens to have — it doesn't drive the form directly anymore.</p>
+
+    <div class="attr-defs">
+      <div class="attr-def">
+        <div class="attr-name">Competitive / Limited Slots</div>
+        <div class="attr-desc">Not everyone who applies gets in</div>
+      </div>
+      <div class="attr-def">
+        <div class="attr-name">Sponsor Attached</div>
+        <div class="attr-desc">A partner company is directly involved</div>
+      </div>
+      <div class="attr-def">
+        <div class="attr-name">Multi-Week</div>
+        <div class="attr-desc">Runs longer than a single session or day</div>
+      </div>
+      <div class="attr-def">
+        <div class="attr-name">Has Deliverable</div>
+        <div class="attr-desc">Produces a submission, project, or capstone</div>
+      </div>
+      <div class="attr-def">
+        <div class="attr-name">Centrally Run</div>
+        <div class="attr-desc">Org-managed vs. run by a hub leader</div>
+      </div>
+    </div>
+
+    <div class="scroller">
+      <div class="col-headings">
+        <div></div>
+        <span>Competitive</span><span>Sponsor</span><span>Multi-Week</span><span>Deliverable</span><span>Central</span>
+      </div>
+
+      <div class="block" data-block="core">
+        <div class="block-row" onclick="toggleBlock(this.parentElement)">
+          <div class="row-label">
+            <span class="caret">▶</span>
+            <div class="row-text">
+              <div class="row-name">Core Profile &amp; Consent</div>
+              <div class="row-desc">Always on, regardless of attributes</div>
+            </div>
+          </div>
+          <div class="cell"><div class="dot on"></div></div>
+          <div class="cell"><div class="dot on"></div></div>
+          <div class="cell"><div class="dot on"></div></div>
+          <div class="cell"><div class="dot on"></div></div>
+          <div class="cell"><div class="dot on"></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-inner">
+            <div class="field-note">General fields — same shape for every program</div>
+            <ul>
+              <li>First name, last name, active email address</li>
+              <li>Phone number, province, school, year level</li>
+              <li>Demographic and household context</li>
+              <li>Data privacy consent (RA 10173 / Data Privacy Act)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="block" data-block="motivation">
+        <div class="block-row" onclick="toggleBlock(this.parentElement)">
+          <div class="row-label">
+            <span class="caret">▶</span>
+            <div class="row-text">
+              <div class="row-name">Motivation &amp; Fit</div>
+              <div class="row-desc">Why they're applying, ranked reasons</div>
+            </div>
+          </div>
+          <div class="cell"><div class="dot on"></div></div>
+          <div class="cell"><div class="dot off"></div></div>
+          <div class="cell"><div class="dot on"></div></div>
+          <div class="cell"><div class="dot off"></div></div>
+          <div class="cell"><div class="dot off"></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-inner">
+            <div class="field-note">Triggers on Competitive OR Multi-Week</div>
+            <ul>
+              <li>Where did you hear about this program?</li>
+              <li>Why did you decide to participate? (select all that apply)</li>
+              <li>Rank your top reasons for joining</li>
+              <li>Why do you want to join this specific program?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="block" data-block="self">
+        <div class="block-row" onclick="toggleBlock(this.parentElement)">
+          <div class="row-label">
+            <span class="caret">▶</span>
+            <div class="row-text">
+              <div class="row-name">Self-Assessment</div>
+              <div class="row-desc">Confidence or knowledge rating scale</div>
+            </div>
+          </div>
+          <div class="cell"><div class="dot off"></div></div>
+          <div class="cell"><div class="dot off"></div></div>
+          <div class="cell"><div class="dot on"></div></div>
+          <div class="cell"><div class="dot on"></div></div>
+          <div class="cell"><div class="dot off"></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-inner">
+            <div class="field-note">Triggers on Multi-Week OR Has Deliverable — see the gap flagged below</div>
+            <ul>
+              <li>Rate your confidence in the skills this program requires (1–5)</li>
+              <li>Rate your knowledge of the program's topic (1–5)</li>
+              <li>Have you had real-world experience in this area before?</li>
+              <li>How familiar are you with [topic]? (0–10)</li>
+              <li>How familiar are you with our organization? (0–10)</li>
+              <li>Do you know where to access relevant career resources?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="block" data-block="eligibility">
+        <div class="block-row" onclick="toggleBlock(this.parentElement)">
+          <div class="row-label">
+            <span class="caret">▶</span>
+            <div class="row-text">
+              <div class="row-name">Eligibility Screening</div>
+              <div class="row-desc">Gating questions and supporting materials</div>
+            </div>
+          </div>
+          <div class="cell"><div class="dot on"></div></div>
+          <div class="cell"><div class="dot on"></div></div>
+          <div class="cell"><div class="dot off"></div></div>
+          <div class="cell"><div class="dot off"></div></div>
+          <div class="cell"><div class="dot off"></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-inner">
+            <div class="field-note">Triggers on Competitive OR Sponsor Attached</div>
+            <ul>
+              <li>Upload supporting materials (resume, portfolio, or work sample)</li>
+              <li>Will this be your first formal experience of this kind?</li>
+              <li>What qualities do you have that would help you succeed, solo or in a group?</li>
+              <li>Have you reviewed the program handbook or guidelines?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="block" data-block="partner">
+        <div class="block-row" onclick="toggleBlock(this.parentElement)">
+          <div class="row-label">
+            <span class="caret">▶</span>
+            <div class="row-text">
+              <div class="row-name">Partner Data Consent</div>
+              <div class="row-desc">Sharing contact/resume with sponsors</div>
+            </div>
+          </div>
+          <div class="cell"><div class="dot off"></div></div>
+          <div class="cell"><div class="dot on"></div></div>
+          <div class="cell"><div class="dot off"></div></div>
+          <div class="cell"><div class="dot off"></div></div>
+          <div class="cell"><div class="dot off"></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-inner">
+            <div class="field-note">Triggers on Sponsor Attached</div>
+            <ul>
+              <li>Agree to program-specific terms (privacy notice, NDA, output ownership)</li>
+              <li>Opt in to a formal internship or role with a partner company</li>
+              <li>Permission to share your resume and contact details with partner companies</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="block" data-block="commitment">
+        <div class="block-row" onclick="toggleBlock(this.parentElement)">
+          <div class="row-label">
+            <span class="caret">▶</span>
+            <div class="row-text">
+              <div class="row-name">Commitment Agreement</div>
+              <div class="row-desc">Formal sign-off on program expectations</div>
+            </div>
+          </div>
+          <div class="cell"><div class="dot off"></div></div>
+          <div class="cell"><div class="dot off"></div></div>
+          <div class="cell"><div class="dot on"></div></div>
+          <div class="cell"><div class="dot on"></div></div>
+          <div class="cell"><div class="dot off"></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-inner">
+            <div class="field-note">Triggers on Multi-Week OR Has Deliverable</div>
+            <ul>
+              <li>Formal agreement to fulfill program expectations and responsibilities</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="dot on"></div> Triggers this block</div>
+      <div class="legend-item"><div class="dot off"></div> No effect</div>
+    </div>
+
+    <div class="note">
+      <b>Centrally Run doesn't trigger any block above, and that's likely correct.</b> It isn't really a content attribute like the other four — it's a governance one. It probably determines <i>who's allowed to toggle blocks on or off</i> for a given instance, not <i>which blocks show up</i>. That reframes Hub Events: its earlier "varies" status wasn't a content problem, it was this attribute — decentralized control, not decentralized content.
+    </div>
+
+    <h2>Worked examples</h2>
+    <p class="section-note">Plugging real and hypothetical instances into the rules above, to pressure-test whether the four content attributes actually predict the right blocks.</p>
+
+    <div class="instances">
+      <div class="instance-card">
+        <div class="instance-name">VirApp Cohort</div>
+        <div class="attr-row">
+          <span class="attr-tag yes"><span class="tag-dot"></span>Competitive</span>
+          <span class="attr-tag yes"><span class="tag-dot"></span>Sponsor</span>
+          <span class="attr-tag yes"><span class="tag-dot"></span>Multi-Week</span>
+          <span class="attr-tag yes"><span class="tag-dot"></span>Deliverable</span>
+          <span class="attr-tag yes"><span class="tag-dot"></span>Central</span>
+        </div>
+        <div class="result-line">Activates <b>every block</b> — matches the real VirApp form exactly.</div>
+      </div>
+
+      <div class="instance-card">
+        <div class="instance-name">AI Skills Workshop</div>
+        <div class="attr-row">
+          <span class="attr-tag no"><span class="tag-dot"></span>Competitive</span>
+          <span class="attr-tag no"><span class="tag-dot"></span>Sponsor</span>
+          <span class="attr-tag no"><span class="tag-dot"></span>Multi-Week</span>
+          <span class="attr-tag no"><span class="tag-dot"></span>Deliverable</span>
+          <span class="attr-tag yes"><span class="tag-dot"></span>Central</span>
+        </div>
+        <div class="result-line">Predicted: <b>no blocks beyond Core Profile.</b></div>
+        <div class="gap-flag">But the real Workshops form did include Self-Assessment for exactly this kind of session. The four attributes miss it — pointing to a likely fifth content attribute: whether the session teaches a specific skill in depth.</div>
+      </div>
+
+      <div class="instance-card">
+        <div class="instance-name">Resume Refinement Workshop</div>
+        <div class="attr-row">
+          <span class="attr-tag no"><span class="tag-dot"></span>Competitive</span>
+          <span class="attr-tag no"><span class="tag-dot"></span>Sponsor</span>
+          <span class="attr-tag no"><span class="tag-dot"></span>Multi-Week</span>
+          <span class="attr-tag no"><span class="tag-dot"></span>Deliverable</span>
+          <span class="attr-tag yes"><span class="tag-dot"></span>Central</span>
+        </div>
+        <div class="result-line">Predicted: <b>no blocks beyond Core Profile.</b> This one, correctly.</div>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>Same attribute profile, different real-world need.</b> The AI workshop and the resume-refinement workshop score identically on all five attributes, yet only one actually wants a self-assessment. That's the clearest evidence the attribute set isn't complete yet — worth testing "teaches a specific skill" as a sixth attribute with program managers before this goes further.
+    </div>
+  </div>
+
+  <script>
+    function toggleBlock(blockEl) {
+      const wasOpen = blockEl.classList.contains('open');
+      document.querySelectorAll('.block.open').forEach(b => b.classList.remove('open'));
+      if (!wasOpen) blockEl.classList.add('open');
+    }
+  </script>
+</body>
+</html>
