@@ -811,6 +811,49 @@
       white-space: pre-wrap;
     }
 
+    /* Styled as an actual button (not just a text label) so it's obvious
+       the preview expands — the History/Info sections it's borrowed from
+       (.detail-section-title.collapsible) read fine as passive headers,
+       but a plain gray label read as inert here. */
+    .detail-section-title.email-preview-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0 10px;
+      padding: 6px 12px;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      background: white;
+      color: #0066cc;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    .detail-section-title.email-preview-toggle:hover {
+      background: #f0f7ff;
+      border-color: #0066cc;
+    }
+    .detail-section-title.email-preview-toggle .detail-section-chevron {
+      color: #0066cc;
+    }
+
+    .status-action-participants {
+      font-size: 13px;
+      color: #3a3a3c;
+      background: #f5f5f7;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 16px;
+    }
+    .status-action-group {
+      margin-bottom: 4px;
+    }
+    .status-action-group:last-child {
+      margin-bottom: 0;
+    }
+
     /* Bulk actions — only shown once at least one row is selected */
     .bulk-actions-bar {
       display: none;
@@ -1028,6 +1071,8 @@
       <button class="modal-close" onclick="cancelStatusAction()">✕</button>
     </div>
 
+    <div class="status-action-participants" id="statusActionParticipants" style="display: none;"></div>
+
     <div class="config-group" id="statusActionReasonField" style="display: none;">
       <label class="config-label" for="statusActionReason">Reason for rejection</label>
       <textarea id="statusActionReason" class="status-action-textarea" rows="3" placeholder="Explain why this application was rejected…"></textarea>
@@ -1044,10 +1089,10 @@
     </div>
 
     <div id="statusActionPreviewSection">
-      <div class="detail-section-title collapsible collapsed" onclick="toggleDetailSection(this)">
+      <button type="button" class="detail-section-title collapsible collapsed email-preview-toggle" onclick="toggleDetailSection(this)">
         <span>Preview email</span>
         <span class="detail-section-chevron">▾</span>
-      </div>
+      </button>
       <div class="email-preview" id="statusActionPreviewBody"></div>
     </div>
 
@@ -1879,6 +1924,17 @@
     if (label) label.textContent = statusLabel(status);
   }
 
+  // Comma list of participant names for a set of rows, truncated with a
+  // "and N more" tail so a large bulk selection doesn't blow out the modal.
+  function namesList(rows, limit) {
+    const names = rows.map(r => {
+      const p = participantsData.find(x => x.id === r.dataset.rowId);
+      return p ? p.name : r.dataset.rowId;
+    });
+    if (names.length <= limit) return names.join(', ');
+    return `${names.slice(0, limit).join(', ')}, and ${names.length - limit} more`;
+  }
+
   // overflowRows is only used by the bulk approve-at-capacity split: rows
   // get `status` (Approved), overflowRows get Waitlisted, sharing one
   // send-email decision instead of asking twice.
@@ -1897,6 +1953,23 @@
       title = `${STATUS_ACTION_TITLES[status]} ${p ? p.name : 'participant'}`;
     }
     document.getElementById('statusActionTitle').textContent = title;
+
+    // Who exactly is affected — the title only gives a count for a bulk
+    // change, so this spells out names (a single change already names
+    // its one participant in the title above).
+    const participantsEl = document.getElementById('statusActionParticipants');
+    if (hasOverflow) {
+      participantsEl.innerHTML = `
+        <div class="status-action-group"><strong>Approve (${rows.length}):</strong> ${namesList(rows, 6)}</div>
+        <div class="status-action-group"><strong>Waitlist (${overflowRows.length}):</strong> ${namesList(overflowRows, 6)}</div>
+      `;
+      participantsEl.style.display = 'block';
+    } else if (isBulk) {
+      participantsEl.textContent = namesList(rows, 8);
+      participantsEl.style.display = 'block';
+    } else {
+      participantsEl.style.display = 'none';
+    }
 
     const reasonField = document.getElementById('statusActionReasonField');
     const reasonInput = document.getElementById('statusActionReason');
