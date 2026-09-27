@@ -769,6 +769,48 @@
       margin: 6px 0 0;
     }
 
+    .reset-demo-group {
+      padding-top: 16px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .reset-demo-btn {
+      color: #dc2626;
+      border-color: #fecaca;
+    }
+    .reset-demo-btn:hover {
+      background: #fef2f2;
+      border-color: #dc2626;
+    }
+
+    .status-action-textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    .email-preview {
+      background: #f5f5f7;
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-size: 13px;
+    }
+    .email-preview-subject {
+      font-weight: 600;
+      color: #1d1d1f;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e5e5ea;
+    }
+    .email-preview-body {
+      color: #3a3a3c;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
     /* Bulk actions — only shown once at least one row is selected */
     .bulk-actions-bar {
       display: none;
@@ -965,9 +1007,53 @@
       </div>
     </div>
 
+    <div class="config-group reset-demo-group">
+      <label class="config-label">Demo data</label>
+      <button type="button" class="btn-outline reset-demo-btn" onclick="resetDemoData()">Reset to demo data</button>
+      <p class="config-hint">Clears every status/reject-reason change made in this browser and restores the original sample data.</p>
+    </div>
+
     <div class="modal-actions">
       <button class="modal-btn cancel" onclick="closeModal('configModal')">Cancel</button>
       <button class="modal-btn save" onclick="saveConfig()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Status Action Modal (Approve / Reject / Waitlist) -->
+<div id="statusActionModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title" id="statusActionTitle">Reject application</h2>
+      <button class="modal-close" onclick="cancelStatusAction()">✕</button>
+    </div>
+
+    <div class="config-group" id="statusActionReasonField" style="display: none;">
+      <label class="config-label" for="statusActionReason">Reason for rejection</label>
+      <textarea id="statusActionReason" class="status-action-textarea" rows="3" placeholder="Explain why this application was rejected…"></textarea>
+    </div>
+
+    <div class="config-group">
+      <div class="config-switch-row">
+        <span class="config-label" id="statusActionEmailLabel" style="margin-bottom: 0;">Send acceptance email</span>
+        <label class="config-switch">
+          <input type="checkbox" id="statusActionSendEmail" checked>
+          <span class="config-switch-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div id="statusActionPreviewSection">
+      <div class="detail-section-title collapsible collapsed" onclick="toggleDetailSection(this)">
+        <span>Preview email</span>
+        <span class="detail-section-chevron">▾</span>
+      </div>
+      <div class="email-preview" id="statusActionPreviewBody"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="cancelStatusAction()">Cancel</button>
+      <button class="modal-btn save" id="statusActionConfirmBtn" onclick="confirmStatusAction()">Reject</button>
     </div>
   </div>
 </div>
@@ -1017,6 +1103,29 @@
   // truncateRejectReason() (defined later in this script, but that
   // function's body reads this const, so it must exist before then).
   const REJECT_REASON_PREVIEW_LENGTH = 90;
+
+  const PARTICIPANTS_KEY = 'kadakareer_program_participants';
+
+  // Overlay any admin changes saved from a previous session onto the seed
+  // data, in place, before the table renders — so a reload doesn't lose
+  // status/history/reject-reason edits made in this browser. "Reset to
+  // demo data" (in Program Configuration) clears this back out.
+  (function applyPersistedParticipantState() {
+    let saved;
+    try {
+      saved = JSON.parse(localStorage.getItem(PARTICIPANTS_KEY) || '{}');
+    } catch {
+      saved = {};
+    }
+    participantsData.forEach(p => {
+      const override = saved[p.id];
+      if (!override) return;
+      p.status = override.status;
+      p.rejectReason = override.rejectReason || '';
+      p.history = override.history || [];
+      p.updatedAt = override.updatedAt || p.updatedAt;
+    });
+  })();
 
   // Render rows synchronously before admin-common.js loads
   const tbody = document.querySelector('#signups-table tbody');
@@ -1085,9 +1194,9 @@
     return text.slice(0, REJECT_REASON_PREVIEW_LENGTH) + '…';
   }
 
-  // presetReason skips the prompt — used by the bulk-update flow, which
-  // asks once for the whole batch instead of once per row.
-  function updateRejectReasonCell(row, status, presetReason) {
+  // reason always comes from the status-action modal now (the reject flow
+  // no longer uses a native prompt()).
+  function updateRejectReasonCell(row, status, reason) {
     const cell = row.querySelector('.reject-reason-cell');
     if (!cell) return;
 
@@ -1096,32 +1205,25 @@
       return;
     }
 
-    const existing = rejectReasonStore[row.dataset.rowId] || '';
-    const reason = presetReason !== undefined ? presetReason : prompt('Reason for rejection:', existing);
     rejectReasonStore[row.dataset.rowId] = reason || '';
     cell.textContent = truncateRejectReason(reason || '');
   }
 
   // Applies a decided status to one row: pill, dataset, timestamp, history
-  // log, email-sent log, reject reason. Capacity/waitlist decisions and
-  // reject-reason prompting happen in the caller, since those differ
-  // between a single-row change and a bulk one.
-  function applyRowStatus(row, newStatus, rejectReason) {
-    const pill = row.querySelector('.status-pill');
-    if (pill) {
-      pill.dataset.status = newStatus;
-      applyPillColor(pill);
-      const label = pill.querySelector('.status-pill-label');
-      if (label) label.textContent = statusLabel(newStatus);
-    }
+  // log, reject reason, and (opt-in) the email-sent log entry. Capacity/
+  // waitlist decisions and reject-reason/send-email prompting happen in the
+  // caller, since those differ between a single-row change and a bulk one.
+  function applyRowStatus(row, newStatus, rejectReason, sendEmail) {
+    syncPillVisual(row, newStatus);
 
     row.dataset.status = newStatus;
     updateRowTimestamp(row);
     logStatusChange(row.dataset.rowId, newStatus);
-    if (newStatus === 'approved' || newStatus === 'rejected') {
+    if (sendEmail && EMAILED_STATUSES.includes(newStatus)) {
       logEmailSent(row.dataset.rowId, newStatus);
     }
     updateRejectReasonCell(row, newStatus, rejectReason);
+    persistParticipantState();
   }
 
   // Tracks which participant's detail modal is currently open, if any — a
@@ -1173,6 +1275,28 @@
   // Registrants who occupy an accepted seat. Waitlisted doesn't count —
   // that's the whole point — and dropped-out frees the seat back up.
   const ACCEPTED_STATUSES = ['approved', 'completed'];
+
+  // Statuses that trigger an automated notification email (opt-out per
+  // change via the status-action modal's "Send email" checkbox).
+  const EMAILED_STATUSES = ['approved', 'rejected', 'waitlisted'];
+
+  const EMAIL_TEMPLATES = {
+    approved: {
+      sentLabel: 'Acceptance email sent',
+      subject: () => `You're in! Next steps for ${programName}`,
+      body: (p) => `Hi ${p.name},\n\nCongratulations — you've been accepted into ${programName}. We'll follow up shortly with next steps to get you started.\n\nWelcome aboard!\nThe KadaKareer Team`,
+    },
+    rejected: {
+      sentLabel: 'Rejection email sent',
+      subject: () => `Update on your ${programName} application`,
+      body: (p, reason) => `Hi ${p.name},\n\nThank you for applying to ${programName}. After careful review, we're unable to offer you a spot in this cohort.${reason ? `\n\nReason: ${reason}` : ''}\n\nWe encourage you to apply again in the future.\nThe KadaKareer Team`,
+    },
+    waitlisted: {
+      sentLabel: 'Waitlist email sent',
+      subject: () => `You're on the waitlist for ${programName}`,
+      body: (p) => `Hi ${p.name},\n\n${programName} has reached capacity, but you've been added to the waitlist. We'll reach out right away if a spot opens up.\n\nThe KadaKareer Team`,
+    },
+  };
 
   function updateCapacitySummary() {
     const max = loadConfig().maxParticipants;
@@ -1734,6 +1858,140 @@
     return count;
   }
 
+  /* Status action modal — Approve/Reject/Waitlist all ask for a reason
+     (Reject only) and whether to send the automated email, with a preview
+     of that email's content, instead of a native prompt()/confirm(). */
+  const STATUS_ACTION_TITLES = { approved: 'Approve', rejected: 'Reject', waitlisted: 'Move to waitlist' };
+  const STATUS_ACTION_EMAIL_LABELS = {
+    approved: 'Send acceptance email',
+    rejected: 'Send rejection email',
+    waitlisted: 'Send waitlist email',
+  };
+
+  let pendingStatusAction = null;
+
+  function syncPillVisual(row, status) {
+    const pill = row.querySelector('.status-pill');
+    if (!pill) return;
+    pill.dataset.status = status;
+    applyPillColor(pill);
+    const label = pill.querySelector('.status-pill-label');
+    if (label) label.textContent = statusLabel(status);
+  }
+
+  // overflowRows is only used by the bulk approve-at-capacity split: rows
+  // get `status` (Approved), overflowRows get Waitlisted, sharing one
+  // send-email decision instead of asking twice.
+  function openStatusActionModal(status, rows, overflowRows) {
+    pendingStatusAction = { status, rows, overflowRows };
+    const hasOverflow = !!(overflowRows && overflowRows.length);
+    const isBulk = rows.length > 1 || hasOverflow;
+
+    let title;
+    if (hasOverflow) {
+      title = `Approve ${rows.length} and waitlist ${overflowRows.length}`;
+    } else if (isBulk) {
+      title = `${STATUS_ACTION_TITLES[status]} ${rows.length} participants`;
+    } else {
+      const p = participantsData.find(x => x.id === rows[0].dataset.rowId);
+      title = `${STATUS_ACTION_TITLES[status]} ${p ? p.name : 'participant'}`;
+    }
+    document.getElementById('statusActionTitle').textContent = title;
+
+    const reasonField = document.getElementById('statusActionReasonField');
+    const reasonInput = document.getElementById('statusActionReason');
+    reasonField.style.display = status === 'rejected' ? 'block' : 'none';
+    reasonInput.value = (!isBulk && status === 'rejected') ? (rejectReasonStore[rows[0].dataset.rowId] || '') : '';
+    reasonInput.oninput = updateStatusActionPreview;
+
+    document.getElementById('statusActionEmailLabel').textContent = hasOverflow
+      ? 'Send email notifications'
+      : STATUS_ACTION_EMAIL_LABELS[status];
+    document.getElementById('statusActionSendEmail').checked = true;
+    document.getElementById('statusActionConfirmBtn').textContent = hasOverflow ? 'Confirm' : STATUS_ACTION_TITLES[status];
+
+    // A bulk change touches a mix of recipients, so one live template
+    // preview would be misleading — only shown for a single participant.
+    const previewSection = document.getElementById('statusActionPreviewSection');
+    if (isBulk) {
+      previewSection.style.display = 'none';
+    } else {
+      previewSection.style.display = 'block';
+      updateStatusActionPreview();
+    }
+
+    if (!isBulk) syncPillVisual(rows[0], status);
+    openModal('statusActionModal');
+  }
+
+  function updateStatusActionPreview() {
+    if (!pendingStatusAction) return;
+    const { status, rows } = pendingStatusAction;
+    const p = participantsData.find(x => x.id === rows[0].dataset.rowId);
+    if (!p) return;
+    const reason = document.getElementById('statusActionReason').value;
+    const template = EMAIL_TEMPLATES[status];
+    document.getElementById('statusActionPreviewBody').innerHTML = `
+      <div class="email-preview-subject">${template.subject(p)}</div>
+      <div class="email-preview-body">${template.body(p, reason)}</div>
+    `;
+  }
+
+  function cancelStatusAction() {
+    if (pendingStatusAction) {
+      const { rows, overflowRows } = pendingStatusAction;
+      rows.forEach(row => syncPillVisual(row, row.dataset.status));
+      if (overflowRows) overflowRows.forEach(row => syncPillVisual(row, row.dataset.status));
+      pendingStatusAction = null;
+    }
+    closeModal('statusActionModal');
+  }
+
+  document.getElementById('statusActionModal').addEventListener('click', function(e) {
+    if (e.target === this) cancelStatusAction();
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && pendingStatusAction) {
+      const { rows, overflowRows } = pendingStatusAction;
+      rows.forEach(row => syncPillVisual(row, row.dataset.status));
+      if (overflowRows) overflowRows.forEach(row => syncPillVisual(row, row.dataset.status));
+      pendingStatusAction = null;
+    }
+  });
+
+  function confirmStatusAction() {
+    if (!pendingStatusAction) return;
+    const { status, rows, overflowRows } = pendingStatusAction;
+    const sendEmail = document.getElementById('statusActionSendEmail').checked;
+    const reason = status === 'rejected' ? document.getElementById('statusActionReason').value : undefined;
+
+    rows.forEach(row => applyRowStatus(row, status, reason, sendEmail));
+    if (overflowRows) {
+      overflowRows.forEach(row => applyRowStatus(row, 'waitlisted', undefined, sendEmail));
+    }
+
+    updateCapacitySummary();
+    applyFilter();
+    if (currentSort.key && currentSort.dir !== 'none') {
+      sortRows();
+    }
+
+    const allRows = overflowRows ? rows.concat(overflowRows) : rows;
+    if (currentDetailRow && allRows.includes(currentDetailRow) &&
+        document.getElementById('historyModal').classList.contains('show')) {
+      renderDetailModal(currentDetailRow);
+    }
+
+    if (allRows.length > 1) {
+      rowCheckboxes().forEach(cb => { cb.checked = false; });
+      updateSelectionUI();
+    }
+
+    pendingStatusAction = null;
+    closeModal('statusActionModal');
+  }
+
   // Runs after admin-common.js's own delegated handler has already updated
   // the *clicked* pill's data-status for this same click, so the tooltip
   // stays in sync. The pill lives either in a table row, or — when this
@@ -1766,6 +2024,11 @@
       }
     }
 
+    if (EMAILED_STATUSES.includes(newStatus)) {
+      openStatusActionModal(newStatus, [row]);
+      return;
+    }
+
     applyRowStatus(row, newStatus);
     updateCapacitySummary();
     applyFilter();
@@ -1794,7 +2057,7 @@
   function logEmailSent(rowId, status) {
     const parts = formatDateTimeParts(new Date());
     const history = statusHistoryStore[rowId] || (statusHistoryStore[rowId] = []);
-    const label = status === 'approved' ? 'Acceptance email sent' : 'Rejection email sent';
+    const label = EMAIL_TEMPLATES[status] ? EMAIL_TEMPLATES[status].sentLabel : 'Email sent';
     history.push({ type: 'email', label, admin: 'System', date: parts.date, time: parts.time });
   }
 
@@ -1807,6 +2070,45 @@
     const time = cell.querySelector('.time-part');
     const date = cell.firstElementChild;
     return time ? `${date.textContent}, ${time.textContent}` : (date ? date.textContent : '');
+  }
+
+  // Same cell shape as formatCellDateTime, but as a {date, time} pair —
+  // the shape persistParticipantState() saves and applyPersistedParticipantState()
+  // restores, matching createdAt/updatedAt elsewhere.
+  function extractDateTimeParts(cell) {
+    if (!cell) return null;
+    const dateEl = cell.firstElementChild;
+    const timeEl = cell.querySelector('.time-part');
+    return dateEl && timeEl ? { date: dateEl.textContent, time: timeEl.textContent } : null;
+  }
+
+  // Snapshots every row's current status/history/reject-reason/updatedAt
+  // to localStorage, so a reload restores exactly where the admin left
+  // off. Called after every status change (see applyRowStatus).
+  function persistParticipantState() {
+    const saved = {};
+    document.querySelectorAll('#signups-table tbody tr').forEach(row => {
+      const id = row.dataset.rowId;
+      saved[id] = {
+        status: row.dataset.status,
+        rejectReason: rejectReasonStore[id] || '',
+        history: statusHistoryStore[id] || [],
+        updatedAt: extractDateTimeParts(row.querySelector('.updated-at-cell')),
+      };
+    });
+    localStorage.setItem(PARTICIPANTS_KEY, JSON.stringify(saved));
+  }
+
+  // Wipes every admin change made in this browser (status/history/reject
+  // reasons and program config) and reloads to the original seed data.
+  function resetDemoData() {
+    const proceed = confirm(
+      'This clears every status, history, and reject-reason change made in this browser, and restores the original demo data. Continue?'
+    );
+    if (!proceed) return;
+    localStorage.removeItem(PARTICIPANTS_KEY);
+    localStorage.removeItem(CONFIG_KEY);
+    location.reload();
   }
 
   function toggleDetailSection(titleEl) {
@@ -2066,36 +2368,36 @@
     const rows = selectedRows();
     if (!rows.length) return;
 
-    let rejectReason;
-    if (status === 'rejected') {
-      rejectReason = prompt(`Reason for rejection (applied to all ${rows.length} selected):`, '') || '';
-    }
+    if (EMAILED_STATUSES.includes(status)) {
+      let primaryRows = rows;
+      let overflowRows;
 
-    let approvedRows = rows;
-    let waitlistedRows = [];
-
-    if (status === 'approved') {
-      const max = loadConfig().maxParticipants;
-      if (max) {
-        const selectedIds = new Set(rows.map(r => r.dataset.rowId));
-        const acceptedElsewhere = countAccepted(selectedIds);
-        const remaining = Math.max(0, max - acceptedElsewhere);
-        if (rows.length > remaining) {
-          const waitlistOverflow = confirm(
-            `Approving all ${rows.length} selected would put this program over capacity ` +
-            `(${acceptedElsewhere + rows.length}/${max}).\n\nApprove the first ${remaining} and waitlist the rest?`
-          );
-          if (waitlistOverflow) {
-            approvedRows = rows.slice(0, remaining);
-            waitlistedRows = rows.slice(remaining);
+      if (status === 'approved') {
+        const max = loadConfig().maxParticipants;
+        if (max) {
+          const selectedIds = new Set(rows.map(r => r.dataset.rowId));
+          const acceptedElsewhere = countAccepted(selectedIds);
+          const remaining = Math.max(0, max - acceptedElsewhere);
+          if (rows.length > remaining) {
+            const waitlistOverflow = confirm(
+              `Approving all ${rows.length} selected would put this program over capacity ` +
+              `(${acceptedElsewhere + rows.length}/${max}).\n\nApprove the first ${remaining} and waitlist the rest?`
+            );
+            if (waitlistOverflow) {
+              primaryRows = rows.slice(0, remaining);
+              overflowRows = rows.slice(remaining);
+            }
           }
         }
       }
+
+      openStatusActionModal(status, primaryRows, overflowRows);
+      return;
     }
 
-    approvedRows.forEach(row => applyRowStatus(row, status, status === 'rejected' ? rejectReason : undefined));
-    waitlistedRows.forEach(row => applyRowStatus(row, 'waitlisted'));
-
+    // Non-emailed statuses (Interested/Applied/Completed/Dropped out) apply
+    // immediately, same as a single row's dropdown.
+    rows.forEach(row => applyRowStatus(row, status));
     updateCapacitySummary();
     applyFilter();
     if (currentSort.key && currentSort.dir !== 'none') {
@@ -2106,7 +2408,6 @@
       renderDetailModal(currentDetailRow);
     }
 
-    // Bulk actions clear the selection afterward, same as most bulk-action UIs.
     rowCheckboxes().forEach(cb => { cb.checked = false; });
     updateSelectionUI();
   }
