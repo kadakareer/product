@@ -265,6 +265,23 @@ const participantsData = [
       { status: 'rejected', admin: 'maria.cruz@kadakareer.com', date: 'Dec 01, 2025', time: '02:15 PM' },
       { type: 'email', label: 'Rejection email sent', admin: 'System', date: 'Dec 01, 2025', time: '02:15 PM' }
     ]
+  },
+  {
+    id: 'r17',
+    name: 'Diego Fernandez',
+    email: 'diego.fernandez@gmail.com',
+    school: 'University of San Agustin',
+    course: 'BS Computer Science',
+    location: 'Iloilo City, Iloilo',
+    status: 'waitlisted',
+    createdAt: { date: 'Dec 22, 2025', time: '10:15 AM' },
+    updatedAt: { date: 'Dec 22, 2025', time: '03:00 PM' },
+    attendance: { single: false, days: [false, false, false, false, false, false, false] },
+    submissions: [false, false, false],
+    history: [
+      { status: 'applied', admin: 'diego.fernandez@gmail.com', date: 'Dec 22, 2025', time: '10:15 AM' },
+      { status: 'waitlisted', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 22, 2025', time: '03:00 PM' }
+    ]
   }
 ];
 

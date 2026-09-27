@@ -731,6 +731,43 @@
       color: #0066cc;
       font-weight: bold;
     }
+
+    /* Capacity summary — hidden entirely when no max is configured */
+    .capacity-summary {
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+    .capacity-summary.show {
+      display: flex;
+    }
+    .capacity-pill, .waitlist-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 12px;
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .capacity-pill {
+      background: #f0f7ff;
+      color: #0066cc;
+    }
+    .capacity-pill.at-capacity {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+    .waitlist-pill {
+      background: #fffbeb;
+      color: #b45309;
+    }
+
+    .config-hint {
+      font-size: 12px;
+      color: #6e6e73;
+      margin: 6px 0 0;
+    }
   </style>
 </head>
 <body>
@@ -754,6 +791,7 @@
         <option value="interested">Interested</option>
         <option value="applied">Applied</option>
         <option value="approved">Approved</option>
+        <option value="waitlisted">Waitlisted</option>
         <option value="completed">Completed</option>
         <option value="dropped-out">Dropped out</option>
         <option value="rejected">Rejected</option>
@@ -769,6 +807,10 @@
           <span class="config-switch-slider"></span>
         </label>
       </div>
+    </div>
+    <div class="capacity-summary" id="capacitySummary">
+      <span class="capacity-pill" id="capacityPill"></span>
+      <span class="waitlist-pill" id="waitlistPill"></span>
     </div>
   </div>
 
@@ -841,7 +883,13 @@
         <input type="number" id="configSubmissionsCount" class="config-days-input" min="1" max="20" value="3">
       </div>
     </div>
-    
+
+    <div class="config-group">
+      <label class="config-label" for="configMaxParticipants">Max participants</label>
+      <input type="number" id="configMaxParticipants" class="config-days-input" min="1" placeholder="No limit">
+      <p class="config-hint">Once Approved reaches this number, further approvals go to the waitlist instead.</p>
+    </div>
+
     <div class="config-group">
       <label class="config-label">Format</label>
       <div class="config-options">
@@ -923,10 +971,11 @@
         <td>
           <span class="status-pill editable" data-status="${p.status}" onclick="toggleStatusDropdown(event)">
             <span class="status-pill-label">${p.status === 'dropped-out' ? 'Dropped out' : p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span>
-            <div class="status-dropdown" data-statuses="interested,applied,approved,completed,dropped-out,rejected">
+            <div class="status-dropdown" data-statuses="interested,applied,approved,completed,dropped-out,rejected,waitlisted">
               <div class="status-option" data-status="interested">Interested</div>
               <div class="status-option" data-status="applied">Applied</div>
               <div class="status-option" data-status="approved">Approved</div>
+              <div class="status-option" data-status="waitlisted">Waitlisted</div>
               <div class="status-option" data-status="completed">Completed</div>
               <div class="status-option" data-status="dropped-out">Dropped out</div>
               <div class="status-option" data-status="rejected">Rejected</div>
@@ -1033,7 +1082,40 @@
     daysCount: 7,
     submissionsCount: 3,
     showParticipantInfo: false,
+    maxParticipants: 10,
   };
+
+  // Registrants who occupy an accepted seat. Waitlisted doesn't count —
+  // that's the whole point — and dropped-out frees the seat back up.
+  const ACCEPTED_STATUSES = ['approved', 'completed'];
+
+  function updateCapacitySummary() {
+    const max = loadConfig().maxParticipants;
+    const summary = document.getElementById('capacitySummary');
+
+    if (!max) {
+      summary.classList.remove('show');
+      return;
+    }
+
+    const rows = document.querySelectorAll('#signups-table tbody tr');
+    let acceptedCount = 0;
+    let waitlistCount = 0;
+    rows.forEach(row => {
+      if (ACCEPTED_STATUSES.includes(row.dataset.status)) acceptedCount++;
+      if (row.dataset.status === 'waitlisted') waitlistCount++;
+    });
+
+    const capacityPill = document.getElementById('capacityPill');
+    capacityPill.textContent = `${acceptedCount} / ${max} accepted`;
+    capacityPill.classList.toggle('at-capacity', acceptedCount >= max);
+
+    const waitlistPill = document.getElementById('waitlistPill');
+    waitlistPill.textContent = `${waitlistCount} waitlisted`;
+    waitlistPill.style.display = waitlistCount > 0 ? '' : 'none';
+
+    summary.classList.add('show');
+  }
 
   function loadConfig() {
     try {
@@ -1050,6 +1132,7 @@
     document.querySelector(`input[name="submissions"][value="${cfg.submissions}"]`).checked = true;
     document.getElementById('configDaysCount').value = cfg.daysCount;
     document.getElementById('configSubmissionsCount').value = cfg.submissionsCount;
+    document.getElementById('configMaxParticipants').value = cfg.maxParticipants || '';
     document.getElementById('participantInfoToggle').checked = cfg.showParticipantInfo;
     document.getElementById('configDaysField').style.display = cfg.duration === 'multi-day' ? 'block' : 'none';
     document.getElementById('configSubmissionsField').style.display = cfg.submissions === 'has-submissions' ? 'block' : 'none';
@@ -1062,10 +1145,13 @@
     const daysCount = parseInt(document.getElementById('configDaysCount').value, 10) || 1;
     const submissionsCount = parseInt(document.getElementById('configSubmissionsCount').value, 10) || 1;
     const showParticipantInfo = document.getElementById('participantInfoToggle').checked;
+    const maxParticipantsRaw = document.getElementById('configMaxParticipants').value;
+    const maxParticipants = maxParticipantsRaw ? parseInt(maxParticipantsRaw, 10) || null : null;
 
-    const cfg = { duration, format, submissions, daysCount, submissionsCount, showParticipantInfo };
+    const cfg = { duration, format, submissions, daysCount, submissionsCount, showParticipantInfo, maxParticipants };
     localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
     refreshTableColumns(duration, daysCount, submissions === 'has-submissions', submissionsCount, showParticipantInfo);
+    updateCapacitySummary();
     closeModal('configModal');
   }
 
@@ -1524,6 +1610,7 @@
     const cfg = loadConfig();
     applyConfigToModal(cfg);
     refreshTableColumns(cfg.duration, cfg.daysCount, cfg.submissions === 'has-submissions', cfg.submissionsCount, cfg.showParticipantInfo);
+    updateCapacitySummary();
   })();
   window.addEventListener('resize', syncHeaderWidths);
 
@@ -1535,6 +1622,7 @@
     completed: 'Complete attendance and/or submissions',
     'dropped-out': 'Left the program before completion',
     rejected: 'Sign-up form response reviewed and found ineligible',
+    waitlisted: 'Approved but the program is at capacity — waiting for a spot to open up',
   };
 
   function applyStatusTooltips() {
@@ -1563,12 +1651,41 @@
     const row = tableRow || currentDetailRow;
     if (!row) return;
 
-    const newStatus = opt.dataset.status;
+    let newStatus = opt.dataset.status;
+
+    // Redirect Approved into the waitlist once the program is at capacity.
+    // admin-common.js's selectStatus() already applied the *original*
+    // status to the clicked pill before this handler runs, so a redirect
+    // here has to re-sync that same pill below.
+    if (newStatus === 'approved') {
+      const max = loadConfig().maxParticipants;
+      if (max) {
+        const rows = document.querySelectorAll('#signups-table tbody tr');
+        let acceptedCount = 0;
+        rows.forEach(r => {
+          if (r !== row && ACCEPTED_STATUSES.includes(r.dataset.status)) acceptedCount++;
+        });
+        if (acceptedCount >= max) {
+          const p = participantsData.find(x => x.id === row.dataset.rowId);
+          const waitlistInstead = confirm(
+            `This program is at capacity (${acceptedCount}/${max} accepted).\n\nMove ${p ? p.name : 'this participant'} to the waitlist instead of approving?`
+          );
+          if (waitlistInstead) newStatus = 'waitlisted';
+        }
+      }
+    }
+
+    const clickedPill = opt.closest('.status-pill');
+    if (clickedPill) {
+      clickedPill.dataset.status = newStatus;
+      applyPillColor(clickedPill);
+      const clickedLabel = clickedPill.querySelector('.status-pill-label');
+      if (clickedLabel) clickedLabel.textContent = statusLabel(newStatus);
+    }
 
     if (!tableRow) {
-      // Change came from the modal's own pill — admin-common.js already
-      // updated that pill, but the table row's separate pill instance
-      // still needs to be mirrored to match.
+      // Change came from the modal's own pill — the table row's separate
+      // pill instance still needs to be mirrored to match.
       const rowPill = row.querySelector('.status-pill');
       if (rowPill) {
         rowPill.dataset.status = newStatus;
@@ -1585,6 +1702,7 @@
       logEmailSent(row.dataset.rowId, newStatus);
     }
     updateRejectReasonCell(row, newStatus);
+    updateCapacitySummary();
     applyFilter();
     if (currentSort.key && currentSort.dir !== 'none') {
       sortRows();
@@ -1643,10 +1761,11 @@
     document.getElementById('modalStatusPill').innerHTML = `
       <span class="status-pill editable small" data-status="${status}" onclick="toggleStatusDropdown(event)">
         <span class="status-pill-label">${statusLabel(status)}</span>
-        <div class="status-dropdown" data-statuses="interested,applied,approved,completed,dropped-out,rejected">
+        <div class="status-dropdown" data-statuses="interested,applied,approved,completed,dropped-out,rejected,waitlisted">
           <div class="status-option" data-status="interested">Interested</div>
           <div class="status-option" data-status="applied">Applied</div>
           <div class="status-option" data-status="approved">Approved</div>
+          <div class="status-option" data-status="waitlisted">Waitlisted</div>
           <div class="status-option" data-status="completed">Completed</div>
           <div class="status-option" data-status="dropped-out">Dropped out</div>
           <div class="status-option" data-status="rejected">Rejected</div>
