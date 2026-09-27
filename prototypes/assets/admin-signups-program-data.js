@@ -68,17 +68,10 @@ const participantsData = [
     course: 'BS Computer Engineering',
     location: 'Sta. Mesa, Manila',
     status: 'approved',
-    commitment: 'confirmed',
     createdAt: { date: 'Dec 05, 2025', time: '08:30 AM' },
-    updatedAt: { date: 'Dec 06, 2025', time: '10:15 AM' },
+    updatedAt: { date: 'Dec 05, 2025', time: '08:30 AM' },
     attendance: { single: false, days: [false, false, true, false, false, true, false] },
-    submissions: [false, false, false],
-    history: [
-      { status: 'applied', admin: 'alex.rodriguez@email.com', date: 'Dec 05, 2025', time: '08:30 AM' },
-      { status: 'approved', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 05, 2025', time: '08:30 AM' },
-      { type: 'email', label: 'Acceptance email sent', admin: 'System', date: 'Dec 05, 2025', time: '08:30 AM' },
-      { type: 'commitment', label: 'Confirmed their spot', admin: 'alex.rodriguez@email.com', date: 'Dec 06, 2025', time: '10:15 AM' }
-    ]
+    submissions: [false, false, false]
   },
   {
     id: 'r6',
@@ -139,17 +132,11 @@ const participantsData = [
     school: 'Adamson University',
     course: 'BS Computer Engineering',
     location: 'Ermita, Manila',
-    status: 'approved',
-    commitment: 'awaiting',
+    status: 'applied',
     createdAt: { date: 'Nov 22, 2025', time: '02:10 PM' },
-    updatedAt: { date: 'Nov 23, 2025', time: '09:00 AM' },
+    updatedAt: { date: 'Nov 22, 2025', time: '02:10 PM' },
     attendance: { single: true, days: [true, true, true, true, true, true, true] },
-    submissions: [true, true, true],
-    history: [
-      { status: 'applied', admin: 'kevin.santos@gmail.com', date: 'Nov 22, 2025', time: '02:10 PM' },
-      { status: 'approved', admin: 'jonas.reyes@kadakareer.com', date: 'Nov 23, 2025', time: '09:00 AM' },
-      { type: 'email', label: 'Acceptance email sent', admin: 'System', date: 'Nov 23, 2025', time: '09:00 AM' }
-    ]
+    submissions: [true, true, true]
   },
   {
     id: 'r10',
@@ -172,16 +159,14 @@ const participantsData = [
     course: 'BS Information Technology',
     location: 'Caloocan City, Metro Manila',
     status: 'approved',
-    commitment: 'declined',
     createdAt: { date: 'Dec 12, 2025', time: '09:15 AM' },
-    updatedAt: { date: 'Dec 13, 2025', time: '11:00 AM' },
+    updatedAt: { date: 'Dec 12, 2025', time: '04:30 PM' },
     attendance: { single: false, days: [true, false, false, true, false, false, true] },
     submissions: [true, false, false],
     history: [
       { status: 'applied', admin: 'james.wilson@gmail.com', date: 'Dec 12, 2025', time: '09:15 AM' },
       { status: 'approved', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 12, 2025', time: '04:30 PM' },
-      { type: 'email', label: 'Acceptance email sent', admin: 'System', date: 'Dec 12, 2025', time: '04:30 PM' },
-      { type: 'commitment', label: 'Declined their spot', admin: 'james.wilson@gmail.com', date: 'Dec 13, 2025', time: '11:00 AM' }
+      { type: 'email', label: 'Acceptance email sent', admin: 'System', date: 'Dec 12, 2025', time: '04:30 PM' }
     ]
   },
   {

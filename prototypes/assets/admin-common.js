@@ -51,35 +51,6 @@ function initStatusPills() {
   document.querySelectorAll('.status-pill.editable[data-status]').forEach(applyPillColor);
 }
 
-// A dropdown positioned via CSS (absolute, anchored to its pill) only
-// paints above sibling rows if the row's own z-index stacking wins —
-// which real <table> rows don't do reliably (that's what .dropdown-active
-// was trying to force). Pinning it to the viewport with the anchor's own
-// coordinates sidesteps table stacking entirely, so it can't ever render
-// behind a row below it.
-function positionDropdownFixed(anchor, dropdown) {
-  const rect = anchor.getBoundingClientRect();
-  dropdown.style.position = 'fixed';
-  dropdown.style.top = (rect.bottom + 4) + 'px';
-  dropdown.style.left = rect.left + 'px';
-  dropdown.style.margin = '0';
-}
-
-function closeAllStatusDropdowns() {
-  document.querySelectorAll('.status-dropdown.show').forEach(dd => {
-    dd.classList.remove('show');
-    const row = dd.closest('tr');
-    if (row) row.classList.remove('dropdown-active');
-  });
-}
-
-// Capture phase so this still fires for a scroll inside a nested
-// scrollable container (like the table's own scroll region) — a
-// fixed-position dropdown doesn't scroll with its anchor, so it has to
-// close rather than drift away from the pill that opened it.
-document.addEventListener('scroll', closeAllStatusDropdowns, true);
-window.addEventListener('resize', closeAllStatusDropdowns);
-
 function toggleStatusDropdown(event) {
   // A click on an option bubbles through the pill (its ancestor) on the
   // way up to the document-level handler that applies the selection.
@@ -106,7 +77,6 @@ function toggleStatusDropdown(event) {
     dropdown.querySelectorAll('.status-option').forEach(opt => {
       opt.style.display = opt.dataset.status === pill.dataset.status ? 'none' : '';
     });
-    positionDropdownFixed(pill, dropdown);
   }
 
   dropdown.classList.toggle('show');
