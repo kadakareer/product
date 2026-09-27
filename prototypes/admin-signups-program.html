@@ -768,6 +768,53 @@
       color: #6e6e73;
       margin: 6px 0 0;
     }
+
+    /* Bulk actions — only shown once at least one row is selected */
+    .bulk-actions-bar {
+      display: none;
+      position: relative;
+    }
+    .bulk-actions-bar.show {
+      display: inline-flex;
+    }
+    .bulk-actions-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .bulk-actions-chevron {
+      font-size: 11px;
+    }
+    .bulk-status-dropdown {
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      margin-bottom: 4px;
+      background: white;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10000;
+      min-width: 140px;
+      display: none;
+    }
+    .bulk-status-dropdown.show {
+      display: block;
+    }
+    .bulk-status-option {
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #1d1d1f;
+      white-space: nowrap;
+      border-bottom: 1px solid #f5f5f7;
+    }
+    .bulk-status-option:last-child {
+      border-bottom: none;
+    }
+    .bulk-status-option:hover {
+      background: #f5f5f7;
+    }
   </style>
 </head>
 <body>
@@ -839,6 +886,20 @@
   </div>
   <div class="table-footer" id="tableFooter">
     <span id="footerText">10 rows</span>
+    <div class="bulk-actions-bar" id="bulkActionsBar">
+      <button type="button" class="btn-outline bulk-actions-btn" id="bulkActionsBtn">
+        Bulk update status <span class="bulk-actions-chevron">▾</span>
+      </button>
+      <div class="bulk-status-dropdown" id="bulkStatusDropdown">
+        <div class="bulk-status-option" data-status="interested">Interested</div>
+        <div class="bulk-status-option" data-status="applied">Applied</div>
+        <div class="bulk-status-option" data-status="approved">Approved</div>
+        <div class="bulk-status-option" data-status="waitlisted">Waitlisted</div>
+        <div class="bulk-status-option" data-status="completed">Completed</div>
+        <div class="bulk-status-option" data-status="dropped-out">Dropped out</div>
+        <div class="bulk-status-option" data-status="rejected">Rejected</div>
+      </div>
+    </div>
   </div>
   </div>
 </div>
@@ -1024,7 +1085,9 @@
     return text.slice(0, REJECT_REASON_PREVIEW_LENGTH) + '…';
   }
 
-  function updateRejectReasonCell(row, status) {
+  // presetReason skips the prompt — used by the bulk-update flow, which
+  // asks once for the whole batch instead of once per row.
+  function updateRejectReasonCell(row, status, presetReason) {
     const cell = row.querySelector('.reject-reason-cell');
     if (!cell) return;
 
@@ -1034,9 +1097,31 @@
     }
 
     const existing = rejectReasonStore[row.dataset.rowId] || '';
-    const reason = prompt('Reason for rejection:', existing);
+    const reason = presetReason !== undefined ? presetReason : prompt('Reason for rejection:', existing);
     rejectReasonStore[row.dataset.rowId] = reason || '';
     cell.textContent = truncateRejectReason(reason || '');
+  }
+
+  // Applies a decided status to one row: pill, dataset, timestamp, history
+  // log, email-sent log, reject reason. Capacity/waitlist decisions and
+  // reject-reason prompting happen in the caller, since those differ
+  // between a single-row change and a bulk one.
+  function applyRowStatus(row, newStatus, rejectReason) {
+    const pill = row.querySelector('.status-pill');
+    if (pill) {
+      pill.dataset.status = newStatus;
+      applyPillColor(pill);
+      const label = pill.querySelector('.status-pill-label');
+      if (label) label.textContent = statusLabel(newStatus);
+    }
+
+    row.dataset.status = newStatus;
+    updateRowTimestamp(row);
+    logStatusChange(row.dataset.rowId, newStatus);
+    if (newStatus === 'approved' || newStatus === 'rejected') {
+      logEmailSent(row.dataset.rowId, newStatus);
+    }
+    updateRejectReasonCell(row, newStatus, rejectReason);
   }
 
   // Tracks which participant's detail modal is currently open, if any — a
@@ -1605,6 +1690,9 @@
   // updateSelectionUI() call during that IIFE, which reads these.
   const selectAllRows = document.getElementById('selectAllRows');
   const footerText = document.getElementById('footerText');
+  const bulkActionsBar = document.getElementById('bulkActionsBar');
+  const bulkActionsBtn = document.getElementById('bulkActionsBtn');
+  const bulkStatusDropdown = document.getElementById('bulkStatusDropdown');
 
   (function initConfig() {
     const cfg = loadConfig();
@@ -1636,6 +1724,16 @@
 
   applyStatusTooltips();
 
+  // Accepted-seat count across all rows, excluding any in excludeRowIds
+  // (the row(s) currently being decided don't count against themselves).
+  function countAccepted(excludeRowIds) {
+    let count = 0;
+    document.querySelectorAll('#signups-table tbody tr').forEach(r => {
+      if (!excludeRowIds.has(r.dataset.rowId) && ACCEPTED_STATUSES.includes(r.dataset.status)) count++;
+    });
+    return count;
+  }
+
   // Runs after admin-common.js's own delegated handler has already updated
   // the *clicked* pill's data-status for this same click, so the tooltip
   // stays in sync. The pill lives either in a table row, or — when this
@@ -1654,17 +1752,10 @@
     let newStatus = opt.dataset.status;
 
     // Redirect Approved into the waitlist once the program is at capacity.
-    // admin-common.js's selectStatus() already applied the *original*
-    // status to the clicked pill before this handler runs, so a redirect
-    // here has to re-sync that same pill below.
     if (newStatus === 'approved') {
       const max = loadConfig().maxParticipants;
       if (max) {
-        const rows = document.querySelectorAll('#signups-table tbody tr');
-        let acceptedCount = 0;
-        rows.forEach(r => {
-          if (r !== row && ACCEPTED_STATUSES.includes(r.dataset.status)) acceptedCount++;
-        });
+        const acceptedCount = countAccepted(new Set([row.dataset.rowId]));
         if (acceptedCount >= max) {
           const p = participantsData.find(x => x.id === row.dataset.rowId);
           const waitlistInstead = confirm(
@@ -1675,33 +1766,7 @@
       }
     }
 
-    const clickedPill = opt.closest('.status-pill');
-    if (clickedPill) {
-      clickedPill.dataset.status = newStatus;
-      applyPillColor(clickedPill);
-      const clickedLabel = clickedPill.querySelector('.status-pill-label');
-      if (clickedLabel) clickedLabel.textContent = statusLabel(newStatus);
-    }
-
-    if (!tableRow) {
-      // Change came from the modal's own pill — the table row's separate
-      // pill instance still needs to be mirrored to match.
-      const rowPill = row.querySelector('.status-pill');
-      if (rowPill) {
-        rowPill.dataset.status = newStatus;
-        applyPillColor(rowPill);
-        const label = rowPill.querySelector('.status-pill-label');
-        if (label) label.textContent = statusLabel(newStatus);
-      }
-    }
-
-    row.dataset.status = newStatus;
-    updateRowTimestamp(row);
-    logStatusChange(row.dataset.rowId, newStatus);
-    if (newStatus === 'approved' || newStatus === 'rejected') {
-      logEmailSent(row.dataset.rowId, newStatus);
-    }
-    updateRejectReasonCell(row, newStatus);
+    applyRowStatus(row, newStatus);
     updateCapacitySummary();
     applyFilter();
     if (currentSort.key && currentSort.dir !== 'none') {
@@ -1959,6 +2024,8 @@
     } else {
       footerText.textContent = total + ' rows';
     }
+
+    bulkActionsBar.classList.toggle('show', selectedCount > 0);
   }
 
   selectAllRows.addEventListener('change', function() {
@@ -1969,6 +2036,80 @@
   document.querySelectorAll('#signups-table tbody .row-select').forEach(cb => cb.addEventListener('change', updateSelectionUI));
 
   updateSelectionUI();
+
+  /* Bulk update status — same status vocabulary as a single row's dropdown,
+     but decides capacity/reject-reason once for the whole batch instead of
+     prompting per row. */
+  function selectedRows() {
+    return rowCheckboxes().filter(cb => cb.checked).map(cb => cb.closest('tr'));
+  }
+
+  bulkActionsBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    bulkStatusDropdown.classList.toggle('show');
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.bulk-actions-bar')) {
+      bulkStatusDropdown.classList.remove('show');
+    }
+  });
+
+  bulkStatusDropdown.addEventListener('click', function(e) {
+    const opt = e.target.closest('.bulk-status-option');
+    if (!opt) return;
+    bulkStatusDropdown.classList.remove('show');
+    applyBulkStatus(opt.dataset.status);
+  });
+
+  function applyBulkStatus(status) {
+    const rows = selectedRows();
+    if (!rows.length) return;
+
+    let rejectReason;
+    if (status === 'rejected') {
+      rejectReason = prompt(`Reason for rejection (applied to all ${rows.length} selected):`, '') || '';
+    }
+
+    let approvedRows = rows;
+    let waitlistedRows = [];
+
+    if (status === 'approved') {
+      const max = loadConfig().maxParticipants;
+      if (max) {
+        const selectedIds = new Set(rows.map(r => r.dataset.rowId));
+        const acceptedElsewhere = countAccepted(selectedIds);
+        const remaining = Math.max(0, max - acceptedElsewhere);
+        if (rows.length > remaining) {
+          const waitlistOverflow = confirm(
+            `Approving all ${rows.length} selected would put this program over capacity ` +
+            `(${acceptedElsewhere + rows.length}/${max}).\n\nApprove the first ${remaining} and waitlist the rest?`
+          );
+          if (waitlistOverflow) {
+            approvedRows = rows.slice(0, remaining);
+            waitlistedRows = rows.slice(remaining);
+          }
+        }
+      }
+    }
+
+    approvedRows.forEach(row => applyRowStatus(row, status, status === 'rejected' ? rejectReason : undefined));
+    waitlistedRows.forEach(row => applyRowStatus(row, 'waitlisted'));
+
+    updateCapacitySummary();
+    applyFilter();
+    if (currentSort.key && currentSort.dir !== 'none') {
+      sortRows();
+    }
+    if (currentDetailRow && document.getElementById('historyModal').classList.contains('show') &&
+        rows.includes(currentDetailRow)) {
+      renderDetailModal(currentDetailRow);
+    }
+
+    // Bulk actions clear the selection afterward, same as most bulk-action UIs.
+    rowCheckboxes().forEach(cb => { cb.checked = false; });
+    updateSelectionUI();
+  }
 
   /* ── Info filter ──────────────────────────────────────────────────────── */
   const INFO_FIELDS = [
