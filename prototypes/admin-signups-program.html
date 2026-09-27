@@ -741,7 +741,7 @@
     .capacity-summary.show {
       display: flex;
     }
-    .capacity-pill, .waitlist-pill {
+    .capacity-pill, .confirmed-pill, .waitlist-pill {
       display: inline-flex;
       align-items: center;
       padding: 5px 12px;
@@ -757,6 +757,10 @@
     .capacity-pill.at-capacity {
       background: #fef2f2;
       color: #dc2626;
+    }
+    .confirmed-pill {
+      background: #ecfdf5;
+      color: #047857;
     }
     .waitlist-pill {
       background: #fffbeb;
@@ -809,6 +813,75 @@
       color: #3a3a3c;
       line-height: 1.5;
       white-space: pre-wrap;
+    }
+
+    .confirmation-th {
+      white-space: nowrap;
+    }
+    .confirmation-cell {
+      white-space: nowrap;
+    }
+
+    /* Confirmation sub-state pill — same shape as .status-pill, but its
+       own (smaller) palette instead of the shared position-based one,
+       since there are only ever these three fixed values. */
+    .commitment-pill {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      position: relative;
+    }
+    .commitment-pill[data-commitment="awaiting"] {
+      background: #f0f0f2;
+      color: #6e6e73;
+    }
+    .commitment-pill[data-commitment="confirmed"] {
+      background: #10b981;
+      color: white;
+    }
+    .commitment-pill[data-commitment="declined"] {
+      background: #ef4444;
+      color: white;
+    }
+    .commitment-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+      background: white;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 999999;
+      min-width: 160px;
+      display: none;
+    }
+    .commitment-dropdown.show {
+      display: block;
+    }
+    .commitment-option {
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #1d1d1f;
+      white-space: nowrap;
+      border-bottom: 1px solid #f5f5f7;
+    }
+    .commitment-option:last-child {
+      border-bottom: none;
+    }
+    .commitment-option:hover {
+      background: #f5f5f7;
+    }
+
+    .history-status.history-commitment {
+      font-weight: 500;
+      color: #3a3a3c;
+      font-style: italic;
     }
 
     /* Styled as an actual button (not just a text label) so it's obvious
@@ -928,6 +1001,13 @@
         <option value="dropped-out">Dropped out</option>
         <option value="rejected">Rejected</option>
       </select>
+      <span class="filter-label">Confirmation:</span>
+      <select class="filter-dropdown" id="confirmationFilter">
+        <option value="all">All</option>
+        <option value="awaiting">Awaiting confirmation</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="declined">Declined</option>
+      </select>
       <input type="search" class="search-input" id="searchFilter" placeholder="Search name, university, degree, location…">
       <button class="btn-outline info-filter-btn" id="infoFilterBtn" onclick="openInfoFilterModal()">
         Filter by info <span class="info-filter-badge" id="infoFilterBadge"></span>
@@ -942,6 +1022,7 @@
     </div>
     <div class="capacity-summary" id="capacitySummary">
       <span class="capacity-pill" id="capacityPill"></span>
+      <span class="confirmed-pill" id="confirmedPill"></span>
       <span class="waitlist-pill" id="waitlistPill"></span>
     </div>
   </div>
@@ -955,6 +1036,7 @@
         <th class="select-col"><input type="checkbox" class="checkbox" id="selectAllRows"></th>
         <th class="sortable-th" data-sort-key="name">Name <span class="sort-icon">↕</span></th>
         <th class="sortable-th" data-sort-key="status">Status <span class="sort-icon">↕</span></th>
+        <th class="confirmation-th">Confirmation</th>
         <th class="created-at-th sortable-th" data-sort-key="createdAt">Created At <span class="sort-icon">↕</span></th>
         <th class="updated-at-th sortable-th" data-sort-key="updatedAt">Updated At <span class="sort-icon">↕</span></th>
         <th class="reject-reason-th">Reject Reason</th>
@@ -1149,6 +1231,29 @@
   // function's body reads this const, so it must exist before then).
   const REJECT_REASON_PREVIEW_LENGTH = 90;
 
+  // Confirmation is a sub-state of Approved (whether the participant has
+  // committed to the spot), not a sibling status — it only exists once
+  // someone is Approved, same idea as the reject-reason field only
+  // existing once someone is Rejected.
+  const COMMITMENT_LABELS = {
+    awaiting: 'Awaiting confirmation',
+    confirmed: 'Confirmed',
+    declined: 'Declined',
+  };
+
+  function confirmationCellHTML(status, commitment) {
+    if (status !== 'approved') return '—';
+    return `
+      <span class="commitment-pill editable" data-commitment="${commitment}" onclick="toggleCommitmentDropdown(event)">
+        <span class="commitment-pill-label">${COMMITMENT_LABELS[commitment]}</span>
+        <div class="commitment-dropdown">
+          <div class="commitment-option" data-commitment="awaiting">Awaiting confirmation</div>
+          <div class="commitment-option" data-commitment="confirmed">Confirmed</div>
+          <div class="commitment-option" data-commitment="declined">Declined</div>
+        </div>
+      </span>`;
+  }
+
   const PARTICIPANTS_KEY = 'kadakareer_program_participants';
 
   // Overlay any admin changes saved from a previous session onto the seed
@@ -1166,6 +1271,7 @@
       const override = saved[p.id];
       if (!override) return;
       p.status = override.status;
+      p.commitment = override.commitment || 'awaiting';
       p.rejectReason = override.rejectReason || '';
       p.history = override.history || [];
       p.updatedAt = override.updatedAt || p.updatedAt;
@@ -1175,7 +1281,7 @@
   // Render rows synchronously before admin-common.js loads
   const tbody = document.querySelector('#signups-table tbody');
   tbody.innerHTML = participantsData.map((p, index) => `
-      <tr data-row-id="${p.id}" data-status="${p.status}" data-original-index="${index}">
+      <tr data-row-id="${p.id}" data-status="${p.status}" data-commitment="${p.commitment || 'awaiting'}" data-original-index="${index}">
         <td class="select-col"><input type="checkbox" class="checkbox row-select"></td>
         <td class="participant-cell">
           <div class="participant-cell">
@@ -1197,6 +1303,7 @@
             </div>
           </span>
         </td>
+        <td class="confirmation-cell">${confirmationCellHTML(p.status, p.commitment || 'awaiting')}</td>
         <td class="created-at-cell">
           <div>${p.createdAt.date}</div>
           <div class="time-part">${p.createdAt.time}</div>
@@ -1231,6 +1338,14 @@
     rejectReasonStore[p.id] = p.rejectReason || '';
   });
 
+  // Confirmation sub-state per participant, keyed by row id. Only
+  // meaningful while status is Approved, but kept even if the status
+  // later moves away, so a re-approval story stays consistent.
+  const commitmentStore = {};
+  participantsData.forEach(p => {
+    commitmentStore[p.id] = p.commitment || 'awaiting';
+  });
+
   // Cell shows a short preview only — no title attribute, since that would
   // add a native hover tooltip that's redundant with the participant detail
   // modal (opened by clicking the row), which already shows the full reason.
@@ -1259,9 +1374,20 @@
   // waitlist decisions and reject-reason/send-email prompting happen in the
   // caller, since those differ between a single-row change and a bulk one.
   function applyRowStatus(row, newStatus, rejectReason, sendEmail) {
+    const previousStatus = row.dataset.status;
     syncPillVisual(row, newStatus);
 
     row.dataset.status = newStatus;
+
+    // A fresh approval always starts a new confirmation cycle — a stale
+    // Declined/Confirmed from a previous approval shouldn't carry over.
+    if (newStatus === 'approved' && previousStatus !== 'approved') {
+      commitmentStore[row.dataset.rowId] = 'awaiting';
+    }
+    const commitment = commitmentStore[row.dataset.rowId] || 'awaiting';
+    row.dataset.commitment = commitment;
+    updateConfirmationCell(row, newStatus, commitment);
+
     updateRowTimestamp(row);
     logStatusChange(row.dataset.rowId, newStatus);
     if (sendEmail && EMAILED_STATUSES.includes(newStatus)) {
@@ -1317,9 +1443,15 @@
     maxParticipants: 10,
   };
 
-  // Registrants who occupy an accepted seat. Waitlisted doesn't count —
-  // that's the whole point — and dropped-out frees the seat back up.
-  const ACCEPTED_STATUSES = ['approved', 'completed'];
+  // Whether a row currently occupies an accepted seat. Completed always
+  // did (they went through it); Approved only counts while the
+  // participant hasn't Declined — a Decline frees the seat back up, same
+  // as Dropped-out, even though the primary status is still "approved".
+  function occupiesSeat(row) {
+    if (row.dataset.status === 'completed') return true;
+    if (row.dataset.status === 'approved') return row.dataset.commitment !== 'declined';
+    return false;
+  }
 
   // Statuses that trigger an automated notification email (opt-out per
   // change via the status-action modal's "Send email" checkbox).
@@ -1354,15 +1486,21 @@
 
     const rows = document.querySelectorAll('#signups-table tbody tr');
     let acceptedCount = 0;
+    let confirmedCount = 0;
     let waitlistCount = 0;
     rows.forEach(row => {
-      if (ACCEPTED_STATUSES.includes(row.dataset.status)) acceptedCount++;
+      if (occupiesSeat(row)) acceptedCount++;
+      if (row.dataset.status === 'approved' && row.dataset.commitment === 'confirmed') confirmedCount++;
       if (row.dataset.status === 'waitlisted') waitlistCount++;
     });
 
     const capacityPill = document.getElementById('capacityPill');
     capacityPill.textContent = `${acceptedCount} / ${max} accepted`;
     capacityPill.classList.toggle('at-capacity', acceptedCount >= max);
+
+    const confirmedPill = document.getElementById('confirmedPill');
+    confirmedPill.textContent = `${confirmedCount} confirmed`;
+    confirmedPill.style.display = confirmedCount > 0 ? '' : 'none';
 
     const waitlistPill = document.getElementById('waitlistPill');
     waitlistPill.textContent = `${waitlistCount} waitlisted`;
@@ -1898,7 +2036,7 @@
   function countAccepted(excludeRowIds) {
     let count = 0;
     document.querySelectorAll('#signups-table tbody tr').forEach(r => {
-      if (!excludeRowIds.has(r.dataset.rowId) && ACCEPTED_STATUSES.includes(r.dataset.status)) count++;
+      if (!excludeRowIds.has(r.dataset.rowId) && occupiesSeat(r)) count++;
     });
     return count;
   }
@@ -1923,6 +2061,92 @@
     const label = pill.querySelector('.status-pill-label');
     if (label) label.textContent = statusLabel(status);
   }
+
+  /* Confirmation sub-state (Awaiting/Confirmed/Declined) — a separate,
+     smaller dropdown pattern from the main status pill, deliberately not
+     reusing .status-pill/.status-option, since those are wired into the
+     approve/reject/waitlist email-modal flow and capacity checks that
+     don't apply here. */
+  function updateConfirmationCell(row, status, commitment) {
+    const cell = row.querySelector('.confirmation-cell');
+    if (cell) cell.innerHTML = confirmationCellHTML(status, commitment);
+  }
+
+  function toggleCommitmentDropdown(event) {
+    event.stopPropagation();
+    const pill = event.currentTarget;
+    const dropdown = pill.querySelector('.commitment-dropdown');
+    document.querySelectorAll('.commitment-dropdown.show').forEach(dd => {
+      if (dd !== dropdown) dd.classList.remove('show');
+    });
+
+    const isOpening = !dropdown.classList.contains('show');
+    if (isOpening) {
+      // Same convention as the status pill: skip the option that's already active.
+      dropdown.querySelectorAll('.commitment-option').forEach(opt => {
+        opt.style.display = opt.dataset.commitment === pill.dataset.commitment ? 'none' : '';
+      });
+      // Pin to the viewport instead of relying on the row's z-index to
+      // beat the rows below it — real <table> rows don't stack reliably
+      // that way (see positionDropdownFixed in admin-common.js).
+      positionDropdownFixed(pill, dropdown);
+    }
+
+    dropdown.classList.toggle('show');
+  }
+
+  function logCommitmentChange(rowId, commitment, participantEmail) {
+    const parts = formatDateTimeParts(new Date());
+    const history = statusHistoryStore[rowId] || (statusHistoryStore[rowId] = []);
+    const labels = {
+      awaiting: 'Confirmation reset to awaiting',
+      confirmed: 'Confirmed their spot',
+      declined: 'Declined their spot',
+    };
+    history.push({ type: 'commitment', label: labels[commitment], admin: participantEmail, date: parts.date, time: parts.time });
+  }
+
+  // Attributed to the participant, not the current admin — this represents
+  // the participant's own decision, same convention as the self-service
+  // Interested/Applied history entries. (Set here by an admin only because
+  // there's no participant-facing surface yet to do it themselves.)
+  function applyCommitment(row, commitment) {
+    commitmentStore[row.dataset.rowId] = commitment;
+    row.dataset.commitment = commitment;
+    updateConfirmationCell(row, row.dataset.status, commitment);
+
+    const p = participantsData.find(x => x.id === row.dataset.rowId);
+    logCommitmentChange(row.dataset.rowId, commitment, p ? p.email : 'participant');
+
+    updateRowTimestamp(row);
+    updateCapacitySummary();
+    persistParticipantState();
+
+    if (currentDetailRow === row && document.getElementById('historyModal').classList.contains('show')) {
+      renderDetailModal(row);
+    }
+  }
+
+  document.addEventListener('click', function(e) {
+    const opt = e.target.closest('.commitment-option');
+    if (opt) {
+      e.stopPropagation();
+      const pill = opt.closest('.commitment-pill');
+      if (pill) pill.querySelector('.commitment-dropdown').classList.remove('show');
+      const row = opt.closest('tr');
+      if (row) applyCommitment(row, opt.dataset.commitment);
+      return;
+    }
+    document.querySelectorAll('.commitment-dropdown.show').forEach(dd => dd.classList.remove('show'));
+  });
+
+  // A fixed-position dropdown doesn't scroll with the pill that opened
+  // it, so a scroll of the table has to close it rather than let it
+  // drift away from its anchor. Capture phase so it still fires for a
+  // scroll inside .table-scroll specifically, not just the whole page.
+  document.addEventListener('scroll', function() {
+    document.querySelectorAll('.commitment-dropdown.show').forEach(dd => dd.classList.remove('show'));
+  }, true);
 
   // Comma list of participant names for a set of rows, truncated with a
   // "and N more" tail so a large bulk selection doesn't blow out the modal.
@@ -2164,6 +2388,7 @@
       const id = row.dataset.rowId;
       saved[id] = {
         status: row.dataset.status,
+        commitment: commitmentStore[id] || 'awaiting',
         rejectReason: rejectReasonStore[id] || '',
         history: statusHistoryStore[id] || [],
         updatedAt: extractDateTimeParts(row.querySelector('.updated-at-cell')),
@@ -2216,6 +2441,11 @@
       ? `<div class="detail-row"><span class="detail-label">Reject reason</span><span class="detail-value">${rejectReasonStore[rowId] || '—'}</span></div>`
       : '';
 
+    // Read-only here — the editable control lives on the table cell.
+    const confirmationRow = status === 'approved'
+      ? `<div class="detail-row"><span class="detail-label">Confirmation</span><span class="detail-value">${COMMITMENT_LABELS[commitmentStore[rowId] || 'awaiting']}</span></div>`
+      : '';
+
     let attendanceRow = '';
     if (cfg.duration === 'single-day') {
       const present = attendanceData[rowId].single;
@@ -2248,7 +2478,7 @@
     }
 
     document.getElementById('detailList').innerHTML = `
-      ${rejectReasonRow ? `<div class="detail-group">${rejectReasonRow}</div>` : ''}
+      ${rejectReasonRow || confirmationRow ? `<div class="detail-group">${rejectReasonRow}${confirmationRow}</div>` : ''}
       <div class="detail-section-title collapsible" onclick="toggleDetailSection(this)">
         <span>Info</span>
         <span class="detail-section-chevron">▾</span>
@@ -2283,7 +2513,9 @@
     listEl.innerHTML = history.slice().reverse().map(entry => {
       const statusText = entry.type === 'email'
         ? `<span class="history-status history-email">✉ ${entry.label}</span>`
-        : `<span class="history-status">${statusLabel(entry.status)}</span>`;
+        : entry.type === 'commitment'
+          ? `<span class="history-status history-commitment">${entry.label}</span>`
+          : `<span class="history-status">${statusLabel(entry.status)}</span>`;
 
       return `
         <div class="history-entry">
@@ -2599,6 +2831,7 @@
 
   function applyFilter() {
     const filterVal = document.getElementById('statusFilter').value;
+    const confirmationVal = document.getElementById('confirmationFilter').value;
     const searchVal = document.getElementById('searchFilter').value.trim().toLowerCase();
     const rows = document.querySelectorAll('#signups-table tbody tr');
 
@@ -2606,6 +2839,11 @@
       const pill = row.querySelector('.status-pill');
       const status = pill ? pill.dataset.status : '';
       const statusMatch = filterVal === 'all' || status === filterVal;
+
+      // Confirmation only exists for Approved rows — anything else can
+      // only match "All".
+      const confirmationMatch = confirmationVal === 'all' ||
+        (status === 'approved' && row.dataset.commitment === confirmationVal);
 
       let searchMatch = true;
       if (searchVal) {
@@ -2629,7 +2867,7 @@
         });
       }
 
-      row.classList.toggle('hidden', !(statusMatch && searchMatch && infoMatch));
+      row.classList.toggle('hidden', !(statusMatch && confirmationMatch && searchMatch && infoMatch));
     });
 
     updateSelectionUI();
@@ -2637,6 +2875,7 @@
   }
 
   document.getElementById('statusFilter').addEventListener('change', applyFilter);
+  document.getElementById('confirmationFilter').addEventListener('change', applyFilter);
   document.getElementById('searchFilter').addEventListener('input', applyFilter);
 
   // Selection is scoped to the checkbox column only — clicking anywhere in
@@ -2657,7 +2896,7 @@
       }
 
       const excluded = e.target.closest(
-        '.status-pill, .attendance-day-btn, .submission-btn, .attendance-checkbox'
+        '.status-pill, .commitment-pill, .attendance-day-btn, .submission-btn, .attendance-checkbox'
       );
       if (excluded) return;
 
