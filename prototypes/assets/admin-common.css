@@ -70,6 +70,7 @@ body {
 
 .filter-section {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   align-items: center;
 }
@@ -86,6 +87,7 @@ body {
   font-size: 14px;
   background: white;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .action-buttons {
@@ -103,6 +105,8 @@ body {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-outline:hover {
