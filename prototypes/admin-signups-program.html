@@ -772,10 +772,20 @@
       border: 1px solid #e5e5ea;
       border-radius: 8px;
       background: #fafafa;
-      min-width: 100px;
+      width: 130px;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
     }
     .summary-tile.show {
       display: flex;
+    }
+    .summary-tile:hover {
+      border-color: #0066cc;
+    }
+    .summary-tile:focus-visible {
+      outline: 2px solid #0066cc;
+      outline-offset: 1px;
     }
     .summary-tile-value {
       font-size: 20px;
@@ -789,7 +799,6 @@
     .summary-tile-label {
       font-size: 12px;
       color: #6e6e73;
-      white-space: nowrap;
     }
 
     /* Actionable state: a seat is open (Approved hasn't hit the max) and
@@ -813,6 +822,11 @@
     }
     .summary-tile-cta:hover {
       text-decoration: underline;
+    }
+    /* Applied's CTA isn't tied to the same open-spot urgency as
+       Waitlist's — a calmer blue instead of the amber "act now" tone. */
+    #appliedTile .summary-tile-cta {
+      color: #0066cc;
     }
 
     .config-hint {
@@ -1041,24 +1055,32 @@
     <button class="config-btn" onclick="openModal('configModal')" title="Program settings">⚙️</button>
   </div>
 
-  <!-- High-level summary -->
+  <!-- High-level summary — clicking a tile filters the table to match it.
+       Display order (left to right) is priority-based and can shift at
+       runtime (see updateCapacitySummary): Applied always leads since
+       it's the admin's actual review queue; Waitlisted jumps to 2nd
+       whenever there's an open spot to fill. -->
   <div class="summary-tiles" id="summaryTiles">
-    <div class="summary-tile" id="approvedTile">
+    <div class="summary-tile" id="appliedTile" tabindex="0" role="button" data-filter-status="applied">
+      <div class="summary-tile-value" id="appliedTileValue">0</div>
+      <span class="summary-tile-cta">Pending review&nbsp;→</span>
+    </div>
+    <div class="summary-tile" id="waitlistTile" tabindex="0" role="button" data-filter-status="waitlisted">
+      <div class="summary-tile-value" id="waitlistTileValue">0</div>
+      <div class="summary-tile-label">Waitlisted</div>
+      <button type="button" class="summary-tile-cta" id="waitlistCta" onclick="event.stopPropagation(); promoteNextWaitlisted()" style="display: none;">Fill open spot&nbsp;→</button>
+    </div>
+    <div class="summary-tile" id="approvedTile" tabindex="0" role="button" data-filter-status="approved">
       <div class="summary-tile-value" id="approvedTileValue">0</div>
       <div class="summary-tile-label">Approved</div>
     </div>
-    <div class="summary-tile" id="confirmedTile">
+    <div class="summary-tile" id="confirmedTile" tabindex="0" role="button" data-filter-status="approved" data-filter-confirmation="confirmed">
       <div class="summary-tile-value" id="confirmedTileValue">0</div>
       <div class="summary-tile-label">Confirmed</div>
     </div>
-    <div class="summary-tile" id="awaitingTile">
+    <div class="summary-tile" id="awaitingTile" tabindex="0" role="button" data-filter-status="approved" data-filter-confirmation="awaiting">
       <div class="summary-tile-value" id="awaitingTileValue">0</div>
       <div class="summary-tile-label">Awaiting confirmation</div>
-    </div>
-    <div class="summary-tile" id="waitlistTile">
-      <div class="summary-tile-value" id="waitlistTileValue">0</div>
-      <div class="summary-tile-label">Waitlisted</div>
-      <button type="button" class="summary-tile-cta" id="waitlistCta" onclick="promoteNextWaitlisted()" style="display: none;">Fill open spot →</button>
     </div>
   </div>
 
@@ -1557,15 +1579,23 @@
   // part of the confirm/decline cycle, so folding them into that same
   // denominator would make the ratio misleading. A plain count sidesteps
   // that entirely and is honestly all this needs to say.
+  // Base priority order — Applied leads because it's the admin's actual
+  // review queue (a decision is waiting on them), everything else is
+  // status further along the funnel. Waitlisted overrides this (see
+  // below) and jumps to 2nd whenever there's a spot open to fill.
+  const TILE_ORDER = { applied: 1, waitlist: 3, approved: 4, confirmed: 5, awaiting: 6 };
+
   function updateCapacitySummary() {
     const max = loadConfig().maxParticipants;
 
     const rows = document.querySelectorAll('#signups-table tbody tr');
+    let appliedCount = 0;
     let approvedCount = 0;
     let confirmedCount = 0;
     let awaitingCount = 0;
     let waitlistCount = 0;
     rows.forEach(row => {
+      if (row.dataset.status === 'applied') appliedCount++;
       if (occupiesSeat(row)) approvedCount++;
       if (row.dataset.status === 'approved') {
         if (row.dataset.commitment === 'confirmed') confirmedCount++;
@@ -1574,28 +1604,39 @@
       if (row.dataset.status === 'waitlisted') waitlistCount++;
     });
 
+    const appliedTile = document.getElementById('appliedTile');
+    document.getElementById('appliedTileValue').textContent = appliedCount;
+    appliedTile.classList.toggle('show', appliedCount > 0);
+    appliedTile.style.order = TILE_ORDER.applied;
+
     const approvedTile = document.getElementById('approvedTile');
     document.getElementById('approvedTileValue').textContent = max ? `${approvedCount} / ${max}` : `${approvedCount}`;
     approvedTile.classList.toggle('at-capacity', !!max && approvedCount >= max);
     approvedTile.classList.add('show');
+    approvedTile.style.order = TILE_ORDER.approved;
 
     const confirmedTile = document.getElementById('confirmedTile');
     document.getElementById('confirmedTileValue').textContent = confirmedCount;
     confirmedTile.classList.toggle('show', confirmedCount > 0);
+    confirmedTile.style.order = TILE_ORDER.confirmed;
 
     const awaitingTile = document.getElementById('awaitingTile');
     document.getElementById('awaitingTileValue').textContent = awaitingCount;
     awaitingTile.classList.toggle('show', awaitingCount > 0);
+    awaitingTile.style.order = TILE_ORDER.awaiting;
 
     const waitlistTile = document.getElementById('waitlistTile');
     document.getElementById('waitlistTileValue').textContent = waitlistCount;
     waitlistTile.classList.toggle('show', waitlistCount > 0);
 
     // A spot is open (or there's no cap at all) and someone's waiting for
-    // one — surface it instead of leaving the admin to notice on their own.
+    // one — surface it instead of leaving the admin to notice on their
+    // own, and bump it up to 2nd priority (right after Applied) while
+    // it's actionable. Otherwise it sits in its normal funnel position.
     const hasOpenSpot = waitlistCount > 0 && (!max || approvedCount < max);
     waitlistTile.classList.toggle('actionable', hasOpenSpot);
     document.getElementById('waitlistCta').style.display = hasOpenSpot ? 'block' : 'none';
+    waitlistTile.style.order = hasOpenSpot ? 2 : TILE_ORDER.waitlist;
   }
 
   // Promotes the first waitlisted row (in current table order) into the
@@ -3037,6 +3078,27 @@
   document.getElementById('statusFilter').addEventListener('change', applyFilter);
   document.getElementById('confirmationFilter').addEventListener('change', applyFilter);
   document.getElementById('searchFilter').addEventListener('input', applyFilter);
+
+  // Each summary tile doubles as a filter shortcut — clicking Awaiting
+  // confirmation, say, jumps straight to Approved + Awaiting instead of
+  // making the admin set both dropdowns by hand.
+  function applyTileFilter(tile) {
+    const statusVal = tile.dataset.filterStatus;
+    if (!statusVal) return;
+    document.getElementById('statusFilter').value = statusVal;
+    document.getElementById('confirmationFilter').value = tile.dataset.filterConfirmation || 'all';
+    applyFilter();
+  }
+
+  document.querySelectorAll('.summary-tile[data-filter-status]').forEach(tile => {
+    tile.addEventListener('click', () => applyTileFilter(tile));
+    tile.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        applyTileFilter(tile);
+      }
+    });
+  });
 
   // Selection is scoped to the checkbox column only — clicking anywhere in
   // that cell (not just the checkbox itself) toggles it. Clicking anywhere
