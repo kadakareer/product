@@ -153,6 +153,22 @@
   .result-line b { font-weight: 600; }
   .gap-flag { font-size: 12.5px; color: var(--amber); margin-top: 8px; font-style: italic; }
 
+  .tabs {
+    display: flex; gap: 24px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 24px;
+  }
+  .tab-btn {
+    background: none; border: none; cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+    color: var(--muted);
+    padding: 10px 2px; margin-bottom: -2px;
+    border-bottom: 2px solid transparent;
+  }
+  .tab-btn.active { color: var(--ink); border-bottom-color: var(--forest); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
   @media (max-width: 600px) {
     .sheet { padding: 28px 20px; }
     h1 { font-size: 23px; }
@@ -162,8 +178,14 @@
 <body>
   <div class="sheet">
     <h1>Screening Blocks, by Attribute</h1>
-    <p class="subtitle">Instead of five brand columns, blocks key off what an instance of a program actually is. A brand name is just a label for whatever bundle of attributes that run happens to have — it doesn't drive the form directly anymore.</p>
+    <p class="subtitle">A brand name (e.g. VirApp, Workshop) is just a label for whatever bundle of attributes a program happens to have — it doesn't drive the form directly.</p>
 
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="blocks" onclick="switchTab('blocks')">Blocks by attribute</button>
+      <button class="tab-btn" data-tab="examples" onclick="switchTab('examples')">Worked examples</button>
+    </div>
+
+    <div class="tab-panel active" data-tab-panel="blocks">
     <div class="attr-defs">
       <div class="attr-def">
         <div class="attr-name">Competitive / Limited Slots</div>
@@ -364,12 +386,9 @@
       <div class="legend-item"><div class="dot on"></div> Triggers this block</div>
       <div class="legend-item"><div class="dot off"></div> No effect</div>
     </div>
-
-    <div class="note">
-      <b>Centrally Run doesn't trigger any block above, and that's likely correct.</b> It isn't really a content attribute like the other four — it's a governance one. It probably determines <i>who's allowed to toggle blocks on or off</i> for a given instance, not <i>which blocks show up</i>. That reframes Hub Events: its earlier "varies" status wasn't a content problem, it was this attribute — decentralized control, not decentralized content.
     </div>
 
-    <h2>Worked examples</h2>
+    <div class="tab-panel" data-tab-panel="examples">
     <p class="section-note">Plugging real and hypothetical instances into the rules above, to pressure-test whether the four content attributes actually predict the right blocks.</p>
 
     <div class="instances">
@@ -409,10 +428,23 @@
         </div>
         <div class="result-line">Predicted: <b>no blocks beyond Core Profile.</b> This one, correctly.</div>
       </div>
+
+      <div class="instance-card">
+        <div class="instance-name">Hub Event</div>
+        <div class="attr-row">
+          <span class="attr-tag no"><span class="tag-dot"></span>Competitive</span>
+          <span class="attr-tag no"><span class="tag-dot"></span>Sponsor</span>
+          <span class="attr-tag no"><span class="tag-dot"></span>Multi-Week</span>
+          <span class="attr-tag no"><span class="tag-dot"></span>Deliverable</span>
+          <span class="attr-tag no"><span class="tag-dot"></span>Central</span>
+        </div>
+        <div class="result-line">Predicted: <b>no blocks beyond Core Profile</b> — same as an org-run session with identical content. Run by a hub leader instead of the org, but that doesn't change which blocks show up.</div>
+      </div>
     </div>
 
     <div class="note">
       <b>Same attribute profile, different real-world need.</b> The AI workshop and the resume-refinement workshop score identically on all five attributes, yet only one actually wants a self-assessment. That's the clearest evidence the attribute set isn't complete yet — worth testing "teaches a specific skill" as a sixth attribute with program managers before this goes further.
+    </div>
     </div>
   </div>
 
@@ -421,6 +453,11 @@
       const wasOpen = blockEl.classList.contains('open');
       document.querySelectorAll('.block.open').forEach(b => b.classList.remove('open'));
       if (!wasOpen) blockEl.classList.add('open');
+    }
+
+    function switchTab(name) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.dataset.tabPanel === name));
     }
   </script>
 </body>
