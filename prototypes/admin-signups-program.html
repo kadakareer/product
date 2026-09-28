@@ -792,6 +792,29 @@
       white-space: nowrap;
     }
 
+    /* Actionable state: a seat is open (Approved hasn't hit the max) and
+       someone's waiting for one — call it out instead of leaving the
+       admin to notice on their own and go dig up the waitlist filter. */
+    .summary-tile.actionable {
+      border-color: #f59e0b;
+      background: #fffbeb;
+    }
+    .summary-tile-cta {
+      margin: 2px 0 0;
+      padding: 0;
+      border: none;
+      background: none;
+      color: #b45309;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+    }
+    .summary-tile-cta:hover {
+      text-decoration: underline;
+    }
+
     .config-hint {
       font-size: 12px;
       color: #6e6e73;
@@ -1035,6 +1058,7 @@
     <div class="summary-tile" id="waitlistTile">
       <div class="summary-tile-value" id="waitlistTileValue">0</div>
       <div class="summary-tile-label">Waitlisted</div>
+      <button type="button" class="summary-tile-cta" id="waitlistCta" onclick="promoteNextWaitlisted()" style="display: none;">Fill open spot →</button>
     </div>
   </div>
 
@@ -1566,6 +1590,22 @@
     const waitlistTile = document.getElementById('waitlistTile');
     document.getElementById('waitlistTileValue').textContent = waitlistCount;
     waitlistTile.classList.toggle('show', waitlistCount > 0);
+
+    // A spot is open (or there's no cap at all) and someone's waiting for
+    // one — surface it instead of leaving the admin to notice on their own.
+    const hasOpenSpot = waitlistCount > 0 && (!max || approvedCount < max);
+    waitlistTile.classList.toggle('actionable', hasOpenSpot);
+    document.getElementById('waitlistCta').style.display = hasOpenSpot ? 'block' : 'none';
+  }
+
+  // Promotes the first waitlisted row (in current table order) into the
+  // open spot — still goes through the normal approve modal so the admin
+  // reviews and confirms it, same as any other approval, rather than
+  // silently flipping the status.
+  function promoteNextWaitlisted() {
+    const row = document.querySelector('#signups-table tbody tr[data-status="waitlisted"]');
+    if (!row) return;
+    openStatusActionModal('approved', [row]);
   }
 
   function loadConfig() {
@@ -1832,17 +1872,16 @@
   /* Table Column Sorting */
   const SORT_KEY = 'kadakareer_program_sort';
 
-  // Persisted across reloads — otherwise a refresh silently snaps back
-  // to the hardcoded default below, which is exactly the same jump the
-  // admin's edits were just protected from.
+  // Persisted across reloads — otherwise a refresh silently snaps back to
+  // a default sort, which is exactly the same jump an edit is protected
+  // from below. No hardcoded default either: an admin who's never sorted
+  // anything sees the data in its natural order, not a sort they didn't ask for.
   function loadSort() {
     try {
       const saved = JSON.parse(localStorage.getItem(SORT_KEY) || 'null');
       if (saved && typeof saved.dir === 'string') return { key: saved.key || null, dir: saved.dir };
     } catch {}
-    // Default to Status descending so Rejected rows (last alphabetically)
-    // surface at the top on a first-ever load.
-    return { key: 'status', dir: 'desc' };
+    return { key: null, dir: 'none' };
   }
 
   function saveSort() {
@@ -1850,6 +1889,20 @@
   }
 
   let currentSort = loadSort(); // 'none' -> 'asc' -> 'desc' -> 'none'
+
+  // A status/commitment edit deliberately doesn't reorder rows (see the
+  // notes at each call site below) — but leaving the sort indicator
+  // pointing at a column the table's current on-screen order no longer
+  // actually matches would be lying about it. Clearing it (without
+  // touching row order) keeps the header honest: nothing claims a sort
+  // that isn't really there anymore.
+  function clearSortAfterEdit() {
+    if (!currentSort.key) return;
+    currentSort.key = null;
+    currentSort.dir = 'none';
+    updateSortHeaderUI();
+    saveSort();
+  }
 
   function updateSortHeaderUI() {
     document.querySelectorAll('#headRow .sortable-th').forEach(th => {
@@ -2211,6 +2264,7 @@
     updateRowTimestamp(row);
     updateCapacitySummary();
     persistParticipantState();
+    clearSortAfterEdit();
 
     if (currentDetailRow === row && document.getElementById('historyModal').classList.contains('show')) {
       renderDetailModal(row);
@@ -2361,10 +2415,11 @@
 
     updateCapacitySummary();
     applyFilter();
-    // Deliberately not re-sorting here — jumping the row to its new
-    // sorted position right after the admin acts on it is disorienting
-    // (it looks like it vanished). The active sort stays selected and
-    // applies again the next time the admin sorts or reloads.
+    // Deliberately not re-sorting — jumping the row to its new sorted
+    // position right after the admin acts on it is disorienting (it looks
+    // like it vanished). clearSortAfterEdit() drops the now-inaccurate
+    // sort indicator without touching row order.
+    clearSortAfterEdit();
 
     const allRows = overflowRows ? rows.concat(overflowRows) : rows;
     if (currentDetailRow && allRows.includes(currentDetailRow) &&
@@ -2427,7 +2482,7 @@
     applyRowStatus(row, newStatus);
     updateCapacitySummary();
     applyFilter();
-    // No re-sort here either — see the note in confirmStatusAction.
+    clearSortAfterEdit();
 
     if (currentDetailRow === row && document.getElementById('historyModal').classList.contains('show')) {
       renderDetailModal(row);
@@ -2808,11 +2863,11 @@
     }
 
     // Non-emailed statuses (Interested/Applied/Completed/Dropped out) apply
-    // immediately, same as a single row's dropdown. No re-sort — see the
-    // note in confirmStatusAction.
+    // immediately, same as a single row's dropdown.
     rows.forEach(row => applyRowStatus(row, status));
     updateCapacitySummary();
     applyFilter();
+    clearSortAfterEdit();
     if (currentDetailRow && document.getElementById('historyModal').classList.contains('show') &&
         rows.includes(currentDetailRow)) {
       renderDetailModal(currentDetailRow);
