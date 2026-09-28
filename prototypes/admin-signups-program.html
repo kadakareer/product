@@ -549,10 +549,6 @@
 
 
     /* Participant detail modal */
-    #historyModal .modal-content {
-      max-height: 85vh;
-      overflow-y: auto;
-    }
     .modal-title-group {
       display: flex;
       align-items: center;
@@ -835,10 +831,6 @@
       margin: 6px 0 0;
     }
 
-    .reset-demo-group {
-      padding-top: 16px;
-      border-top: 1px solid #f0f0f0;
-    }
     .reset-demo-btn {
       color: #dc2626;
       border-color: #fecaca;
@@ -1172,6 +1164,18 @@
     </div>
 
     <div class="config-group">
+      <label class="config-label" for="configMaxParticipants">Max participants</label>
+      <input type="number" id="configMaxParticipants" class="config-days-input" min="1" placeholder="No limit">
+      <p class="config-hint">Once Approved reaches this number, further approvals go to the waitlist instead.</p>
+    </div>
+
+    <div class="config-group">
+      <label class="config-label">Demo data</label>
+      <button type="button" class="btn-outline reset-demo-btn" onclick="resetDemoData()">Reset to demo data</button>
+      <p class="config-hint">Clears every status/reject-reason change made in this browser and restores the original sample data.</p>
+    </div>
+
+    <div class="config-group">
       <label class="config-label">Duration</label>
       <div class="config-options">
         <input type="radio" id="duration-single" name="duration" class="config-radio" value="single-day">
@@ -1205,12 +1209,6 @@
     </div>
 
     <div class="config-group">
-      <label class="config-label" for="configMaxParticipants">Max participants</label>
-      <input type="number" id="configMaxParticipants" class="config-days-input" min="1" placeholder="No limit">
-      <p class="config-hint">Once Approved reaches this number, further approvals go to the waitlist instead.</p>
-    </div>
-
-    <div class="config-group">
       <label class="config-label">Format</label>
       <div class="config-options">
         <input type="radio" id="format-online" name="format" class="config-radio" value="online" checked>
@@ -1222,12 +1220,6 @@
         <input type="radio" id="format-hybrid" name="format" class="config-radio" value="hybrid">
         <label for="format-hybrid" class="config-radio-label">Hybrid</label>
       </div>
-    </div>
-
-    <div class="config-group reset-demo-group">
-      <label class="config-label">Demo data</label>
-      <button type="button" class="btn-outline reset-demo-btn" onclick="resetDemoData()">Reset to demo data</button>
-      <p class="config-hint">Clears every status/reject-reason change made in this browser and restores the original sample data.</p>
     </div>
 
     <div class="modal-actions">
