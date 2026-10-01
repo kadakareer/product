@@ -1,8 +1,10 @@
-# VirApp backend reference
+# VirApp
 
-Source repo: `monorepo/`, code under `functions/`. Read access granted via `additionalDirectories` in `.claude/settings.local.json` (personal, not committed).
+VirApp = Virtual Apprenticeship. Checked against the code on 2026-10-01.
 
-VirApp = Virtual Apprenticeship.
+Sections below describe v2 (`monorepo`, code under `functions/`) unless marked otherwise. v3 status is near the end. Read access to all repos comes from `additionalDirectories` in `.claude/settings.local.json` (personal, not committed).
+
+Events are a separate system. See [events.md](events.md).
 
 ## Challenge content — Contentful, read-only
 
@@ -45,10 +47,61 @@ Enroll flow: user submits → group gets created → the enrolling user gets add
 - Most SMTP providers reject or spam-flag a From that isn't the authenticated mailbox (or a verified alias). Switching the sending account means updating **both** the hardcoded from-address and the SMTP host/user/pass env vars, pointed at the new account.
 - Repo only holds local/test dummy creds — production creds live outside the repo.
 
+## v3 status
+
+### Backend — broadly built
+
+- **Challenges:** list, get details. Content still comes from Contentful.
+- **Groups:** invite an enrolled user, accept or decline an invite, leave a group and revert to solo
+- **Weekly submissions:** submit a link or file, get the latest, list all for a week
+- **Comments:** list, add, edit, delete on a submission
+- **Admin:**
+  - List registrations, update one status, batch-update statuses
+  - List submissions, review a submission
+  - Mark completion, list completions
+- **Email templates:** received, enrolled, waitlisted, rejected, already registered, participated, submission accepted, submission needs update, and three completion levels
+
+### Status model
+
+| Area | v3 values |
+|---|---|
+| Enrollment | `PENDING`, `WAITLISTED`, `ENROLLED`, `ENROLLED_GROUP`, `REJECTED`, `WITHDRAWN`, `COMPLETED`, `PARTICIPATED` |
+| Invite | `PENDING`, `ACCEPTED`, `DECLINED`, `EXPIRED` |
+| Submission review | `PENDING_REVIEW`, `ACCEPTED`, `NEEDS_UPDATE` |
+| Completion merit | `OUTSTANDING`, `COMMENDABLE`, `SATISFACTORY`, `NONE` |
+
+Older v2 values (`INVITED`, `UNENROLLED`, `DECLINED`, `NOT_ENROLLED`) are kept only for the migration.
+
+### Differences from v2
+
+- **Weekly submissions exist in both.** Parity on comments and admin review wasn't compared. Needs a side-by-side before porting.
+- **Completion merit is new.** Merit levels and an admin "mark completion" action weren't found in the v2 backend.
+- **Signup intake** is still a Tally webhook. It creates a `PENDING` registration with the screening answers and emails an "application received" message.
+- **Duplicate signups** get an "already registered" email instead of a second record.
+- **Admin routes** use the action-style naming (list, update, review, mark).
+
+### Not done yet
+
+- The signup webhook sits behind a feature flag. Production state not checked.
+- The code has open TODOs on mapping form field keys to the real Tally form
+- One is marked critical: the challenge name isn't captured yet, and the emails use it
+
+### Frontend — partial
+
+- The v3 app has three VirApp pages: marketplace, enrollment, challenge detail
+- No submission pages, no comment UI, no admin screens
+
 ## Reference
 
 | What | Where |
 |---|---|
+| v3 challenges controller | `backend/src/api/challenges/challenges.controller.ts` |
+| v3 admin challenges controller | `backend/src/api/admin/admin-challenges.controller.ts` |
+| v3 status enums | `backend/src/api/challenges/entity/challenge.enums.ts` |
+| v3 signup webhook | `backend/src/api/webhooks/services/virapp-registration-form.service.ts` |
+| v3 feature flags | `backend/src/core/feature-flags/flags.ts` |
+| v3 email templates | `backend/src/core/mail/templates/` |
+| v3 VirApp frontend | `app/src/features/virtual-apprenticeship/` |
 | Routing | New NestJS controllers served under `/api/v2/**`; legacy code under `/api/**` (`firebase.json` hosting rewrites) |
 | `ChallengesController` | `functions/src/api/challenges/challenges.controller.ts` — tagged `@ApiTags('virapp')` |
 | `CmsService` (Contentful fetch) | `functions/src/core/cms/cms.service.ts` |
