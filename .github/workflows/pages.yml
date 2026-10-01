@@ -1,0 +1,66 @@
+name: Deploy site
+
+# main            -> site root
+# feature/<name>  -> /preview/<name>/ on the same site
+#
+# A repo has one Pages site, so every deploy rebuilds all of it: main plus
+# every current feature branch. The github-pages environment only allows
+# deploys from main, so a feature push doesn't deploy itself. It asks main's
+# copy of this workflow to run, which then picks the feature branch up.
+
+on:
+  push:
+    branches: [main, "feature/**"]
+  delete:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deploy at a time per ref. A newer queued run replaces an older queued
+# one, which is fine because every run rebuilds everything.
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  request-deploy:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/feature/')
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Ask main to deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --repo "$GITHUB_REPOSITORY" --ref main
+
+  build:
+    # Push to main, a dispatch aimed at main, or a deleted feature branch
+    # (delete events run on the default branch).
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name != 'delete' || startsWith(github.event.ref, 'feature/'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Assemble site
+        run: bash .github/scripts/assemble-site.sh
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
