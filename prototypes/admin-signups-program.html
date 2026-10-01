@@ -13,6 +13,24 @@
       padding-right: 12px;
     }
 
+    /* Link-style so it reads as a lightweight escape hatch, not another
+       primary control competing with the filters it resets. */
+    .clear-filters-btn {
+      padding: 0;
+      border: none;
+      background: none;
+      color: #0066cc;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .clear-filters-btn:hover {
+      text-decoration: underline;
+    }
+
     /* Secondary filter controls (info filter, participant-info toggle) —
        set apart from the primary status/confirmation/search filters with
        a divider, so the row reads as two groups instead of one flat pile
@@ -1096,6 +1114,7 @@
         <option value="declined">Declined</option>
       </select>
       <input type="search" class="search-input" id="searchFilter" placeholder="Search name, university, degree, location…">
+      <button type="button" class="clear-filters-btn" id="clearFiltersBtn" onclick="clearFilters()" style="display: none;">Clear filters</button>
       <div class="filter-secondary">
         <button class="btn-outline info-filter-btn" id="infoFilterBtn" onclick="openInfoFilterModal()">
           Filter by info <span class="info-filter-badge" id="infoFilterBadge"></span>
@@ -3063,8 +3082,20 @@
       row.classList.toggle('hidden', !(statusMatch && confirmationMatch && searchMatch && infoMatch));
     });
 
+    // Only Status/Confirmation/search count here — the info filter has
+    // its own "Reset all" inside its modal and its own active badge.
+    const anyFilterActive = filterVal !== 'all' || confirmationVal !== 'all' || searchVal !== '';
+    document.getElementById('clearFiltersBtn').style.display = anyFilterActive ? '' : 'none';
+
     updateSelectionUI();
     syncHeaderWidths();
+  }
+
+  function clearFilters() {
+    document.getElementById('statusFilter').value = 'all';
+    document.getElementById('confirmationFilter').value = 'all';
+    document.getElementById('searchFilter').value = '';
+    applyFilter();
   }
 
   document.getElementById('statusFilter').addEventListener('change', applyFilter);
