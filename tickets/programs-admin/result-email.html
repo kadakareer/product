@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Programs admin — Email the Kadet on registration result</title>
+<style>
+  body { font: 16px/1.5 -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f0f0f0; margin: 0; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  h2 { margin-top: 0; }
+  section.card { position: relative; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .copy-btn { position: absolute; top: 1rem; right: 1.25rem; font: inherit; font-size: 0.8em; padding: 0.25rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #444; cursor: pointer; }
+  .copy-btn:hover { background: #f5f5f7; }
+  .copy-btn.copied { color: #16a34a; border-color: #16a34a; }
+  table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #ddd; vertical-align: top; }
+  th { background: #f5f5f5; }
+  code { background: #f0f0f0; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.9em; }
+  td ul { margin: 0; padding-left: 1.1rem; }
+  td li { margin: 0.2rem 0; }
+  td .note { display: block; margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; font-size: 0.9em; }
+  td .path { display: block; margin-top: 0.15rem; color: #666; }
+  .back-link { display: inline-block; margin-bottom: 1rem; font-size: 0.9em; color: #666; text-decoration: none; }
+  .back-link:hover { color: #3b82f6; text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<a class="back-link" href="../index.html">&larr; Back to tickets</a>
+
+<section class="card" id="result-email">
+  <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+  <h2>Email the Kadet on approve, reject or waitlist, and CC programs</h2>
+
+  <p>CC <code>programs@kadakareer.com</code> so the program manager can confirm the Kadet's result email actually sent. Events send no such email today. The only event emails are a registration confirmation, sent when a Kadet registers in the app and not when the Tally webhook records one, and an event reminder. So this ticket adds the result emails and the CC together. Depends on the approve, reject or waitlist ticket, which is what triggers the send.</p>
+
+  <h3>Technical solution</h3>
+
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr>
+      <td>Add one email template per result</td>
+      <td>
+        <ul>
+          <li>approved</li>
+          <li>rejected</li>
+          <li>waitlisted</li>
+        </ul>
+        <span class="path"><code>functions/src/core/mail/templates/</code></span>
+        <span class="note">model on <code>virapp-application-accepted.html</code> and <code>virapp-application-rejected.html</code>. Wording comes from Programs.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Add the options type</td>
+      <td>
+        New interface next to <code>IEventRegisteredOptions</code>
+        <span class="path"><code>functions/src/core/mail/mail.interfaces.ts</code></span>
+        <span class="note">no <code>cc</code> field to add: the options already extend <code>ISendMailOptions</code>, which carries <code>cc</code></span>
+      </td>
+    </tr>
+    <tr>
+      <td>Add the send method, with the CC</td>
+      <td>
+        New method next to <code>sendEventRegistrationEmail</code>, picking the template from the status
+        <span class="path"><code>functions/src/core/mail/mail.service.ts</code></span>
+        <span class="note">hardcode <code>cc: 'programs@kadakareer.com'</code>. Fixed address on every send, not per request, so no new API field.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Send it when admin sets the status</td>
+      <td>
+        The service method behind the new admin route
+        <span class="path"><code>functions/src/api/events/events.service.ts</code></span>
+        <span class="note">needs the Kadet's email and the event title and start time. <code>create</code> already fetches both with <code>usersService.findOne</code> and <code>getEventById</code>, so reuse that. Send only for approved, rejected and waitlisted, not for other status changes.</span>
+        <span class="note">save the status first, then send. A failed send never rolls the status back: catch the error, record it, and return <code>emailSent: false</code> in the response so the admin sees it.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Return the last email outcome in the admin list</td>
+      <td>
+        <code>UserEventWithUserDto</code> and <code>getAllRegisteredUsersWithDetailsForEvent</code>
+        <span class="path"><code>functions/src/api/events/dto/user-event-with-user.dto.ts</code></span>
+        <span class="note">add the latest email outcome per registration (sent, sent time, error), read from the newest status-history row, so the table can show "Approved — email failed"</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Let admin resend</td>
+      <td>
+        New admin route next to the status route, with the same guards (Admin and Program Manager)
+        <span class="path"><code>functions/src/api/events/events.controller.ts</code></span>
+        <span class="note">resend sends the email for the registration's current status. Only on request, never automatic retry, so a Kadet can't get two. Each resend updates the same history row.</span>
+      </td>
+    </tr>
+  </table>
+
+  <p>Decided: a failed email is recorded, never rolled back, because the status change is the source of truth and mail here is plain SMTP with no fallback. The outcome is stored on the status-history row (see that ticket).</p>
+</section>
+
+<script>
+function copyCard(btn) {
+  const card = btn.closest('.card');
+  const clone = card.cloneNode(true);
+  clone.querySelectorAll('.copy-btn').forEach(el => el.remove());
+  const text = clone.innerText.trim();
+  const restore = btn.textContent;
+  const onDone = () => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = restore; btn.classList.remove('copied'); }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(onDone).catch(() => fallbackCopy(text, onDone));
+  } else {
+    fallbackCopy(text, onDone);
+  }
+}
+function fallbackCopy(text, onDone) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); onDone(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+</script>
+</body>
+</html>

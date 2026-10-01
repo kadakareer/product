@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Programs admin — Track registration status changes</title>
+<style>
+  body { font: 16px/1.5 -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f0f0f0; margin: 0; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  h2 { margin-top: 0; }
+  section.card { position: relative; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .copy-btn { position: absolute; top: 1rem; right: 1.25rem; font: inherit; font-size: 0.8em; padding: 0.25rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #444; cursor: pointer; }
+  .copy-btn:hover { background: #f5f5f7; }
+  .copy-btn.copied { color: #16a34a; border-color: #16a34a; }
+  table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #ddd; vertical-align: top; }
+  th { background: #f5f5f5; }
+  code { background: #f0f0f0; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.9em; }
+  td ul { margin: 0; padding-left: 1.1rem; }
+  td li { margin: 0.2rem 0; }
+  td .note { display: block; margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; font-size: 0.9em; }
+  td .path { display: block; margin-top: 0.15rem; color: #666; }
+  .back-link { display: inline-block; margin-bottom: 1rem; font-size: 0.9em; color: #666; text-decoration: none; }
+  .back-link:hover { color: #3b82f6; text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<a class="back-link" href="../index.html">&larr; Back to tickets</a>
+
+<section class="card" id="status-history-tracking">
+  <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+  <h2>Track status changes per registration</h2>
+
+  <p>Admin wants an audit trail of when a registration's status changed and what changed it. Nothing is tracked today: a status change overwrites the previous one, and cancelling a registration deletes the record outright, history included. Status can change through four separate service methods, with no single place to hook a log.</p>
+
+  <h3>Technical solution</h3>
+
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr>
+      <td>New history entity, one doc per status change</td>
+      <td>
+        New flat top-level collection <code>user_event_status_history</code>
+        <span class="note">same flat-collection pattern as <code>user_event</code> itself (fireorm, no subcollections in use)</span>
+        <ul>
+          <li><code>userId</code> and <code>eventId</code> — stored directly, not just a link to the registration, because cancelling deletes that doc</li>
+          <li><code>previousStatus</code> / <code>newStatus</code> — <code>previousStatus</code> null on first create</li>
+          <li><code>changedBy</code> — user id, or a fixed marker for the Tally webhook</li>
+          <li><code>source</code> — which path made the change (see below)</li>
+          <li><code>changedAt</code></li>
+          <li><code>emailSent</code> — null when the change sends no email, otherwise true or false</li>
+          <li><code>emailSentAt</code> — nullable</li>
+          <li><code>emailError</code> — short message when the send failed</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td>Route every status change through one function that writes the row</td>
+      <td>
+        <code>functions/src/api/events/events.service.ts</code>
+        <ul>
+          <li><code>create</code> — caller sets the status in the request body</li>
+          <li><code>upsertFormRegistration</code> — Tally webhook, writes <code>APPLIED</code> or <code>APPROVED</code></li>
+          <li><code>update</code> — can't change status today; the new admin route from the approve/reject ticket would</li>
+          <li><code>delete</code> — write a final row before removing the record</li>
+        </ul>
+        <span class="note">write the row in the same call as the status change, so a change can't land without its history. Then send the email and update that same row with the outcome. Two writes, so the audit entry survives if the process dies between the change and the send. A resend updates the same row, so it shows the first failure and the later success.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Record the old status before it's overwritten</td>
+      <td>
+        <code>updateRegistration</code> and <code>upsertRegistration</code>
+        <span class="path"><code>functions/src/api/events/event.repository.ts</code></span>
+        <span class="note"><code>upsertRegistration</code> already reads the existing record to refuse overwriting protected statuses, so the previous status is available there</span>
+      </td>
+    </tr>
+  </table>
+
+  <p>Email outcome is tracked here because the result-email ticket adds result emails. Depends on that ticket and on the approve, reject or waitlist ticket.</p>
+</section>
+
+<script>
+function copyCard(btn) {
+  const card = btn.closest('.card');
+  const clone = card.cloneNode(true);
+  clone.querySelectorAll('.copy-btn').forEach(el => el.remove());
+  const text = clone.innerText.trim();
+  const restore = btn.textContent;
+  const onDone = () => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = restore; btn.classList.remove('copied'); }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(onDone).catch(() => fallbackCopy(text, onDone));
+  } else {
+    fallbackCopy(text, onDone);
+  }
+}
+function fallbackCopy(text, onDone) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); onDone(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+</script>
+</body>
+</html>

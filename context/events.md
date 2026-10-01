@@ -41,7 +41,10 @@ Full status set: `INTERESTED`, `APPLIED`, `APPROVED`, `COMPLETED`, `DROPPED_OUT`
 Behaviors worth knowing:
 
 - The webhook refuses to overwrite `APPLIED`, `APPROVED`, `COMPLETED` or `DROPPED_OUT`. Only `INTERESTED` can be upgraded.
-- The per-user create and update routes take the status from the caller. The backend only checks it's a valid value.
+- The per-user create route takes the status from the caller. The backend only checks it's a valid value.
+- The per-user update route can't change status. It accepts only user and event ids, and the validation pipe strips anything else.
+- Cancelling deletes the registration record, so no history survives.
+- The confirmation email is sent only on the in-app create path, not by the Tally webhook.
 - A record with no status shows as "Not signed up" in the UI.
 
 ### Admin
