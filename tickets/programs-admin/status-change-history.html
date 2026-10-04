@@ -7,6 +7,11 @@
 <style>
   body { font: 16px/1.5 -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f0f0f0; margin: 0; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
   h2 { margin-top: 0; padding-right: 5rem; }
+  .pill { display: inline-block; margin-left: 0.4rem; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.5em; font-weight: 600; vertical-align: middle; white-space: nowrap; }
+  .pill-fe { background: #ede9fe; color: #5b21b6; }
+  .pill-be { background: #dcfce7; color: #166534; }
+  .pill-app { background: #e0f2fe; color: #075985; }
+
   section.card { position: relative; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
   .copy-btn { position: absolute; top: 1rem; right: 1.25rem; font: inherit; font-size: 0.8em; padding: 0.25rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #444; cursor: pointer; }
   .copy-btn:hover { background: #f5f5f7; }
@@ -20,6 +25,31 @@
   td .note { display: block; margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; font-size: 0.9em; }
   td .path { display: block; margin-top: 0.15rem; color: #666; }
   .back-link { display: inline-block; margin-bottom: 1rem; font-size: 0.9em; color: #666; text-decoration: none; }
+  .hdemo { margin: 1rem 0; padding: 1rem 1.25rem; background: #fafafa; border: 1px dashed #000; border-radius: 6px; }
+  .hdemo-caption { margin: 0 0 0.75rem; font-size: 0.8em; color: #666; }
+  .hdemo table { margin: 0; background: #fff; }
+  .hdemo th, .hdemo td { font-size: 14px; }
+  .hdemo tr.row { cursor: pointer; }
+  .hdemo tr.row:hover { background: #f5f5f7; }
+  .hmodal { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; }
+  .hmodal.show { display: flex; }
+  .hmodal .box { background: #fff; padding: 32px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.15); color: #1d1d1f; }
+  .hmodal .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .hmodal .title { font-size: 20px; font-weight: 600; margin: 0; }
+  .hmodal .close { background: none; border: none; font-size: 24px; cursor: pointer; color: #6e6e73; padding: 0; }
+  .hmodal .section { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; margin-bottom: 4px; border: none; border-bottom: 1px solid #e5e5ea; background: none; width: 100%; font: inherit; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #6e6e73; cursor: pointer; }
+  .hmodal .chev { font-size: 11px; color: #86868b; transition: transform 0.15s; }
+  .hmodal .section.collapsed .chev { transform: rotate(-90deg); }
+  .hmodal .section.collapsed + .list { display: none; }
+  .hmodal .list { display: flex; flex-direction: column; gap: 2px; }
+  .hmodal .entry { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 4px; border-bottom: 1px solid #f0f0f2; }
+  .hmodal .entry:last-child { border-bottom: none; }
+  .hmodal .main { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+  .hmodal .status { font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .hmodal .status.email { font-weight: 500; color: #6e6e73; }
+  .hmodal .who { font-size: 11px; color: #6e6e73; }
+  .hmodal .when { font-size: 11px; color: #86868b; white-space: nowrap; text-align: right; }
+  .hmodal .empty { color: #86868b; font-size: 14px; padding: 16px 4px; text-align: center; }
   .back-link:hover { color: #3b82f6; text-decoration: underline; }
 </style>
 </head>
@@ -27,11 +57,68 @@
 
 <a class="back-link" href="../index.html">&larr; Back to tickets</a>
 
-<section class="card" id="status-history-tracking">
+<section class="card" id="history-modal">
   <button class="copy-btn" onclick="copyCard(this)">Copy</button>
-  <h2>Track status changes per registration</h2>
+  <h2>Show a registration's history in a participant modal <span class="pill pill-fe">Admin · Retool</span> <span class="pill pill-be">Backend · monorepo</span></h2>
 
-  <p>Admin wants an audit trail of when a registration's status changed and what changed it. Nothing is tracked today: a status change overwrites the previous one, and cancelling a registration deletes the record outright, history included. Status can change through four separate service methods, with no single place to hook a log.</p>
+  <p>Clicking a registration row opens a participant modal. Its History section lists each status change, newest first, with who made it and when, plus an "Email sent" line when the result email went out. The admin page has no row-click modal today.</p>
+
+  <p>Retool change: <a href="https://kadakareer.retool.com/app/event/signups?eventId=24HkUfzxlxTEXQlHUjz7L3" target="_blank" rel="noopener">Event signups page</a>. Questions: reach out to Ishi or Ken.</p>
+
+  <div class="hdemo">
+    <p class="hdemo-caption">Demo: click a registration to open its history.</p>
+    <table>
+      <tr><th>Participant</th><th>Status</th></tr>
+      <tr class="row" data-id="sarah"><td>Sarah Martinez</td><td>Approved</td></tr>
+      <tr class="row" data-id="david"><td>David Kim</td><td>Applied</td></tr>
+    </table>
+    <div class="hmodal">
+      <div class="box">
+        <div class="head">
+          <h2 class="title"></h2>
+          <button type="button" class="close">&times;</button>
+        </div>
+        <button type="button" class="section">History <span class="chev">&#9662;</span></button>
+        <div class="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Technical solution</h3>
+
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr>
+      <td>Add a route that returns a registration's history</td>
+      <td>
+        Next to <code>getEventRegistrations</code>, with the same guards: Admin and Program Manager
+        <span class="path"><code>functions/src/api/events/events.controller.ts</code></span>
+        <span class="note">takes <code>userId</code> and <code>eventId</code>, returns the history rows newest first. Resolve <code>changedBy</code> to the person's name, the admin or the Kadet.</span>
+        <span class="note">the front end renders an "Email sent" line from each row's <code>emailSent</code> and <code>emailSentAt</code>, attributed to "System" since the platform sends it, not the admin.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Open a participant modal on row click</td>
+      <td>
+        Row of the registrations table
+        <span class="note">shows the participant's name and the History section. A click on the status dropdown must not open it.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Add the History section</td>
+      <td>
+        Collapsible list at the bottom of the modal
+        <span class="note">each entry shows the status, who changed it, and the date and time. Empty state: "No status changes recorded yet."</span>
+      </td>
+    </tr>
+  </table>
+</section>
+
+<section class="card" id="record-history">
+  <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+  <h2>Record every registration status change <span class="pill pill-be">Backend · monorepo</span></h2>
+
+  <p>Admin can see when a registration's status changed, what changed it, and whether the Kadet was emailed. Nothing is tracked today: a status change overwrites the previous one, and cancelling deletes the record, history included. Status can change through four service methods, with no single place to hook a log.</p>
 
   <h3>Technical solution</h3>
 
@@ -45,12 +132,11 @@
         <ul>
           <li><code>userId</code> and <code>eventId</code> — stored directly, not just a link to the registration, because cancelling deletes that doc</li>
           <li><code>previousStatus</code> / <code>newStatus</code> — <code>previousStatus</code> null on first create</li>
-          <li><code>changedBy</code> — user id, or a fixed marker for the Tally webhook</li>
+          <li><code>changedBy</code> — user id of whoever made the change: the admin, or the Kadet when they register or submit the Tally form</li>
           <li><code>source</code> — which path made the change (see below)</li>
           <li><code>changedAt</code></li>
-          <li><code>emailSent</code> — null when the change sends no email, otherwise true or false</li>
+          <li><code>emailSent</code> — true once the result email was sent, otherwise null</li>
           <li><code>emailSentAt</code> — nullable</li>
-          <li><code>emailError</code> — short message when the send failed</li>
         </ul>
       </td>
     </tr>
@@ -60,11 +146,11 @@
         <code>functions/src/api/events/events.service.ts</code>
         <ul>
           <li><code>create</code> — caller sets the status in the request body</li>
-          <li><code>upsertFormRegistration</code> — Tally webhook, writes <code>APPLIED</code> or <code>APPROVED</code></li>
+          <li><code>upsertFormRegistration</code> — Tally webhook, writes <code>APPLIED</code> or <code>APPROVED</code>, recorded against the Kadet who submitted</li>
           <li><code>update</code> — can't change status today; the new admin route from the status ticket would</li>
           <li><code>delete</code> — write a final row before removing the record</li>
         </ul>
-        <span class="note">write the row in the same call as the status change, so a change can't land without its history. Then send the email and update that same row with the outcome. Two writes, so the audit entry survives if the process dies between the change and the send. A resend updates the same row, so it shows the first failure and the later success.</span>
+        <span class="note">write the row in the same call as the status change, so a change can't land without its history. Then send the email and mark that same row sent. Two writes, so the audit entry survives if the send throws or the process dies.</span>
       </td>
     </tr>
     <tr>
@@ -75,29 +161,42 @@
         <span class="note"><code>upsertRegistration</code> already reads the existing record to refuse overwriting protected statuses, so the previous status is available there</span>
       </td>
     </tr>
-    <tr>
-      <td>Return the last email outcome in the admin list</td>
-      <td>
-        <code>UserEventWithUserDto</code> and <code>getAllRegisteredUsersWithDetailsForEvent</code>
-        <span class="path"><code>functions/src/api/events/dto/user-event-with-user.dto.ts</code></span>
-        <span class="note">add the latest email outcome per registration (sent, sent time, error), read from the newest status-history row, so the table can show "Approved — email failed"</span>
-      </td>
-    </tr>
-    <tr>
-      <td>Let admin resend</td>
-      <td>
-        New admin route next to the status route, with the same guards (Admin and Program Manager)
-        <span class="path"><code>functions/src/api/events/events.controller.ts</code></span>
-        <span class="note">resend sends the email for the registration's current status. Only on request, never automatic retry, so a Kadet can't get two. Each resend updates the same history row.</span>
-      </td>
-    </tr>
   </table>
 
-  <p>Depends on the status ticket, which adds the admin status route and the result emails. That ticket only returns <code>emailSent: false</code> on the save response. This ticket records the outcome, shows it in the list, and adds resend.</p>
-
-  <p>Decided: a failed email is recorded, never rolled back, because the status change is the source of truth and mail here is plain SMTP with no fallback.</p>
+  <p>Depends on the status ticket, which adds the admin status route and the result emails. Failed sends are a separate ticket.</p>
 </section>
 
+<script>
+(function () {
+  const people = {
+    sarah: { name: 'Sarah Martinez', history: [
+      { label: 'Approved', email: false, who: 'Dana Reyes', when: 'Dec 12, 2025, 09:20 AM' },
+      { label: '\u2709 Email sent', email: true, who: 'System', when: 'Dec 12, 2025, 09:20 AM' },
+      { label: 'Applied', email: false, who: 'Sarah Martinez', when: 'Dec 11, 2025, 02:15 PM' },
+      { label: 'Interested', email: false, who: 'Sarah Martinez', when: 'Dec 11, 2025, 11:30 AM' }
+    ] },
+    david: { name: 'David Kim', history: [] }
+  };
+  const demo = document.querySelector('.hdemo');
+  const modal = demo.querySelector('.hmodal');
+  const list = modal.querySelector('.list');
+  function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+  demo.querySelectorAll('tr.row').forEach(function (row) {
+    row.addEventListener('click', function () {
+      const p = people[row.dataset.id];
+      modal.querySelector('.title').textContent = p.name;
+      modal.querySelector('.section').classList.remove('collapsed');
+      list.innerHTML = p.history.length ? p.history.map(function (e) {
+        return '<div class="entry"><div class="main"><span class="status' + (e.email ? ' email' : '') + '">' + esc(e.label) + '</span><span class="who">' + esc(e.who) + '</span></div><div class="when">' + esc(e.when) + '</div></div>';
+      }).join('') : '<div class="empty">No status changes recorded yet.</div>';
+      modal.classList.add('show');
+    });
+  });
+  modal.querySelector('.close').addEventListener('click', function () { modal.classList.remove('show'); });
+  modal.addEventListener('click', function (e) { if (e.target === modal) modal.classList.remove('show'); });
+  modal.querySelector('.section').addEventListener('click', function (e) { e.currentTarget.classList.toggle('collapsed'); });
+})();
+</script>
 <script>
 function copyCard(btn) {
   const card = btn.closest('.card');

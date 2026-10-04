@@ -7,6 +7,11 @@
 <style>
   body { font: 16px/1.5 -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f0f0f0; margin: 0; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
   h2 { margin-top: 0; padding-right: 5rem; }
+  .pill { display: inline-block; margin-left: 0.4rem; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.5em; font-weight: 600; vertical-align: middle; white-space: nowrap; }
+  .pill-fe { background: #ede9fe; color: #5b21b6; }
+  .pill-be { background: #dcfce7; color: #166534; }
+  .pill-app { background: #e0f2fe; color: #075985; }
+
   section.card { position: relative; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
   .copy-btn { position: absolute; top: 1rem; right: 1.25rem; font: inherit; font-size: 0.8em; padding: 0.25rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #444; cursor: pointer; }
   .copy-btn:hover { background: #f5f5f7; }
@@ -21,7 +26,7 @@
   td .path { display: block; margin-top: 0.15rem; color: #666; }
   .back-link { display: inline-block; margin-bottom: 1rem; font-size: 0.9em; color: #666; text-decoration: none; }
   .back-link:hover { color: #3b82f6; text-decoration: underline; }
-  .demo { margin: 1rem 0; padding: 1rem 1.25rem 7rem; background: #fafafa; border: 1px dashed #ccc; border-radius: 6px; }
+  .demo { margin: 1rem 0; padding: 1rem 1.25rem 7rem; background: #fafafa; border: 1px dashed #000; border-radius: 6px; }
   .demo-caption { margin: 0 0 0.75rem; font-size: 0.8em; color: #666; }
   .demo-row { display: flex; align-items: center; gap: 1rem; }
   .demo-name { font-size: 14px; font-weight: 600; }
@@ -69,9 +74,11 @@
 
 <section class="card" id="status-change">
   <button class="copy-btn" onclick="copyCard(this)">Copy</button>
-  <h2>Let admin change a registration's status from a dropdown</h2>
+  <h2>Let admin change a registration's status from a dropdown <span class="pill pill-fe">Admin · Retool</span> <span class="pill pill-be">Backend · monorepo</span> <span class="pill pill-app">Frontend · app-playground</span></h2>
 
   <p>Each registration row on the events admin page gets a status dropdown. Picking a value saves it for the applicant. Rejected and waitlisted are new statuses.</p>
+
+  <p>Retool change: <a href="https://kadakareer.retool.com/app/event/signups?eventId=24HkUfzxlxTEXQlHUjz7L3" target="_blank" rel="noopener">Event signups page</a>. Questions: reach out to Ishi or Ken.</p>
 
   <div class="demo">
     <p class="demo-caption">Demo: click the status to open the dropdown.</p>
@@ -148,9 +155,11 @@
 
 <section class="card" id="confirm-and-email">
   <button class="copy-btn" onclick="copyCard(this)">Copy</button>
-  <h2>Confirm approved, rejected or waitlisted, and email the Kadet</h2>
+  <h2>Confirm approved, rejected or waitlisted, and email the Kadet <span class="pill pill-fe">Admin · Retool</span> <span class="pill pill-be">Backend · monorepo</span></h2>
 
   <p>Choosing approved, rejected or waitlisted opens a confirmation before anything saves. It has a toggle to send or skip the Kadet's email, and rejecting also takes an optional reason. Cancel leaves the status unchanged.</p>
+
+  <p>Retool change: <a href="https://kadakareer.retool.com/app/event/signups?eventId=24HkUfzxlxTEXQlHUjz7L3" target="_blank" rel="noopener">Event signups page</a>. Questions: reach out to Ishi or Ken.</p>
 
   <div class="demo" data-modal="on">
     <p class="demo-caption">Demo: pick Approved, Rejected or Waitlisted to open the confirmation. Other statuses save straight away.</p>

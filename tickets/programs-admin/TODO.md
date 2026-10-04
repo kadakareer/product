@@ -5,9 +5,9 @@ Admin tools for reviewing program signups: approve, reject, waitlist, history, r
 ## Done
 
 - [x] Ticket: change a registration's status (dropdown, confirmation modal, admin route, reason), and email the Kadet on result, CC programs
-- [x] Ticket: track registration status changes, with the email outcome, list display and resend
+- [x] Ticket: track registration status changes, with whether the email was sent
 - [x] Decided: scope is programs, v2 gets the work, both roles can decide
-- [x] Decided: a failed result email is logged and shown to admin with a Resend, never rolled back
+- [x] Decided: failed result emails are a separate ticket, still to refine
 
 ## Write next
 
