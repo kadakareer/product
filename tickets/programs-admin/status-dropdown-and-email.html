@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Programs admin — Registration status change and result email</title>
+<style>
+  body { font: 16px/1.5 -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f0f0f0; margin: 0; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  h2 { margin-top: 0; padding-right: 5rem; }
+  section.card { position: relative; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .copy-btn { position: absolute; top: 1rem; right: 1.25rem; font: inherit; font-size: 0.8em; padding: 0.25rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #444; cursor: pointer; }
+  .copy-btn:hover { background: #f5f5f7; }
+  .copy-btn.copied { color: #16a34a; border-color: #16a34a; }
+  table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #ddd; vertical-align: top; }
+  th { background: #f5f5f5; }
+  code { background: #f0f0f0; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.9em; }
+  td ul { margin: 0; padding-left: 1.1rem; }
+  td li { margin: 0.2rem 0; }
+  td .note { display: block; margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; font-size: 0.9em; }
+  td .path { display: block; margin-top: 0.15rem; color: #666; }
+  .back-link { display: inline-block; margin-bottom: 1rem; font-size: 0.9em; color: #666; text-decoration: none; }
+  .back-link:hover { color: #3b82f6; text-decoration: underline; }
+  .demo { margin: 1rem 0; padding: 1rem 1.25rem 7rem; background: #fafafa; border: 1px dashed #ccc; border-radius: 6px; }
+  .demo-caption { margin: 0 0 0.75rem; font-size: 0.8em; color: #666; }
+  .demo-row { display: flex; align-items: center; gap: 1rem; }
+  .demo-name { font-size: 14px; font-weight: 600; }
+  .demo .status-pill { position: relative; display: inline-block; padding: 5px 14px; border-radius: 14px; font-size: 12px; font-weight: 600; color: #fff; white-space: nowrap; user-select: none; cursor: pointer; transition: background 0.2s; }
+  .demo .pill-palette-0 { background: #0066cc; } .demo .pill-palette-0:hover { background: #0052a3; }
+  .demo .pill-palette-1 { background: #f59e0b; } .demo .pill-palette-1:hover { background: #d97706; }
+  .demo .pill-palette-2 { background: #10b981; } .demo .pill-palette-2:hover { background: #0ea472; }
+  .demo .pill-palette-3 { background: #ef4444; } .demo .pill-palette-3:hover { background: #dc2626; }
+  .demo .pill-palette-4 { background: #6b7280; } .demo .pill-palette-4:hover { background: #52525b; }
+  .demo .pill-palette-5 { background: #6366f1; } .demo .pill-palette-5:hover { background: #4f46e5; }
+  .demo .pill-palette-6 { background: #ec4899; } .demo .pill-palette-6:hover { background: #db2777; }
+  .demo .status-dropdown { display: none; position: absolute; top: 100%; left: 0; margin-top: 4px; min-width: 120px; background: #fff; border: 1px solid #d2d2d7; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10; }
+  .demo .status-dropdown.show { display: block; }
+  .demo .status-option { padding: 8px 12px; font-size: 13px; color: #1d1d1f; font-weight: 400; white-space: nowrap; border-bottom: 1px solid #f5f5f7; cursor: pointer; }
+  .demo .status-option:last-child { border-bottom: none; }
+  .demo .status-option:hover { background: #f5f5f7; }
+  .demo-note { margin: 0.75rem 0 0; font-size: 13px; color: #3a3a3c; min-height: 1.2em; }
+  .demo-modal { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; }
+  .demo-modal.show { display: flex; }
+  .demo-modal .box { background: #fff; padding: 32px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.15); color: #1d1d1f; }
+  .demo-modal .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .demo-modal .title { font-size: 20px; font-weight: 600; margin: 0; }
+  .demo-modal .close { background: none; border: none; font-size: 24px; cursor: pointer; color: #6e6e73; padding: 0; }
+  .demo-modal .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+  .demo-modal .label { font-size: 14px; font-weight: 600; }
+  .demo-modal .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+  .demo-modal .switch input { opacity: 0; width: 0; height: 0; }
+  .demo-modal .slider { position: absolute; cursor: pointer; inset: 0; background: #d2d2d7; border-radius: 24px; transition: background 0.2s; }
+  .demo-modal .slider::before { content: ''; position: absolute; height: 18px; width: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
+  .demo-modal .switch input:checked + .slider { background: #0066cc; }
+  .demo-modal .switch input:checked + .slider::before { transform: translateX(20px); }
+  .demo-modal .reason { margin-bottom: 20px; }
+  .demo-modal .reason textarea { width: 100%; box-sizing: border-box; margin-top: 8px; padding: 8px 10px; border: 1px solid #d2d2d7; border-radius: 6px; font: inherit; font-size: 13px; resize: vertical; }
+  .demo-modal .actions { display: flex; gap: 12px; margin-top: 24px; }
+  .demo-modal .btn { flex: 1; padding: 10px 16px; border-radius: 6px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; border: none; }
+  .demo-modal .btn.save { background: #0066cc; color: #fff; }
+  .demo-modal .btn.save:hover { background: #0052a3; }
+  .demo-modal .btn.cancel { background: #f5f5f7; color: #1d1d1f; border: 1px solid #d2d2d7; }
+  .demo-modal .btn.cancel:hover { background: #e8e8ed; }
+</style>
+</head>
+<body>
+
+<a class="back-link" href="../index.html">&larr; Back to tickets</a>
+
+<section class="card" id="status-change">
+  <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+  <h2>Let admin change a registration's status from a dropdown</h2>
+
+  <p>Each registration row on the events admin page gets a status dropdown. Picking a value saves it for the applicant. Rejected and waitlisted are new statuses.</p>
+
+  <div class="demo">
+    <p class="demo-caption">Demo: click the status to open the dropdown.</p>
+    <div class="demo-row">
+      <span class="demo-name">Sarah Martinez</span>
+      <span class="status-pill" data-status="applied">
+        <span class="status-pill-label">Applied</span>
+        <div class="status-dropdown">
+          <div class="status-option" data-status="interested">Interested</div>
+          <div class="status-option" data-status="applied">Applied</div>
+          <div class="status-option" data-status="approved">Approved</div>
+          <div class="status-option" data-status="waitlisted">Waitlisted</div>
+          <div class="status-option" data-status="completed">Completed</div>
+          <div class="status-option" data-status="dropped-out">Dropped out</div>
+          <div class="status-option" data-status="rejected">Rejected</div>
+        </div>
+      </span>
+    </div>
+  </div>
+
+  <h3>Technical solution</h3>
+
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr>
+      <td>Add rejected and waitlisted statuses</td>
+      <td>
+        <code>UserEventStatus</code>
+        <span class="path"><code>functions/src/api/events/entities/user-event.entity.ts</code></span>
+        <span class="note">add <code>REJECTED</code> and <code>WAITLISTED</code>. Waitlisted is set by admin only, since events have no capacity, and a waitlisted registration is promoted by setting <code>APPROVED</code>.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Add the reason field</td>
+      <td>
+        <code>UserEvent</code> entity
+        <span class="path"><code>functions/src/api/events/entities/user-event.entity.ts</code></span>
+        <span class="note">optional <code>rejectedReason</code>, shown in the admin table. Not included in the Kadet's email.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Add an admin-only route to set status</td>
+      <td>
+        Next to <code>getEventRegistrations</code>, with the same guards: Admin and Program Manager
+        <span class="path"><code>functions/src/api/events/events.controller.ts</code></span>
+        <span class="note">new DTO with <code>userId</code>, <code>eventId</code>, <code>status</code>, optional <code>rejectedReason</code> (only with <code>REJECTED</code>) and <code>sendEmail</code>. Don't widen <code>UpdateRegistrationDto</code>: its route is user-guarded, so a user could approve themselves.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Persist it</td>
+      <td>
+        New service method calling <code>updateRegistration</code>
+        <span class="path"><code>functions/src/api/events/events.service.ts</code></span>
+      </td>
+    </tr>
+    <tr>
+      <td>Replace the status label with a dropdown</td>
+      <td>
+        Status cell of each row in the registrations table
+        <span class="note">options: every <code>UserEventStatus</code>. Approved, rejected and waitlisted open the confirmation (next card). Other statuses save straight away.</span>
+        <span class="note">show the new status on the row only after the save succeeds. On failure keep the old status and show an error.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Label the new statuses in the Kadet app</td>
+      <td>
+        <code>EVENT_STATUS</code> and <code>EVENT_STATUS_LABELS</code>
+        <span class="path"><code>src/utils/events.ts</code> in <code>app-playground</code></span>
+        <span class="note">an unknown status shows its raw name, so unlabelled these would read <code>REJECTED</code> and <code>WAITLISTED</code></span>
+      </td>
+    </tr>
+  </table>
+</section>
+
+<section class="card" id="confirm-and-email">
+  <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+  <h2>Confirm approved, rejected or waitlisted, and email the Kadet</h2>
+
+  <p>Choosing approved, rejected or waitlisted opens a confirmation before anything saves. It has a toggle to send or skip the Kadet's email, and rejecting also takes an optional reason. Cancel leaves the status unchanged.</p>
+
+  <div class="demo" data-modal="on">
+    <p class="demo-caption">Demo: pick Approved, Rejected or Waitlisted to open the confirmation. Other statuses save straight away.</p>
+    <div class="demo-row">
+      <span class="demo-name">Sarah Martinez</span>
+      <span class="status-pill" data-status="applied">
+        <span class="status-pill-label">Applied</span>
+        <div class="status-dropdown">
+          <div class="status-option" data-status="interested">Interested</div>
+          <div class="status-option" data-status="applied">Applied</div>
+          <div class="status-option" data-status="approved">Approved</div>
+          <div class="status-option" data-status="waitlisted">Waitlisted</div>
+          <div class="status-option" data-status="completed">Completed</div>
+          <div class="status-option" data-status="dropped-out">Dropped out</div>
+          <div class="status-option" data-status="rejected">Rejected</div>
+        </div>
+      </span>
+    </div>
+    <p class="demo-note"></p>
+    <div class="demo-modal">
+      <div class="box">
+        <div class="head">
+          <h2 class="title"></h2>
+          <button type="button" class="close">&times;</button>
+        </div>
+        <div class="reason">
+          <span class="label">Reason for rejection (optional)</span>
+          <textarea rows="3" placeholder="Explain why this application was rejected…"></textarea>
+        </div>
+        <div class="switch-row">
+          <span class="label"></span>
+          <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn cancel">Cancel</button>
+          <button type="button" class="btn save"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Technical solution</h3>
+
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr>
+      <td>Add the confirmation modal</td>
+      <td>
+        Confirmation modal on the registrations page
+        <span class="note">shows the Kadet, a "Send email" toggle (on by default) and, for reject only, a reason textarea. Confirm saves with <code>sendEmail</code> and <code>rejectedReason</code>. Cancel closes.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Add one email template per result</td>
+      <td>
+        <ul>
+          <li>approved</li>
+          <li>rejected</li>
+          <li>waitlisted</li>
+        </ul>
+        <span class="path"><code>functions/src/core/mail/templates/</code></span>
+        <span class="note">wording is in the table below. Model the layout on <code>virapp-application-accepted.html</code>.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Add the options type</td>
+      <td>
+        New interface next to <code>IEventRegisteredOptions</code>, with <code>participantName</code> and <code>programName</code> in its context
+        <span class="path"><code>functions/src/core/mail/mail.interfaces.ts</code></span>
+      </td>
+    </tr>
+    <tr>
+      <td>Add the send method, with the CC</td>
+      <td>
+        New method next to <code>sendEventRegistrationEmail</code>, picking the template and subject from the status
+        <span class="path"><code>functions/src/core/mail/mail.service.ts</code></span>
+        <span class="note">hardcode <code>cc: 'programs@kadakareer.com'</code> so the program manager can confirm the email sent. Fixed on every send, not per request.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Send it after the status is saved</td>
+      <td>
+        The service method behind the admin status route
+        <span class="path"><code>functions/src/api/events/events.service.ts</code></span>
+        <span class="note">send only for approved, rejected and waitlisted, and only when <code>sendEmail</code> is true. Reuse <code>usersService.findOne</code> and <code>getEventById</code> for the Kadet's email and the event title, as <code>create</code> does. Save first, then send. Failed sends are a separate ticket.</span>
+      </td>
+    </tr>
+  </table>
+
+  <h3>Email templates</h3>
+
+  <p>Variables: <code>{{participantName}}</code> and <code>{{programName}}</code>. Signed "KadaKareer Team".</p>
+
+  <table>
+    <tr><th>Status</th><th>Subject and body</th></tr>
+    <tr>
+      <td>Approved</td>
+      <td>
+        <strong>You're in! Next steps for {{programName}}</strong>
+        <br>Hi {{participantName}},
+        <br>Congratulations — you've been accepted into {{programName}}. We'll follow up shortly with next steps to get you started.
+        <br>Welcome aboard!
+      </td>
+    </tr>
+    <tr>
+      <td>Rejected</td>
+      <td>
+        <strong>Update on your {{programName}} application</strong>
+        <br>Hi {{participantName}},
+        <br>Thank you for applying to {{programName}}. After careful review, we're unable to offer you a spot in this cohort.
+        <br>We encourage you to apply again in the future.
+      </td>
+    </tr>
+    <tr>
+      <td>Waitlisted</td>
+      <td>
+        <strong>You're on the waitlist for {{programName}}</strong>
+        <br>Hi {{participantName}},
+        <br>{{programName}} has reached capacity, but you've been added to the waitlist. We'll reach out right away if a spot opens up.
+      </td>
+    </tr>
+  </table>
+</section>
+
+<script>
+(function () {
+  const order = ['interested', 'applied', 'approved', 'completed', 'dropped-out', 'rejected', 'waitlisted'];
+  const confirmCopy = {
+    approved:   { title: 'Approve',         label: 'Send acceptance email' },
+    rejected:   { title: 'Reject',          label: 'Send rejection email' },
+    waitlisted: { title: 'Move to waitlist', label: 'Send waitlist email' }
+  };
+
+  document.querySelectorAll('.demo').forEach(function (demo) {
+    const pill = demo.querySelector('.status-pill');
+    const dropdown = demo.querySelector('.status-dropdown');
+    const label = pill.querySelector('.status-pill-label');
+    const modal = demo.querySelector('.demo-modal');
+    const note = demo.querySelector('.demo-note');
+    let pending = null;
+
+    function paint(status) {
+      pill.dataset.status = status;
+      for (let i = 0; i < 7; i++) pill.classList.remove('pill-palette-' + i);
+      pill.classList.add('pill-palette-' + order.indexOf(status));
+      label.textContent = dropdown.querySelector('[data-status="' + status + '"]').textContent;
+    }
+    paint('applied');
+
+    function openModal(status) {
+      const c = confirmCopy[status];
+      pending = status;
+      modal.querySelector('.title').textContent = c.title + ' Sarah Martinez';
+      modal.querySelector('.label').textContent = c.label;
+      modal.querySelector('.save').textContent = c.title;
+      modal.querySelector('input').checked = true;
+      modal.querySelector('.reason').style.display = status === 'rejected' ? 'block' : 'none';
+      modal.querySelector('textarea').value = '';
+      modal.classList.add('show');
+    }
+    function closeModal() { modal.classList.remove('show'); pending = null; }
+
+    pill.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const opt = e.target.closest('.status-option');
+      if (!opt) { dropdown.classList.toggle('show'); return; }
+      dropdown.classList.remove('show');
+      const status = opt.dataset.status;
+      if (modal && confirmCopy[status]) { openModal(status); return; }
+      paint(status);
+      if (note) note.textContent = 'Saved. No confirmation, no email.';
+    });
+    document.addEventListener('click', function () { dropdown.classList.remove('show'); });
+
+    if (modal) {
+      modal.querySelector('.close').addEventListener('click', closeModal);
+      modal.querySelector('.cancel').addEventListener('click', function () { closeModal(); note.textContent = 'Cancelled. Status unchanged.'; });
+      modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+      modal.querySelector('.save').addEventListener('click', function () {
+        const send = modal.querySelector('input').checked;
+        paint(pending);
+        const reason = pending === 'rejected' && modal.querySelector('textarea').value.trim();
+        note.textContent = (send ? 'Saved. Email sent to Sarah.' : 'Saved. No email sent.') + (reason ? ' Reason recorded.' : '');
+        closeModal();
+      });
+    }
+  });
+})();
+</script>
+<script>
+function copyCard(btn) {
+  const card = btn.closest('.card');
+  const clone = card.cloneNode(true);
+  clone.querySelectorAll('.copy-btn').forEach(el => el.remove());
+  const text = clone.innerText.trim();
+  const restore = btn.textContent;
+  const onDone = () => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = restore; btn.classList.remove('copied'); }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(onDone).catch(() => fallbackCopy(text, onDone));
+  } else {
+    fallbackCopy(text, onDone);
+  }
+}
+function fallbackCopy(text, onDone) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); onDone(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+</script>
+</body>
+</html>

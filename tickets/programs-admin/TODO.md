@@ -4,9 +4,8 @@ Admin tools for reviewing program signups: approve, reject, waitlist, history, r
 
 ## Done
 
-- [x] Ticket: approve, reject or waitlist a registration, with a reason
-- [x] Ticket: track registration status changes
-- [x] Ticket: email the Kadet on result, CC programs
+- [x] Ticket: change a registration's status (dropdown, confirmation modal, admin route, reason), and email the Kadet on result, CC programs
+- [x] Ticket: track registration status changes, with the email outcome, list display and resend
 - [x] Decided: scope is programs, v2 gets the work, both roles can decide
 - [x] Decided: a failed result email is logged and shown to admin with a Resend, never rolled back
 
@@ -14,6 +13,7 @@ Admin tools for reviewing program signups: approve, reject, waitlist, history, r
 
 Prototyped but with no ticket yet. Each one needs a backend piece.
 
+- [ ] Refine: failed result email handling (drafted in `failed-result-email.html`)
 - [ ] Confirmation state on approved registrations (awaiting, confirmed, declined)
 - [ ] Capacity: max participants, overflow to waitlist, fill an open spot
 - [ ] Bulk status update across several registrations
@@ -74,9 +74,9 @@ Suggested answers are mine. Overrule freely.
 
 | What | Where |
 |---|---|
-| Approve, reject or waitlist ticket | `new-fields.html` in this folder |
+| Status change and result email ticket | `status-dropdown-and-email.html` in this folder |
+| Failed result email ticket | `failed-result-email.html` in this folder |
 | Status history ticket | `status-change-history.html` in this folder |
-| Result email ticket | `result-email.html` in this folder |
 | Signups prototype | `prototypes/admin-signups-program.html` |
 | Events and registrations context | `context/events.md` |
 | Ticket index | `tickets/index.html` |

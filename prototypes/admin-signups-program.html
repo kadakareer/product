@@ -1571,17 +1571,17 @@
     approved: {
       sentLabel: 'Acceptance email sent',
       subject: () => `You're in! Next steps for ${programName}`,
-      body: (p) => `Hi ${p.name},\n\nCongratulations — you've been accepted into ${programName}. We'll follow up shortly with next steps to get you started.\n\nWelcome aboard!\nThe KadaKareer Team`,
+      body: (p) => `Hi ${p.name},\n\nCongratulations — you've been accepted into ${programName}. We'll follow up shortly with next steps to get you started.\n\nWelcome aboard!\nKadaKareer Team`,
     },
     rejected: {
       sentLabel: 'Rejection email sent',
       subject: () => `Update on your ${programName} application`,
-      body: (p, reason) => `Hi ${p.name},\n\nThank you for applying to ${programName}. After careful review, we're unable to offer you a spot in this cohort.${reason ? `\n\nReason: ${reason}` : ''}\n\nWe encourage you to apply again in the future.\nThe KadaKareer Team`,
+      body: (p, reason) => `Hi ${p.name},\n\nThank you for applying to ${programName}. After careful review, we're unable to offer you a spot in this cohort.${reason ? `\n\nReason: ${reason}` : ''}\n\nWe encourage you to apply again in the future.\nKadaKareer Team`,
     },
     waitlisted: {
       sentLabel: 'Waitlist email sent',
       subject: () => `You're on the waitlist for ${programName}`,
-      body: (p) => `Hi ${p.name},\n\n${programName} has reached capacity, but you've been added to the waitlist. We'll reach out right away if a spot opens up.\n\nThe KadaKareer Team`,
+      body: (p) => `Hi ${p.name},\n\n${programName} has reached capacity, but you've been added to the waitlist. We'll reach out right away if a spot opens up.\n\nKadaKareer Team`,
     },
   };
 

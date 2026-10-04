@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>What's New Banner — add registrationCloseDate to Event</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Programs admin — Handle a failed result email</title>
 <style>
   body { font: 16px/1.5 -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f0f0f0; margin: 0; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
-  h2 { margin-top: 0; padding-right: 5rem; scroll-margin-top: 1.5rem; }
+  h2 { margin-top: 0; padding-right: 5rem; }
   section.card { position: relative; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
   .copy-btn { position: absolute; top: 1rem; right: 1.25rem; font: inherit; font-size: 0.8em; padding: 0.25rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #444; cursor: pointer; }
   .copy-btn:hover { background: #f5f5f7; }
@@ -18,7 +19,8 @@
   td li { margin: 0.2rem 0; }
   td .note { display: block; margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; font-size: 0.9em; }
   td .path { display: block; margin-top: 0.15rem; color: #666; }
-  .back-link { font-size: 0.9em; color: #666; text-decoration: none; display: inline-block; margin-bottom: 1rem; }
+  .badge { display: inline-block; margin-bottom: 0.75rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: #fef3c7; color: #92400e; font-size: 0.8em; font-weight: 600; }
+  .back-link { display: inline-block; margin-bottom: 1rem; font-size: 0.9em; color: #666; text-decoration: none; }
   .back-link:hover { color: #3b82f6; text-decoration: underline; }
 </style>
 </head>
@@ -26,57 +28,52 @@
 
 <a class="back-link" href="../index.html">&larr; Back to tickets</a>
 
-<section class="card" id="registration-close-date">
+<section class="card" id="failed-result-email">
   <button class="copy-btn" onclick="copyCard(this)">Copy</button>
-  <h2>Add registrationCloseDate to Event</h2>
+  <span class="badge">Needs refinement</span>
+  <h2>Handle a failed result email</h2>
 
-  <p>The What's New banner needs to stop surfacing an event once its registration window closes. No such field exists on the Event resource today — only <code>startTime</code>/<code>endTime</code>. Event content is authored in Contentful, not through a KadaKareer admin write API, so this is a content-model change plus a read-surface change, not a typical entity migration.</p>
+  <p>The status change and result email ticket saves the status first, then sends the email, and doesn't handle a failed send. If the send throws, the admin sees an error even though the status changed, and can't tell if the Kadet was emailed. This ticket catches the failure and tells the admin. Depends on that ticket.</p>
 
   <h3>Technical solution</h3>
 
   <table>
     <tr><th>What</th><th>Where</th></tr>
     <tr>
-      <td>Add the field to the content model</td>
+      <td>Catch the send error</td>
       <td>
-        Contentful <code>event</code> content type
-        <span class="note">CMS-side change, not in this repo — needs whoever manages the Contentful space</span>
-      </td>
-    </tr>
-    <tr>
-      <td>Surface it on the API interface</td>
-      <td>
-        <code>EventEntryFields</code>
-        <span class="path"><code>functions/src/api/events/interfaces/event-entry.interface.ts</code></span>
-      </td>
-    </tr>
-    <tr>
-      <td>Surface it on the response DTO</td>
-      <td>
-        <code>EventResponseDto</code>
-        <span class="path"><code>functions/src/api/events/dto/event-response.dto.ts</code></span>
-        <span class="note">add <code>registrationCloseDate: string</code> with <code>@ApiProperty()</code> / <code>@IsISO8601()</code>, matching how <code>startTime</code>/<code>endTime</code> are declared</span>
-      </td>
-    </tr>
-    <tr>
-      <td>Map it through to the response</td>
-      <td>
-        <code>EventsService</code>
+        The service method behind the admin status route
         <span class="path"><code>functions/src/api/events/events.service.ts</code></span>
-        <span class="note">the DTO-mapping method used by <code>getEventById</code> / <code>getFilteredEvents</code></span>
+        <span class="note"><code>sendMail</code> already turns SMTP and template errors into a <code>MailError</code> (<code>mail/general</code>, <code>mail/template-nonexistent</code>) and logs it. Catch that around the send. Never roll the status back, and log the error.</span>
+        <span class="path"><code>functions/src/core/mail/mail.service.ts</code></span>
       </td>
     </tr>
     <tr>
-      <td>Add it to the frontend's informal Event type</td>
+      <td>Return the outcome</td>
       <td>
-        <code>EventCardProps</code> / events view props
-        <span class="path"><code>app-playground/src/pages/events/components/events-card/events-card.component.tsx</code></span>
-        <span class="note">events aren't part of app-playground's orval-generated client (they're fetched via a hand-rolled <code>useApi</code> hook), so no client regen step — just extend this hand-written type</span>
+        Response of the admin status route
+        <span class="note">add <code>emailSent</code>: true or false, and nothing when no email was attempted (toggle off, or a status that sends none).</span>
+        <span class="note">precedent: the VirApp batch decision endpoint already returns <code>email_status</code> SENT or FAILED per record.</span>
+        <span class="path"><code>functions/src/api/challenges/challenges.service.ts</code></span>
+      </td>
+    </tr>
+    <tr>
+      <td>Tell the admin</td>
+      <td>
+        Save handler of the confirmation modal
+        <span class="note">when <code>emailSent</code> is false, show "Status saved, email failed". The status stays changed.</span>
       </td>
     </tr>
   </table>
 
-  <p><span class="note">No create/update DTO exists for events anywhere in the backend — confirm with whoever owns the Contentful space that they'll populate this field per event, since there's no admin UI path for it yet.</span></p>
+  <h3>Open questions</h3>
+
+  <ul>
+    <li>Response shape: a boolean, or the same <code>email_status</code> values the VirApp batch endpoint uses?</li>
+    <li>Stored or response-only? The status history ticket already plans <code>emailSent</code> and <code>emailError</code> on the history row.</li>
+    <li>Resend: the history ticket has the route. Is a manual retry in scope here?</li>
+    <li>Fix the existing event registration email too? It throws after the registration is saved.</li>
+  </ul>
 </section>
 
 <script>

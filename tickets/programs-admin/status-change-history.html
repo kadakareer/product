@@ -6,7 +6,7 @@
 <title>Programs admin — Track registration status changes</title>
 <style>
   body { font: 16px/1.5 -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f0f0f0; margin: 0; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
-  h2 { margin-top: 0; }
+  h2 { margin-top: 0; padding-right: 5rem; }
   section.card { position: relative; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
   .copy-btn { position: absolute; top: 1rem; right: 1.25rem; font: inherit; font-size: 0.8em; padding: 0.25rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #444; cursor: pointer; }
   .copy-btn:hover { background: #f5f5f7; }
@@ -61,7 +61,7 @@
         <ul>
           <li><code>create</code> — caller sets the status in the request body</li>
           <li><code>upsertFormRegistration</code> — Tally webhook, writes <code>APPLIED</code> or <code>APPROVED</code></li>
-          <li><code>update</code> — can't change status today; the new admin route from the approve/reject ticket would</li>
+          <li><code>update</code> — can't change status today; the new admin route from the status ticket would</li>
           <li><code>delete</code> — write a final row before removing the record</li>
         </ul>
         <span class="note">write the row in the same call as the status change, so a change can't land without its history. Then send the email and update that same row with the outcome. Two writes, so the audit entry survives if the process dies between the change and the send. A resend updates the same row, so it shows the first failure and the later success.</span>
@@ -75,9 +75,27 @@
         <span class="note"><code>upsertRegistration</code> already reads the existing record to refuse overwriting protected statuses, so the previous status is available there</span>
       </td>
     </tr>
+    <tr>
+      <td>Return the last email outcome in the admin list</td>
+      <td>
+        <code>UserEventWithUserDto</code> and <code>getAllRegisteredUsersWithDetailsForEvent</code>
+        <span class="path"><code>functions/src/api/events/dto/user-event-with-user.dto.ts</code></span>
+        <span class="note">add the latest email outcome per registration (sent, sent time, error), read from the newest status-history row, so the table can show "Approved — email failed"</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Let admin resend</td>
+      <td>
+        New admin route next to the status route, with the same guards (Admin and Program Manager)
+        <span class="path"><code>functions/src/api/events/events.controller.ts</code></span>
+        <span class="note">resend sends the email for the registration's current status. Only on request, never automatic retry, so a Kadet can't get two. Each resend updates the same history row.</span>
+      </td>
+    </tr>
   </table>
 
-  <p>Email outcome is tracked here because the result-email ticket adds result emails. Depends on that ticket and on the approve, reject or waitlist ticket.</p>
+  <p>Depends on the status ticket, which adds the admin status route and the result emails. That ticket only returns <code>emailSent: false</code> on the save response. This ticket records the outcome, shows it in the list, and adds resend.</p>
+
+  <p>Decided: a failed email is recorded, never rolled back, because the status change is the source of truth and mail here is plain SMTP with no fallback.</p>
 </section>
 
 <script>
