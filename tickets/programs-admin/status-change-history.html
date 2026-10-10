@@ -37,6 +37,8 @@
   .hmodal .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
   .hmodal .title { font-size: 20px; font-weight: 600; margin: 0; }
   .hmodal .close { background: none; border: none; font-size: 24px; cursor: pointer; color: #6e6e73; padding: 0; }
+  .hmodal .reason-line { margin-bottom: 16px; font-size: 14px; }
+  .hmodal .reason-label { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #6e6e73; }
   .hmodal .section { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; margin-bottom: 4px; border: none; border-bottom: 1px solid #e5e5ea; background: none; width: 100%; font: inherit; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #6e6e73; cursor: pointer; }
   .hmodal .chev { font-size: 11px; color: #86868b; transition: transform 0.15s; }
   .hmodal .section.collapsed .chev { transform: rotate(-90deg); }
@@ -70,7 +72,8 @@
     <table>
       <tr><th>Participant</th><th>Status</th></tr>
       <tr class="row" data-id="sarah"><td>Sarah Martinez</td><td>Approved</td></tr>
-      <tr class="row" data-id="david"><td>David Kim</td><td>Applied</td></tr>
+      <tr class="row" data-id="david"><td>David Kim</td><td>Rejected</td></tr>
+      <tr class="row" data-id="emily"><td>Emily Chen</td><td>Interested</td></tr>
     </table>
     <div class="hmodal">
       <div class="box">
@@ -78,6 +81,7 @@
           <h2 class="title"></h2>
           <button type="button" class="close">&times;</button>
         </div>
+        <div class="reason-line"><span class="reason-label">Reason for rejection</span><div class="reason-text"></div></div>
         <button type="button" class="section">History <span class="chev">&#9662;</span></button>
         <div class="list"></div>
       </div>
@@ -101,7 +105,7 @@
       <td>Open a participant modal on row click</td>
       <td>
         Row of the registrations table
-        <span class="note">shows the participant's name and the History section. A click on the status dropdown must not open it.</span>
+        <span class="note">shows the participant's name, the full rejection reason when the status is rejected, and the History section. A click on the status dropdown must not open it.</span>
       </td>
     </tr>
     <tr>
@@ -175,7 +179,12 @@
       { label: 'Applied', email: false, who: 'Sarah Martinez', when: 'Dec 11, 2025, 02:15 PM' },
       { label: 'Interested', email: false, who: 'Sarah Martinez', when: 'Dec 11, 2025, 11:30 AM' }
     ] },
-    david: { name: 'David Kim', history: [] }
+    david: { name: 'David Kim', reason: 'The cohort is full and your application did not meet the minimum requirements for this intake.', history: [
+      { label: 'Rejected', email: false, who: 'Dana Reyes', when: 'Dec 13, 2025, 10:05 AM' },
+      { label: '\u2709 Email sent', email: true, who: 'System', when: 'Dec 13, 2025, 10:05 AM' },
+      { label: 'Applied', email: false, who: 'David Kim', when: 'Dec 12, 2025, 03:40 PM' }
+    ] },
+    emily: { name: 'Emily Chen', history: [] }
   };
   const demo = document.querySelector('.hdemo');
   const modal = demo.querySelector('.hmodal');
@@ -186,6 +195,9 @@
       const p = people[row.dataset.id];
       modal.querySelector('.title').textContent = p.name;
       modal.querySelector('.section').classList.remove('collapsed');
+      const rl = modal.querySelector('.reason-line');
+      rl.style.display = p.reason ? 'block' : 'none';
+      rl.querySelector('.reason-text').textContent = p.reason || '';
       list.innerHTML = p.history.length ? p.history.map(function (e) {
         return '<div class="entry"><div class="main"><span class="status' + (e.email ? ' email' : '') + '">' + esc(e.label) + '</span><span class="who">' + esc(e.who) + '</span></div><div class="when">' + esc(e.when) + '</div></div>';
       }).join('') : '<div class="empty">No status changes recorded yet.</div>';

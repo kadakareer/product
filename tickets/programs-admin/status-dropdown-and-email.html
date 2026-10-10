@@ -43,6 +43,8 @@
   .demo .status-option { padding: 8px 12px; font-size: 13px; color: #1d1d1f; font-weight: 400; white-space: nowrap; border-bottom: 1px solid #f5f5f7; cursor: pointer; }
   .demo .status-option:last-child { border-bottom: none; }
   .demo .status-option:hover { background: #f5f5f7; }
+  .demo-reason { font-size: 13px; color: #3a3a3c; }
+  .demo-reason-label { color: #6e6e73; }
   .demo-note { margin: 0.75rem 0 0; font-size: 13px; color: #3a3a3c; min-height: 1.2em; }
   .demo-modal { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; }
   .demo-modal.show { display: flex; }
@@ -116,7 +118,15 @@
       <td>
         <code>UserEvent</code> entity
         <span class="path"><code>functions/src/api/events/entities/user-event.entity.ts</code></span>
-        <span class="note">optional <code>rejectedReason</code>, shown in the admin table. Not included in the Kadet's email.</span>
+        <span class="note">optional <code>rejectedReason</code>. Not included in the Kadet's email.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Return the reason in the registrations list</td>
+      <td>
+        <code>UserEventWithUserDto</code>
+        <span class="path"><code>functions/src/api/events/dto/user-event-with-user.dto.ts</code></span>
+        <span class="note">add optional <code>rejectedReason</code>. The list method already spreads the whole registration, so the value is returned, but the API contract doesn't list it.</span>
       </td>
     </tr>
     <tr>
@@ -125,6 +135,15 @@
         Next to <code>getEventRegistrations</code>, with the same guards: Admin and Program Manager
         <span class="path"><code>functions/src/api/events/events.controller.ts</code></span>
         <span class="note">new DTO with <code>userId</code>, <code>eventId</code>, <code>status</code>, optional <code>rejectedReason</code> (only with <code>REJECTED</code>) and <code>sendEmail</code>. Don't widen <code>UpdateRegistrationDto</code>: its route is user-guarded, so a user could approve themselves.</span>
+        <span class="note">gate it by role only: <code>@RolesAllowed(Roles.ADMIN, Roles.PROGRAM_MANAGER)</code>. Don't add <code>@RequirePermissions(Permission.EDIT_SIGNUPS)</code>. That permission is a separate dashboard-role system built for VirApp sign-ups, so every program manager would also need a dashboard role in Firestore.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Stop the Kadet create route accepting any status</td>
+      <td>
+        <code>CreateUserEventDto</code> and <code>users-events.controller.ts</code>
+        <span class="path"><code>functions/src/api/users/dto/create-user-event.dto.ts</code></span>
+        <span class="note">today the caller sends <code>status</code> and the backend only checks it is a valid <code>UserEventStatus</code>. A Kadet could register themselves as <code>APPROVED</code>, and with the new statuses as <code>REJECTED</code> or <code>WAITLISTED</code> too. Limit it to <code>INTERESTED</code> and <code>APPLIED</code>, the two values the Kadet app sends. Only the admin route above can set the rest.</span>
       </td>
     </tr>
     <tr>
@@ -140,6 +159,13 @@
         Status cell of each row in the registrations table
         <span class="note">options: every <code>UserEventStatus</code>. Approved, rejected and waitlisted open the confirmation (next card). Other statuses save straight away.</span>
         <span class="note">show the new status on the row only after the save succeeds. On failure keep the old status and show an error.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Show the reason in the registrations table</td>
+      <td>
+        New "Rejection reason" column in the registrations table
+        <span class="note">a preview of the first 90 characters, with "—" for rows that aren't rejected. The full reason is in the participant modal (history ticket).</span>
       </td>
     </tr>
     <tr>
@@ -177,6 +203,7 @@
           <div class="status-option" data-status="rejected">Rejected</div>
         </div>
       </span>
+      <span class="demo-reason"><span class="demo-reason-label">Rejection reason:</span> <span class="demo-reason-value">—</span></span>
     </div>
     <p class="demo-note"></p>
     <div class="demo-modal">
@@ -309,6 +336,12 @@
     }
     paint('applied');
 
+    const reasonValue = demo.querySelector('.demo-reason-value');
+    function showReason(status, text) {
+      if (!reasonValue) return;
+      reasonValue.textContent = status === 'rejected' && text ? (text.length > 90 ? text.slice(0, 90) + '\u2026' : text) : '\u2014';
+    }
+
     function openModal(status) {
       const c = confirmCopy[status];
       pending = status;
@@ -330,6 +363,7 @@
       const status = opt.dataset.status;
       if (modal && confirmCopy[status]) { openModal(status); return; }
       paint(status);
+      showReason(status, '');
       if (note) note.textContent = 'Saved. No confirmation, no email.';
     });
     document.addEventListener('click', function () { dropdown.classList.remove('show'); });
@@ -341,6 +375,7 @@
       modal.querySelector('.save').addEventListener('click', function () {
         const send = modal.querySelector('input').checked;
         paint(pending);
+        showReason(pending, modal.querySelector('textarea').value.trim());
         const reason = pending === 'rejected' && modal.querySelector('textarea').value.trim();
         note.textContent = (send ? 'Saved. Email sent to Sarah.' : 'Saved. No email sent.') + (reason ? ' Reason recorded.' : '');
         closeModal();
