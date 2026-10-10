@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="ticket-created" content="2026-10-10">
+<meta name="ticket-updated" content="2026-10-10">
 <title>Programs admin — Confirm a seat</title>
 <style>
   body { font: 16px/1.5 -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f0f0f0; margin: 0; }
@@ -14,6 +16,14 @@
   nav.toc a { color: #1a1a1a; text-decoration: none; }
   nav.toc a:hover { color: #3b82f6; text-decoration: underline; }
   main { flex: 1 1 auto; min-width: 0; }
+  /* Tablet and phone: the contents list moves above the cards instead of beside them. */
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; gap: 1rem; margin: 1rem auto; }
+    nav.toc { position: static; flex: none; width: 100%; box-sizing: border-box; }
+    main { width: 100%; }
+    .card { overflow-x: auto; }
+    td code, td .path { overflow-wrap: anywhere; }
+  }
   h2 { margin-top: 0; padding-right: 5rem; scroll-margin-top: 1.5rem; }
   .pill { display: inline-block; margin-left: 0.4rem; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.5em; font-weight: 600; vertical-align: middle; white-space: nowrap; }
   .pill-fe { background: #ede9fe; color: #5b21b6; }
@@ -182,7 +192,7 @@
   <button class="copy-btn" onclick="copyCard(this)">Copy</button>
   <h2>Show and set the confirmation in the registrations table <span class="pill pill-fe">Admin · Retool</span></h2>
 
-  <p>Approved rows get a Confirmation column the admin can read and change. A filter narrows the table by confirmation. This is the data the Confirmed and Awaiting tiles count.</p>
+  <p>Approved rows get a Confirmation column the admin can read and change. A filter narrows the table by confirmation, and two summary tiles show the counts.</p>
 
   <p>Prototype: <a href="../../prototypes/admin-signups-program.html">Program sign-ups</a>. Retool change: <a href="https://kadakareer.retool.com/app/event/signups?eventId=24HkUfzxlxTEXQlHUjz7L3" target="_blank" rel="noopener">Event signups page</a>. Questions: reach out to Ishi or Ken.</p>
 
@@ -210,6 +220,15 @@
       <td>Add a confirmation filter</td>
       <td>
         A second filter next to the status filter: all, awaiting, confirmed, declined
+      </td>
+    </tr>
+    <tr>
+      <td>Add Confirmed and Awaiting confirmation tiles</td>
+      <td>
+        Two tiles after Approved in the tile row from the <a href="summary-tiles.html">summary tiles ticket</a>. Hidden at zero
+        <span class="note">Awaiting counts approved registrations that are neither confirmed nor declined. Declined registrations appear in neither tile. The prototype calls the field <code>commitment</code>.</span>
+        <span class="note">clicking a tile sets the status filter to Approved and the confirmation filter to that state.</span>
+        <span class="note">wait for the design review before building the tiles. The column, dropdown and filter don't wait.</span>
       </td>
     </tr>
   </table>

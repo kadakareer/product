@@ -7,7 +7,11 @@
     <title>Tickets</title>
     <style>
         .container {
-            max-width: 720px;
+            max-width: 1040px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
         }
 
         .filters {
@@ -247,6 +251,22 @@
             text-decoration: none;
         }
 
+        .tickets td.sprint,
+        .tickets td.date {
+            width: 1%;
+            white-space: nowrap;
+            font-size: 13px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .tickets td.none {
+            color: #9c9a94;
+        }
+
+        .tickets td.date {
+            color: #6e6e73;
+        }
+
         .tickets tr:hover td {
             background: #f5f5f7;
         }
@@ -304,6 +324,7 @@
             <button type="button" class="reset" id="reset" hidden>Reset filters</button>
         </div>
 
+        <div class="table-wrap">
         <table class="tickets">
             <thead>
                 <tr>
@@ -311,25 +332,29 @@
                     <th data-sort="ticket" aria-sort="none"><button type="button" class="sort">Ticket</button></th>
                     <th class="type" data-sort="type" aria-sort="none"><button type="button" class="sort">Type</button></th>
                     <th class="status" data-sort="status" aria-sort="none"><button type="button" class="sort">Status</button></th>
+                    <th class="sprint" data-sort="sprint" aria-sort="none"><button type="button" class="sort">Sprint</button></th>
                     <th class="epic" data-sort="epic" aria-sort="none"><button type="button" class="sort">Epic</button></th>
+                    <th class="date" data-sort="created" aria-sort="none"><button type="button" class="sort">Created</button></th>
+                    <th class="date" data-sort="updated" aria-sort="none"><button type="button" class="sort">Updated</button></th>
                 </tr>
             </thead>
             <tbody id="rows">
-                <tr data-epic="virapp-admin"><td class="num">1</td><td><a href="virapp-admin/new-fields.html">New Fields</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">VirApp Admin</span></td></tr>
-                <tr data-epic="virapp-admin"><td class="num">2</td><td><a href="virapp-admin/status-change-history.html">Add Status-Change History</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">VirApp Admin</span></td></tr>
-                <tr data-epic="virapp-admin"><td class="num">3</td><td><a href="virapp-admin/tally-ranking-field.html">Tally Ranking Field Change</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">VirApp Admin</span></td></tr>
+                <tr data-epic="virapp-admin" data-created="2026-08-30" data-updated="2026-10-04"><td class="num">1</td><td><a href="virapp-admin/new-fields.html">New Fields</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="sprint none">—</td><td class="epic"><span class="kind">VirApp Admin</span></td><td class="date" data-col="created"></td><td class="date" data-col="updated"></td></tr>
+                <tr data-epic="virapp-admin" data-created="2026-09-06" data-updated="2026-10-04"><td class="num">2</td><td><a href="virapp-admin/status-change-history.html">Add Status-Change History</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="sprint none">—</td><td class="epic"><span class="kind">VirApp Admin</span></td><td class="date" data-col="created"></td><td class="date" data-col="updated"></td></tr>
+                <tr data-epic="virapp-admin" data-created="2026-09-06" data-updated="2026-10-04"><td class="num">3</td><td><a href="virapp-admin/tally-ranking-field.html">Tally Ranking Field Change</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="sprint none">—</td><td class="epic"><span class="kind">VirApp Admin</span></td><td class="date" data-col="created"></td><td class="date" data-col="updated"></td></tr>
 
-                <tr data-epic="programs-admin"><td class="num">4</td><td><a href="programs-admin/status-change-history.html">Track Registration Status Changes</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-progress">In progress</span></td><td class="epic"><span class="kind">Programs Admin</span></td></tr>
-                <tr data-epic="programs-admin"><td class="num">5</td><td><a href="programs-admin/status-dropdown-and-email.html">Change Registration Status and Email the Kadet</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-progress">In progress</span></td><td class="epic"><span class="kind">Programs Admin</span></td></tr>
-                <tr data-epic="programs-admin"><td class="num">6</td><td><a href="programs-admin/failed-result-email.html">Handle a Failed Result Email</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-refining">In refinement</span></td><td class="epic"><span class="kind">Programs Admin</span></td></tr>
-                <tr data-epic="programs-admin"><td class="num">7</td><td><a href="programs-admin/summary-tiles.html">Show Registration Summary Tiles</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-blocked">Blocked</span></td><td class="epic"><span class="kind">Programs Admin</span></td></tr>
-                <tr data-epic="programs-admin"><td class="num">8</td><td><a href="programs-admin/confirmation-state.html">Confirm an Approved Seat</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">Programs Admin</span></td></tr>
-                <tr data-epic="programs-admin"><td class="num">9</td><td><a href="programs-admin/design-review.html">Design: Review the Prototype and Design the Event Page</a></td><td class="type"><span class="kind kind-design">Design</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">Programs Admin</span></td></tr>
+                <tr data-epic="programs-admin" data-created="2026-09-06" data-updated="2026-10-10"><td class="num">4</td><td><a href="programs-admin/status-change-history.html">Track Registration Status Changes</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-progress">In progress</span></td><td class="sprint">Q4.26.2</td><td class="epic"><span class="kind">Programs Admin</span></td><td class="date" data-col="created"></td><td class="date" data-col="updated"></td></tr>
+                <tr data-epic="programs-admin" data-created="2026-10-04" data-updated="2026-10-10"><td class="num">5</td><td><a href="programs-admin/status-dropdown-and-email.html">Change Registration Status and Email the Kadet</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-progress">In progress</span></td><td class="sprint">Q4.26.2</td><td class="epic"><span class="kind">Programs Admin</span></td><td class="date" data-col="created"></td><td class="date" data-col="updated"></td></tr>
+                <tr data-epic="programs-admin" data-created="2026-09-06" data-updated="2026-10-04"><td class="num">6</td><td><a href="programs-admin/failed-result-email.html">Handle a Failed Result Email</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-refining">In refinement</span></td><td class="sprint none">—</td><td class="epic"><span class="kind">Programs Admin</span></td><td class="date" data-col="created"></td><td class="date" data-col="updated"></td></tr>
+                <tr data-epic="programs-admin" data-created="2026-10-10" data-updated="2026-10-10"><td class="num">7</td><td><a href="programs-admin/summary-tiles.html">Show Registration Summary Tiles</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-blocked">Blocked</span></td><td class="sprint">Q4.26.3</td><td class="epic"><span class="kind">Programs Admin</span></td><td class="date" data-col="created"></td><td class="date" data-col="updated"></td></tr>
+                <tr data-epic="programs-admin" data-created="2026-10-10" data-updated="2026-10-10"><td class="num">8</td><td><a href="programs-admin/confirmation-state.html">Confirm an Approved Seat</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="sprint">Q4.26.3</td><td class="epic"><span class="kind">Programs Admin</span></td><td class="date" data-col="created"></td><td class="date" data-col="updated"></td></tr>
+                <tr data-epic="programs-admin" data-created="2026-10-10" data-updated="2026-10-10"><td class="num">9</td><td><a href="programs-admin/design-review.html">Design: Review the Prototype and Design the Event Page</a></td><td class="type"><span class="kind kind-design">Design</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="sprint">Q4.26.2</td><td class="epic"><span class="kind">Programs Admin</span></td><td class="date" data-col="created"></td><td class="date" data-col="updated"></td></tr>
 
-                <tr data-epic="whats-new-banner"><td class="num">10</td><td><a href="whats-new-banner/registration-close-date.html">Add registrationCloseDate to Event</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">What's New Banner</span></td></tr>
-                <tr data-epic="whats-new-banner"><td class="num">11</td><td><a href="whats-new-banner/banner-component.html">Dismissible What's New Banner</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">What's New Banner</span></td></tr>
+                <tr data-epic="whats-new-banner" data-created="2026-09-06" data-updated="2026-10-04"><td class="num">10</td><td><a href="whats-new-banner/registration-close-date.html">Add registrationCloseDate to Event</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="sprint none">—</td><td class="epic"><span class="kind">What's New Banner</span></td><td class="date" data-col="created"></td><td class="date" data-col="updated"></td></tr>
+                <tr data-epic="whats-new-banner" data-created="2026-09-06" data-updated="2026-10-04"><td class="num">11</td><td><a href="whats-new-banner/banner-component.html">Dismissible What's New Banner</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="sprint none">—</td><td class="epic"><span class="kind">What's New Banner</span></td><td class="date" data-col="created"></td><td class="date" data-col="updated"></td></tr>
             </tbody>
         </table>
+        </div>
         <p class="empty" id="empty" hidden>No tickets match these filters.</p>
 
         <div class="notes" data-epic="whats-new-banner">
@@ -518,11 +543,30 @@
     var sort = { key: null, dir: 'none' };
     rows.forEach(function (r, i) { r.dataset.order = i; });
 
+    // Dates are stored as YYYY-MM-DD on each row. Show them short, with the year only when it isn't this year.
+    function fmt(iso) {
+        if (!iso) return '\u2014';
+        var p = iso.split('-').map(Number);
+        var d = new Date(p[0], p[1] - 1, p[2]);
+        var o = { month: 'short', day: 'numeric' };
+        if (p[0] !== new Date().getFullYear()) o.year = 'numeric';
+        return d.toLocaleDateString(undefined, o);
+    }
+    rows.forEach(function (r) {
+        ['created', 'updated'].forEach(function (k) {
+            var td = r.querySelector('.date[data-col="' + k + '"]');
+            td.textContent = fmt(r.dataset[k]);
+            td.title = (k === 'created' ? 'Created ' : 'Updated ') + (r.dataset[k] || 'unknown');
+        });
+    });
+
     function cell(row, key) {
         if (key === 'num') return Number(text(row, '.num'));
         if (key === 'ticket') return row.cells[1].textContent.trim().toLowerCase();
         if (key === 'type') return text(row, '.type').toLowerCase();
         if (key === 'epic') return text(row, '.epic').toLowerCase();
+        if (key === 'created' || key === 'updated') return row.dataset[key] || '';
+        if (key === 'sprint') { var sp = text(row, '.sprint'); return sp === '\u2014' ? '~' : sp.toLowerCase(); } // no sprint sorts last
         // Status follows the workflow, not the alphabet.
         var i = STATUSES.indexOf(text(row, '.status'));
         return i === -1 ? STATUSES.length : i;
@@ -557,14 +601,14 @@
     groups.push(group(document.getElementById('typeChecks'), 'Type', 'type', TYPES, '.type'));
     resetBtn.addEventListener('click', function () { setState({}); apply(true); });
 
-    // A link like tickets/index.html#programs-admin (the breadcrumb) shows that whole epic,
-    // and becomes the saved choice. The hash is then dropped from the address: left in
-    // place, every refresh would re-apply it and wipe the Status and Type choices.
-    // Otherwise restore what was saved.
+    // A link like tickets/index.html#programs-admin (the breadcrumb) picks that epic and
+    // keeps the saved Status and Type choices. The hash is then dropped from the address:
+    // left in place, every refresh would re-apply it. Otherwise restore what was saved.
     var fromHash = location.hash.replace('#', '');
     var hashEpic = epics.some(function (e) { return e.slug === fromHash; });
     if (hashEpic) {
-        setState({ epic: fromHash });
+        var saved = read() || {};
+        setState({ epic: fromHash, status: saved.status, type: saved.type });
         apply(true);
         try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
     } else { setState(read() || {}); apply(false); }

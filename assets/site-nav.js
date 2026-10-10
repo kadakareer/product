@@ -70,6 +70,7 @@
     '.site-nav .sn-trail{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:0;padding:0;list-style:none}' +
     '.site-nav .sn-trail li+li::before{content:"\\203A";margin-right:4px;color:#9c9a94}' +
     '.site-nav [aria-current]{color:#1d1d1f;font-weight:600}' +
+    '.site-nav .sn-dates{color:#9c9a94;font-size:12px}' +
     '.site-nav .sn-related{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px}' +
     '@media print{.site-nav{display:none}}';
   document.head.appendChild(style);
@@ -96,6 +97,20 @@
     ol.appendChild(li);
   });
   nav.appendChild(ol);
+
+  // Tickets carry <meta name="ticket-created"> and <meta name="ticket-updated">.
+  function metaDate(name) { var m = document.querySelector('meta[name="' + name + '"]'); return m && m.content; }
+  function short(iso) {
+    var p = iso.split('-').map(Number);
+    var o = { month: 'short', day: 'numeric' };
+    if (p[0] !== new Date().getFullYear()) o.year = 'numeric';
+    return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString(undefined, o);
+  }
+  var created = metaDate('ticket-created'), updated = metaDate('ticket-updated');
+  if (created) {
+    var dates = el('span', 'sn-dates', 'Created ' + short(created) + (updated && updated !== created ? ' \u00B7 Updated ' + short(updated) : ''));
+    nav.appendChild(dates);
+  }
 
   var items = (me.dataset.related || '').split(';').filter(Boolean);
   if (items.length) {

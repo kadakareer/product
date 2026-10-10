@@ -6,8 +6,8 @@ Admin tools for reviewing program signups: approve, reject, waitlist, history, r
 
 - [x] Ticket: change a registration's status (dropdown, confirmation modal, admin route, reason), and email the Kadet on result, CC programs
 - [x] Ticket: track registration status changes, with whether the email was sent
-- [x] Ticket: summary tiles above the registrations table (pending review, waitlisted, approved), plus a blocked card for confirmed and awaiting tiles
-- [x] Ticket: confirm a seat (backend field and routes, Kadet buttons on the event page, admin column and filter)
+- [x] Ticket: summary tiles above the registrations table (pending review, waitlisted, approved)
+- [x] Ticket: confirm a seat (backend field and routes, Kadet buttons on the event page, admin column, filter and confirmed/awaiting tiles)
 - [x] Ticket: design review of the sign-ups prototype, and design of the event page for each registration state
 - [x] Decided: scope is programs, v2 gets the work, both roles can decide
 - [x] Decided: failed result emails are a separate ticket, still to refine
