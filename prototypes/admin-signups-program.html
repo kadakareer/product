@@ -797,6 +797,27 @@
     .summary-tile:hover {
       border-color: #0066cc;
     }
+    /* A tile is coloured only while its filter is on (.active). Its accent is the
+       colour of the text under the number: blue for Pending review, amber for
+       Waitlisted, the muted label grey for the rest. */
+    .summary-tile {
+      --tile-border: #6e6e73;
+      --tile-tint: #f0f0f2;
+    }
+    #appliedTile {
+      --tile-border: #0066cc;
+      --tile-tint: #eff6ff;
+    }
+    #waitlistTile {
+      --tile-border: #f59e0b;
+      --tile-tint: #fffbeb;
+    }
+    .summary-tile.active,
+    .summary-tile.active:hover {
+      border-color: var(--tile-border);
+      background: var(--tile-tint);
+      box-shadow: 0 0 0 1px var(--tile-border);
+    }
     .summary-tile:focus-visible {
       outline: 2px solid #0066cc;
       outline-offset: 1px;
@@ -816,12 +837,8 @@
     }
 
     /* Actionable state: a seat is open (Approved hasn't hit the max) and
-       someone's waiting for one — call it out instead of leaving the
-       admin to notice on their own and go dig up the waitlist filter. */
-    .summary-tile.actionable {
-      border-color: #f59e0b;
-      background: #fffbeb;
-    }
+       someone's waiting for one. The "Fill open spot" button below calls it
+       out; the tile itself stays default until it's toggled on. */
     .summary-tile-cta {
       margin: 2px 0 0;
       padding: 0;
@@ -1059,8 +1076,8 @@
 <div class="container">
   <div class="page-header">
     <div class="page-header-content">
-      <h1 class="page-title">Programs Admin</h1>
-      <p class="page-subtitle">Track the progress of kadets for the program {program_name}</p>
+      <h1 class="page-title">{program_name}</h1>
+      <p class="page-subtitle">Track the progress of kadets</p>
     </div>
     <button class="config-btn" onclick="openModal('configModal')" title="Program settings">⚙️</button>
   </div>
@@ -1327,7 +1344,9 @@
   // Parse program name from URL query parameters
   const urlParams = new URLSearchParams(window.location.search);
   const programName = urlParams.get('program') || 'Software Engineering Boot Camp';
-  document.querySelector('.page-subtitle').textContent = `Track the progress of kadets for the program ${programName}`;
+  // The hero is the program being managed, so the admin sees which one at a glance.
+  document.querySelector('.page-title').textContent = programName;
+  document.title = `${programName} – Programs Admin`;
 
   // Declared before the row-rendering map below, which calls
   // truncateRejectReason() (defined later in this script, but that
@@ -3082,6 +3101,8 @@
       row.classList.toggle('hidden', !(statusMatch && confirmationMatch && searchMatch && infoMatch));
     });
 
+    updateTileToggles();
+
     // Only Status/Confirmation/search count here — the info filter has
     // its own "Reset all" inside its modal and its own active badge.
     const anyFilterActive = filterVal !== 'all' || confirmationVal !== 'all' || searchVal !== '';
@@ -3105,11 +3126,27 @@
   // Each summary tile doubles as a filter shortcut — clicking Awaiting
   // confirmation, say, jumps straight to Approved + Awaiting instead of
   // making the admin set both dropdowns by hand.
+  // A tile is on when the dropdowns match its filter exactly.
+  function isTileActive(tile) {
+    return document.getElementById('statusFilter').value === tile.dataset.filterStatus &&
+           document.getElementById('confirmationFilter').value === (tile.dataset.filterConfirmation || 'all');
+  }
+
+  function updateTileToggles() {
+    document.querySelectorAll('.summary-tile[data-filter-status]').forEach(tile => {
+      const on = isTileActive(tile);
+      tile.classList.toggle('active', on);
+      tile.setAttribute('aria-pressed', String(on));
+    });
+  }
+
+  // Clicking a tile turns its filter on; clicking it again turns it off.
   function applyTileFilter(tile) {
     const statusVal = tile.dataset.filterStatus;
     if (!statusVal) return;
-    document.getElementById('statusFilter').value = statusVal;
-    document.getElementById('confirmationFilter').value = tile.dataset.filterConfirmation || 'all';
+    const off = isTileActive(tile);
+    document.getElementById('statusFilter').value = off ? 'all' : statusVal;
+    document.getElementById('confirmationFilter').value = off ? 'all' : (tile.dataset.filterConfirmation || 'all');
     applyFilter();
   }
 
