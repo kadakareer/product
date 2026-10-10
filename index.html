@@ -7,53 +7,99 @@
     <title>Home Page</title>
     <style>
         .container {
-            max-width: 720px;
+            max-width: 800px;
         }
 
-        .section-title {
-            font-size: 22px;
-            font-weight: 600;
-            color: #1d1d1f;
-            margin: 40px 0 16px;
+        .tiles {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
         }
 
-        .section-title:first-of-type {
-            margin-top: 0;
-        }
-
-        .group {
+        /* One accent per tile, used for the focus ring, hover border and the illustration's fills. */
+        .tile {
+            --accent: #2563eb;
+            --tint: #dbeafe;
+            display: block;
+            padding: 24px;
             background: white;
             border: 1px solid #d2d2d7;
             border-radius: 12px;
-            margin-bottom: 24px;
-            overflow: hidden;
-        }
-
-        .group-title {
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: #fff;
-            background: #1d1d1f;
-            padding: 12px 20px;
-        }
-
-        .group-list {
-            list-style: none;
-        }
-
-        .group-list a {
-            display: block;
-            padding: 14px 20px;
             color: #1d1d1f;
             text-decoration: none;
-            border-top: 1px solid #f0f0f2;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
-        .group-list a:hover {
-            background: #f5f5f7;
-            color: #0066cc;
+        .tile-tickets {
+            --accent: #ea580c;
+            --tint: #ffedd5;
+        }
+
+        .tile:hover {
+            transform: translateY(-4px) rotate(-0.6deg);
+            border-color: var(--accent);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .tile:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        .tile h2 {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 16px 0 4px;
+        }
+
+        .tile p {
+            font-size: 14px;
+            color: #6e6e73;
+        }
+
+        .art {
+            display: block;
+            width: 100%;
+            height: auto;
+            fill: none;
+            stroke: #1d1d1f;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .art .fill { fill: var(--tint); stroke: none; }
+        .art .solid { fill: white; }
+        .art .accent { stroke: var(--accent); stroke-width: 3.2; }
+        .art .thin { stroke-width: 1.6; }
+
+        /* Hover nudges one loose piece of each sketch, as if it were still being drawn. */
+        .art .move {
+            transition: transform 0.25s ease;
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+
+        .tile-prototypes:hover .move { transform: translate(-10px, -8px) rotate(-6deg); }
+        .tile-tickets:hover .move { transform: translate(4px, -6px) rotate(4deg); }
+
+        @media (max-width: 640px) {
+            .tiles {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .tile,
+            .art .move {
+                transition: none;
+            }
+
+            .tile:hover,
+            .tile-prototypes:hover .move,
+            .tile-tickets:hover .move {
+                transform: none;
+            }
         }
     </style>
 </head>
@@ -65,31 +111,61 @@
             <p class="page-subtitle">Prototypes and tickets</p>
         </div>
 
-        <h2 class="section-title" id="prototypes">Prototypes</h2>
+        <div class="tiles">
+            <a class="tile tile-prototypes" href="prototypes/index.html">
+                <!-- A sketched app window: sidebar, cards, and a cursor. -->
+                <svg class="art" viewBox="0 0 240 160" aria-hidden="true" focusable="false">
+                    <path class="fill" d="M16 46 C70 44 160 47 224 45 L225 138 C150 141 80 139 17 140 Z"/>
+                    <path d="M14 22 C60 19 150 22 224 20 C227 55 226 100 225 138 C160 142 80 140 16 141 C13 100 15 60 14 22 Z"/>
+                    <path class="thin" d="M16 24 C90 23 170 20 222 23 C225 60 223 105 224 136"/>
+                    <path d="M15 45 C80 43 160 47 224 44"/>
+                    <circle cx="28" cy="33" r="3.2"/>
+                    <circle cx="41" cy="33" r="3.2"/>
+                    <circle cx="54" cy="33" r="3.2"/>
+                    <path class="solid" d="M26 56 C42 54 62 57 78 55 C80 85 77 105 78 128 C62 130 44 127 27 129 C25 100 28 80 26 56 Z"/>
+                    <path d="M33 68 L70 67 M33 80 L62 81 M34 92 L68 91"/>
+                    <path d="M92 61 C120 59 160 62 208 60"/>
+                    <path class="solid" d="M92 74 C110 72 130 75 146 73 C148 85 145 95 146 105 C130 107 108 104 92 106 C90 95 93 85 92 74 Z"/>
+                    <path class="accent" d="M100 90 L138 89"/>
+                    <path d="M154 74 C172 72 192 75 208 73 C210 85 207 95 208 105 C192 107 170 104 154 106 C152 95 155 85 154 74 Z"/>
+                    <path d="M92 118 C130 116 160 119 200 117 M92 128 C115 127 140 129 168 127"/>
+                    <g class="move">
+                        <path class="solid" d="M176 92 C176 104 177 112 177 120 L184 114 L190 127 L195 125 L189 112 L199 111 C192 104 184 98 176 92 Z"/>
+                    </g>
+                </svg>
+                <h2>Prototypes</h2>
+                <p>Clickable mockups of key screens.</p>
+            </a>
 
-        <div class="group">
-            <div class="group-title">Admin</div>
-            <ul class="group-list">
-                <li><a href="prototypes/admin-programs-list.html">Programs List</a></li>
-                <li><a href="prototypes/admin-signups-program.html">Program Sign-ups</a></li>
-                <li><a href="prototypes/admin-signups-coach.html">Koach Sign-ups</a></li>
-                <li><a href="prototypes/admin-submissions.html">Program Submissions</a></li>
-            </ul>
-        </div>
-
-        <div class="group">
-            <div class="group-title">Sign-ups</div>
-            <ul class="group-list">
-                <li><a href="prototypes/signups-events.html">Events</a></li>
-            </ul>
-        </div>
-
-        <h2 class="section-title" id="tickets">Tickets</h2>
-
-        <div class="group">
-            <ul class="group-list">
-                <li><a href="tickets/index.html">All tickets, grouped by epic →</a></li>
-            </ul>
+            <a class="tile tile-tickets" href="tickets/index.html">
+                <!-- Three sticky notes with check marks, one tilted loose. -->
+                <svg class="art" viewBox="0 0 240 160" aria-hidden="true" focusable="false">
+                    <g transform="rotate(-6 70 85)">
+                        <path class="solid" d="M24 36 C60 34 100 37 118 35 C120 70 117 105 119 136 C90 138 50 135 23 137 C25 100 22 70 24 36 Z"/>
+                        <path d="M23 35 C60 33 100 36 119 36 C121 70 118 105 120 137 C90 139 50 136 22 138 C24 100 21 70 23 35 Z"/>
+                        <path d="M36 58 L46 68 L62 48" class="accent"/>
+                        <path d="M72 58 C85 56 95 58 106 57 M36 86 L46 96 L62 76 M72 86 C85 85 95 87 106 86"/>
+                        <path d="M36 116 L48 116 M72 114 C85 113 92 115 100 114" class="thin"/>
+                    </g>
+                    <g transform="rotate(4 168 70)">
+                        <path class="fill" d="M124 22 C150 20 180 23 212 21 C214 55 211 85 213 112 C180 114 150 111 123 113 C125 80 122 50 124 22 Z"/>
+                        <path d="M123 21 C150 19 180 22 213 21 C215 55 212 85 214 113 C180 115 150 112 122 114 C124 80 121 50 123 21 Z"/>
+                        <path class="thin" d="M126 24 C150 23 180 25 210 23"/>
+                        <path d="M136 44 L146 54 L162 34" class="accent"/>
+                        <path d="M172 44 C185 42 195 44 204 43 M136 72 L146 82 L162 62 M172 72 C185 71 195 73 202 72"/>
+                        <path d="M136 98 L148 98 M172 96 C182 95 190 97 198 96" class="thin"/>
+                    </g>
+                    <g class="move">
+                        <g transform="rotate(-3 150 132)">
+                            <path class="solid" d="M104 112 C130 110 160 113 190 111 C192 128 189 140 191 150 C160 152 130 149 103 151 C105 138 102 125 104 112 Z"/>
+                            <path d="M112 128 C130 126 150 129 170 127 M112 139 C125 138 140 140 154 139" class="thin"/>
+                            <path d="M174 124 L180 132 L190 120" class="accent"/>
+                        </g>
+                    </g>
+                </svg>
+                <h2>Tickets</h2>
+                <p>Scoped work for the team, grouped by epic.</p>
+            </a>
         </div>
     </div>
 

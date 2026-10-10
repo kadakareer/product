@@ -1,7 +1,8 @@
 /* ==========================================================================
    Site navigation bar — one script, every page.
-   Adds a breadcrumb (Product › Tickets › Epic › Page), a Back button when you
-   arrived from another page on this site, and optional "Related" links.
+   Adds a breadcrumb (Product › Tickets › Epic › Page, or Product › Prototypes
+   › Page), a Back button when you arrived from another page on this site, and
+   optional "Related" links.
 
    Add to a page, just before </body>:
      <script src="../assets/site-nav.js"
@@ -42,8 +43,13 @@
       trail.push({ label: label });
     }
   } else if (parts[0] === 'prototypes') {
-    trail.push({ label: 'Prototypes', href: abs('index.html') + '#prototypes' });
-    trail.push({ label: label });
+    // Prototype pages sit beside the index in the same folder, so match it by name.
+    if (parts.length === 2 && parts[1] === 'index.html') {
+      trail.push({ label: 'Prototypes' });
+    } else {
+      trail.push({ label: 'Prototypes', href: abs('prototypes/index.html') });
+      trail.push({ label: label });
+    }
   } else {
     trail.push({ label: label });
   }

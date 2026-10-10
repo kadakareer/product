@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/admin-common.css">
+    <title>Prototypes</title>
+    <style>
+        .container {
+            max-width: 1040px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .chip {
+            font: inherit;
+            font-size: 13px;
+            padding: 6px 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 999px;
+            background: white;
+            color: #1d1d1f;
+            cursor: pointer;
+        }
+
+        .chip:hover {
+            border-color: #0066cc;
+        }
+
+        .chip[aria-pressed="true"] {
+            background: #1d1d1f;
+            border-color: #1d1d1f;
+            color: white;
+        }
+
+        .chip .count {
+            margin-left: 4px;
+            opacity: 0.6;
+        }
+
+        .protos {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .protos th {
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #6e6e73;
+            background: #fafafa;
+            padding: 10px 16px;
+        }
+
+        .protos th .sort {
+            font: inherit;
+            letter-spacing: inherit;
+            text-transform: inherit;
+            color: inherit;
+            background: none;
+            border: 0;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .protos th .sort:hover {
+            color: #1d1d1f;
+        }
+
+        .protos th[aria-sort="ascending"] .sort::after { content: " \25B2"; font-size: 9px; }
+        .protos th[aria-sort="descending"] .sort::after { content: " \25BC"; font-size: 9px; }
+
+        .protos td {
+            padding: 12px 16px;
+            border-top: 1px solid #f0f0f2;
+            vertical-align: middle;
+        }
+
+        .protos td.area {
+            width: 1%;
+            white-space: nowrap;
+        }
+
+        .protos td.desc {
+            font-size: 13px;
+            color: #6e6e73;
+        }
+
+        .protos td.tix {
+            width: 1%;
+            white-space: nowrap;
+        }
+
+        .protos td.none {
+            color: #9c9a94;
+        }
+
+        .protos.hide-area .area {
+            display: none;
+        }
+
+        .kind {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Same filled tag as the Epic column on the tickets page, one colour per area. */
+        .area .kind { background: #e5e5ea; color: #3a3a3c; }
+        tr[data-area="admin"] .area .kind { background: #ede9fe; color: #5b21b6; }
+        tr[data-area="signups"] .area .kind { background: #ccfbf1; color: #115e59; }
+
+        .protos a {
+            color: #1d1d1f;
+            text-decoration: none;
+        }
+
+        /* Ticket numbers as small links; the ticket title is in each link's tooltip. */
+        .protos a.t {
+            display: inline-block;
+            min-width: 24px;
+            padding: 1px 6px;
+            margin-right: 4px;
+            border: 1px solid #d2d2d7;
+            border-radius: 6px;
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+            text-align: center;
+            color: #6e6e73;
+        }
+
+        .protos a.t:hover {
+            border-color: #0066cc;
+        }
+
+        .protos tr:hover td {
+            background: #f5f5f7;
+        }
+
+        .protos a:hover {
+            color: #0066cc;
+        }
+
+        .empty {
+            color: #6e6e73;
+            padding: 24px 16px;
+            text-align: center;
+        }
+
+        /* On phones the description goes and ticket links wrap, so the table fits without side-scrolling. */
+        @media (max-width: 640px) {
+            .protos .desc {
+                display: none;
+            }
+
+            .protos th,
+            .protos td {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .protos td.tix {
+                white-space: normal;
+                min-width: 110px;
+            }
+
+            .protos a.t {
+                margin-bottom: 4px;
+            }
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="page-header-content" style="margin-bottom: 32px;">
+            <h1 class="page-title">Prototypes</h1>
+            <p class="page-subtitle">Clickable mockups, grouped by area</p>
+        </div>
+
+        <div class="filters" id="filters" role="group" aria-label="Filter by area"></div>
+
+        <div class="table-wrap">
+        <table class="protos">
+            <thead>
+                <tr>
+                    <th data-sort="name" aria-sort="none"><button type="button" class="sort">Prototype</button></th>
+                    <th class="area" data-sort="area" aria-sort="none"><button type="button" class="sort">Area</button></th>
+                    <th class="desc">Description</th>
+                    <th class="tix" data-sort="tickets" aria-sort="none"><button type="button" class="sort">Related tickets</button></th>
+                </tr>
+            </thead>
+            <tbody id="rows">
+                <tr data-area="admin"><td><a href="admin-programs-list.html">Programs List</a></td><td class="area"><span class="kind">Admin</span></td><td class="desc">Configure attendance tracking, deliverables, and format for programs</td><td class="tix none">—</td></tr>
+                <tr data-area="admin"><td><a href="admin-signups-program.html">Program Sign-ups</a></td><td class="area"><span class="kind">Admin</span></td><td class="desc">Track the progress of Kadets in a program</td><td class="tix"><a class="t" href="../tickets/programs-admin/status-change-history.html" title="Track Registration Status Changes" aria-label="Ticket 4: Track Registration Status Changes">4</a><a class="t" href="../tickets/programs-admin/status-dropdown-and-email.html" title="Change Registration Status and Email the Kadet" aria-label="Ticket 5: Change Registration Status and Email the Kadet">5</a><a class="t" href="../tickets/programs-admin/failed-result-email.html" title="Handle a Failed Result Email" aria-label="Ticket 6: Handle a Failed Result Email">6</a><a class="t" href="../tickets/programs-admin/summary-tiles.html" title="Show Registration Summary Tiles" aria-label="Ticket 7: Show Registration Summary Tiles">7</a><a class="t" href="../tickets/programs-admin/confirmation-state.html" title="Confirm an Approved Seat" aria-label="Ticket 8: Confirm an Approved Seat">8</a><a class="t" href="../tickets/programs-admin/design-review.html" title="Design: Review the Prototype and Design the Event Page" aria-label="Ticket 9: Design: Review the Prototype and Design the Event Page">9</a></td></tr>
+                <tr data-area="admin"><td><a href="admin-signups-coach.html">Koach Sign-ups</a></td><td class="area"><span class="kind">Admin</span></td><td class="desc">Manage coach applications</td><td class="tix none">—</td></tr>
+                <tr data-area="admin"><td><a href="admin-submissions.html">Program Submissions</a></td><td class="area"><span class="kind">Admin</span></td><td class="desc">Bulk approve, reject, or request revisions for multiple submissions</td><td class="tix none">—</td></tr>
+                <tr data-area="signups"><td><a href="signups-events.html">Events</a></td><td class="area"><span class="kind">Sign-ups</span></td><td class="desc">Event form builder</td><td class="tix none">—</td></tr>
+            </tbody>
+        </table>
+        </div>
+        <p class="empty" id="empty" hidden>No prototypes match this filter.</p>
+    </div>
+
+<script>
+(function () {
+    // Remembers the last area on this device. Storage can throw (private
+    // mode, blocked site data), so every access is guarded and the page works without it.
+    var KEY = 'product-prototypes-area-filter';
+    var rows = Array.prototype.slice.call(document.querySelectorAll('#rows tr'));
+    var filters = document.getElementById('filters');
+    var table = document.querySelector('.protos');
+    var area = 'all';
+
+    function text(row, sel) { return row.querySelector(sel).textContent.trim(); }
+
+    // Areas in the order they first appear in the table.
+    var areas = [];
+    rows.forEach(function (r) {
+        var slug = r.dataset.area;
+        var a = areas.filter(function (x) { return x.slug === slug; })[0];
+        if (!a) {
+            a = { slug: slug, name: text(r, '.area'), count: 0 };
+            areas.push(a);
+        }
+        a.count++;
+    });
+
+    function read() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+    function write() { try { localStorage.setItem(KEY, area); } catch (e) {} }
+
+    function setArea(next) {
+        area = areas.some(function (a) { return a.slug === next; }) ? next : 'all';
+    }
+
+    function apply(save) {
+        rows.forEach(function (r) { r.hidden = area !== 'all' && r.dataset.area !== area; });
+        // Every visible row shares one area once an area is picked, so the column adds nothing.
+        table.classList.toggle('hide-area', area !== 'all');
+        if (area !== 'all' && sort.key === 'area') { sort = { key: null, dir: 'none' }; applySort(); }
+        document.getElementById('empty').hidden = rows.some(function (r) { return !r.hidden; });
+        Array.prototype.forEach.call(filters.children, function (b) {
+            b.setAttribute('aria-pressed', String(b.dataset.slug === area));
+        });
+        if (save) write();
+    }
+
+    function chip(slug, name, count) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip';
+        b.dataset.slug = slug;
+        b.textContent = name;
+        var c = document.createElement('span');
+        c.className = 'count';
+        c.textContent = count;
+        b.appendChild(c);
+        b.addEventListener('click', function () { area = slug; apply(true); });
+        filters.appendChild(b);
+    }
+
+    // Sorting: click a header to cycle original order -> ascending -> descending -> original.
+    var tbody = document.getElementById('rows');
+    var heads = Array.prototype.slice.call(document.querySelectorAll('.protos th[data-sort]'));
+    var sort = { key: null, dir: 'none' };
+    rows.forEach(function (r, i) { r.dataset.order = i; });
+
+    function cell(row, key) {
+        if (key === 'name') return row.cells[0].textContent.trim().toLowerCase();
+        if (key === 'area') return text(row, '.area').toLowerCase();
+        // By first ticket number; no tickets sorts last.
+        var first = row.querySelector('.tix a');
+        return first ? Number(first.textContent) : Infinity;
+    }
+
+    function applySort() {
+        var sorted = rows.slice().sort(function (a, b) {
+            if (sort.dir === 'none') return a.dataset.order - b.dataset.order;
+            var x = cell(a, sort.key), y = cell(b, sort.key);
+            var d = x < y ? -1 : x > y ? 1 : 0;
+            if (sort.dir === 'descending' && x !== Infinity && y !== Infinity) d = -d;
+            return d || a.dataset.order - b.dataset.order; // ties keep their original order
+        });
+        sorted.forEach(function (r) { tbody.appendChild(r); });
+        heads.forEach(function (h) {
+            h.setAttribute('aria-sort', h.dataset.sort === sort.key ? sort.dir : 'none');
+        });
+    }
+
+    heads.forEach(function (h) {
+        h.querySelector('.sort').addEventListener('click', function () {
+            var key = h.dataset.sort;
+            var next = { none: 'ascending', ascending: 'descending', descending: 'none' };
+            sort = { key: key, dir: sort.key === key ? next[sort.dir] : 'ascending' };
+            applySort();
+        });
+    });
+
+    chip('all', 'All', rows.length);
+    areas.forEach(function (a) { chip(a.slug, a.name, a.count); });
+    setArea(read());
+    apply(false);
+})();
+</script>
+<script src="../assets/site-nav.js" data-label="Prototypes"></script>
+</body>
+</html>
