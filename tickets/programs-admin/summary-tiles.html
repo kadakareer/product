@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Programs admin — Registration summary tiles</title>
+<style>
+  body { font: 16px/1.5 -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f0f0f0; margin: 0; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  h2 { margin-top: 0; padding-right: 5rem; }
+  .pill { display: inline-block; margin-left: 0.4rem; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.5em; font-weight: 600; vertical-align: middle; white-space: nowrap; }
+  .pill-fe { background: #ede9fe; color: #5b21b6; }
+  .pill-be { background: #dcfce7; color: #166534; }
+  .pill-app { background: #e0f2fe; color: #075985; }
+
+  section.card { position: relative; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .copy-btn { position: absolute; top: 1rem; right: 1.25rem; font: inherit; font-size: 0.8em; padding: 0.25rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #444; cursor: pointer; }
+  .copy-btn:hover { background: #f5f5f7; }
+  .copy-btn.copied { color: #16a34a; border-color: #16a34a; }
+  table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #ddd; vertical-align: top; }
+  th { background: #f5f5f5; }
+  code { background: #f0f0f0; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.9em; }
+  td ul { margin: 0; padding-left: 1.1rem; }
+  td li { margin: 0.2rem 0; }
+  td .note { display: block; margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; font-size: 0.9em; }
+  td .path { display: block; margin-top: 0.15rem; color: #666; }
+  .badge { display: inline-block; margin-bottom: 0.75rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: #fef3c7; color: #92400e; font-size: 0.8em; font-weight: 600; }
+  .tiles { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 0.75rem 0 1rem; }
+  .tile { width: 130px; padding: 0.6rem 1rem; border: 1px solid #e5e5ea; border-radius: 8px; background: #fafafa; }
+  .tile b { display: block; font-size: 1.25rem; }
+  .tile span { font-size: 0.8em; color: #6e6e73; }
+</style>
+</head>
+<body>
+
+<section class="card" id="summary-tiles">
+  <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+  <h2>Show status summary tiles above the registrations table <span class="pill pill-fe">Admin · Retool</span></h2>
+
+  <p>A row of tiles above the registrations table shows how many registrations sit in each status. Clicking a tile filters the table to that status, so the admin sees their review queue at a glance.</p>
+
+  <div class="tiles">
+    <div class="tile"><b>12</b><span>Pending review</span></div>
+    <div class="tile"><b>3</b><span>Waitlisted</span></div>
+    <div class="tile"><b>25</b><span>Approved</span></div>
+  </div>
+
+  <p>Prototype: <a href="../../prototypes/admin-signups-program.html">Program sign-ups</a>. Retool change: <a href="https://kadakareer.retool.com/app/event/signups?eventId=24HkUfzxlxTEXQlHUjz7L3" target="_blank" rel="noopener">Event signups page</a>. Questions: reach out to Ishi or Ken.</p>
+
+  <p>No backend change. Depends on the status change ticket, since Waitlisted only exists once that ships.</p>
+
+  <h3>Technical solution</h3>
+
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr>
+      <td>Count registrations by status</td>
+      <td>
+        The registrations query the table already uses
+        <span class="path"><code>GET /events/:eventId/registrations</code></span>
+        <span class="note">load the list without a status filter and count it in a transformer. No new endpoint. If the list is ever paginated, the counts must come from the server instead.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Add the tile row above the table</td>
+      <td>
+        Three tiles, left to right
+        <ul>
+          <li>Pending review: <code>APPLIED</code>. Hidden at zero</li>
+          <li>Waitlisted: <code>WAITLISTED</code>. Hidden at zero</li>
+          <li>Approved: <code>APPROVED</code>. Always shown</li>
+        </ul>
+        <span class="note">the prototype also counts <code>COMPLETED</code> in Approved, because a completed registration still holds a seat. Confirm whether to keep that.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Click a tile to filter the table</td>
+      <td>
+        Set the table's existing status filter to the tile's status
+        <span class="note">keep the status dropdown in sync with the tile. Make the tiles reachable by keyboard: Enter and Space filter like a click.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Recount after a status change</td>
+      <td>
+        Save handler of the status dropdown
+        <span class="note">update the tiles only after the save succeeds, the same rule as the row's status.</span>
+      </td>
+    </tr>
+  </table>
+
+  <p><strong>Not in this ticket:</strong> the "25 / 30" capacity count, the red at-capacity state, and the "Fill open spot" button. Events have no capacity today. They belong to the capacity ticket, still to write.</p>
+</section>
+
+<section class="card" id="confirmation-tiles">
+  <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+  <span class="badge">Blocked: needs the confirm a seat ticket</span>
+  <h2>Add Confirmed and Awaiting confirmation tiles <span class="pill pill-fe">Admin · Retool</span> <span class="pill pill-be">Backend · monorepo</span></h2>
+
+  <p>Two more tiles split the approved registrations by whether the Kadet confirmed their seat. Awaiting confirmation is the follow-up queue: approved, but no answer yet.</p>
+
+  <div class="tiles">
+    <div class="tile"><b>18</b><span>Confirmed</span></div>
+    <div class="tile"><b>7</b><span>Awaiting confirmation</span></div>
+  </div>
+
+  <p>Depends on the <a href="confirmation-state.html">confirm a seat ticket</a>, which adds the awaiting, confirmed and declined state on an approved registration. Don't start this until that field exists.</p>
+
+  <h3>Technical solution</h3>
+
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr>
+      <td>Count by confirmation state</td>
+      <td>
+        The same registrations list as the first card
+        <span class="note">count approved registrations by the new <code>confirmation</code> field. The prototype calls it <code>commitment</code>.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Add the two tiles after Approved</td>
+      <td>
+        Confirmed and Awaiting confirmation. Hidden at zero
+        <span class="note">Awaiting counts approved registrations that are neither confirmed nor declined. Declined registrations appear in neither tile.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Click a tile to filter the table</td>
+      <td>
+        Set the status filter to Approved and the confirmation filter to the tile's state
+        <span class="note">needs the confirmation filter from the confirm a seat ticket.</span>
+      </td>
+    </tr>
+  </table>
+</section>
+
+<script>
+function copyCard(btn) {
+  const card = btn.closest('.card');
+  const clone = card.cloneNode(true);
+  clone.querySelectorAll('.copy-btn').forEach(el => el.remove());
+  const text = clone.innerText.trim();
+  const restore = btn.textContent;
+  const onDone = () => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = restore; btn.classList.remove('copied'); }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(onDone).catch(() => fallbackCopy(text, onDone));
+  } else {
+    fallbackCopy(text, onDone);
+  }
+}
+function fallbackCopy(text, onDone) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); onDone(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+</script>
+<script src="../../assets/site-nav.js" data-label="Registration summary tiles" data-related="Prototype|../../prototypes/admin-signups-program.html"></script>
+</body>
+</html>

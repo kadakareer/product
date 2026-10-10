@@ -28,18 +28,9 @@
   td li { margin: 0.2rem 0; }
   td .note { display: block; margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; font-size: 0.9em; }
   td .path { display: block; margin-top: 0.15rem; color: #666; }
-  .back-link-wrap { max-width: 1040px; margin: 1.5rem auto 0; padding: 0 1rem; }
-  /* Single-column layout: drop .back-link-wrap and instead give .back-link itself
-     `display: inline-block; margin-bottom: 1rem;` — body's own max-width already
-     constrains it, no wrapper needed. */
-  .back-link { font-size: 0.9em; color: #666; text-decoration: none; }
-  .back-link:hover { color: #3b82f6; text-decoration: underline; }
 </style>
 </head>
 <body>
-
-<!-- Every ticket file links back to the epic index, one level up. -->
-<p class="back-link-wrap"><a class="back-link" href="../index.html">&larr; Back to tickets</a></p>
 
 <!-- TOC + .layout/.toc/<main> wrapper: only add this when the doc has more than 2 cards.
      At 2 or fewer, skip straight to <section class="card"> below with no wrapper, and use
@@ -157,5 +148,7 @@ function fallbackCopy(text, onDone) {
   document.body.removeChild(ta);
 }
 </script>
+<!-- Navigation bar: breadcrumb, Back, and related links. data-related is optional: "Label|relative/href;Label|relative/href". -->
+<script src="../../assets/site-nav.js" data-label="[piece name]"></script>
 </body>
 </html>

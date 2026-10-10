@@ -10,56 +10,179 @@
             max-width: 720px;
         }
 
-        .group {
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .chip {
+            font: inherit;
+            font-size: 13px;
+            padding: 6px 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 999px;
+            background: white;
+            color: #1d1d1f;
+            cursor: pointer;
+        }
+
+        .chip:hover {
+            border-color: #0066cc;
+        }
+
+        .chip[aria-pressed="true"] {
+            background: #1d1d1f;
+            border-color: #1d1d1f;
+            color: white;
+        }
+
+        .chip .count {
+            margin-left: 4px;
+            opacity: 0.6;
+        }
+
+        .tickets {
+            width: 100%;
+            border-collapse: collapse;
             background: white;
             border: 1px solid #d2d2d7;
             border-radius: 12px;
-            margin-bottom: 24px;
             overflow: hidden;
         }
 
-        .group-title {
-            font-size: 14px;
+        .tickets th {
+            text-align: left;
+            font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.04em;
-            color: #fff;
-            background: #1d1d1f;
-            padding: 16px 20px;
+            color: #6e6e73;
+            background: #fafafa;
+            padding: 10px 16px;
         }
 
-        .group-list {
-            list-style: none;
+        .tickets th .sort {
+            font: inherit;
+            letter-spacing: inherit;
+            text-transform: inherit;
+            color: inherit;
+            background: none;
+            border: 0;
+            padding: 0;
+            cursor: pointer;
         }
 
-        .group-list a {
-            display: block;
-            padding: 14px 20px;
+        .tickets th .sort:hover {
+            color: #1d1d1f;
+        }
+
+        .tickets th[aria-sort="ascending"] .sort::after { content: " \25B2"; font-size: 9px; }
+        .tickets th[aria-sort="descending"] .sort::after { content: " \25BC"; font-size: 9px; }
+
+        .tickets td {
+            padding: 12px 16px;
+            border-top: 1px solid #f0f0f2;
+            vertical-align: middle;
+        }
+
+        .tickets td.epic {
+            width: 1%;
+            white-space: nowrap;
+        }
+
+        .tickets td.type {
+            width: 1%;
+            white-space: nowrap;
+        }
+
+        .tickets td.status {
+            width: 1%;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+
+        /* A dot plus plain text, so status reads differently from the filled Type tags. */
+        .state::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin-right: 6px;
+            border-radius: 50%;
+            background: #9c9a94;
+        }
+
+        .state-refining::before { background: #f59e0b; }
+        .state-ready::before { background: #16a34a; }
+        .state-done { color: #6e6e73; }
+
+        .tickets.hide-epic .epic {
+            display: none;
+        }
+
+        .kind {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Epics use the same filled tag as Type, each in its own colour. */
+        .epic .kind { background: #e5e5ea; color: #3a3a3c; }
+        tr[data-epic="virapp-admin"] .epic .kind { background: #ede9fe; color: #5b21b6; }
+        tr[data-epic="programs-admin"] .epic .kind { background: #ffedd5; color: #9a3412; }
+        tr[data-epic="whats-new-banner"] .epic .kind { background: #ccfbf1; color: #115e59; }
+
+        .kind-engineering { background: #e0f2fe; color: #075985; }
+        .kind-design { background: #fce7f3; color: #9d174d; }
+        .kind-discovery { background: #dcfce7; color: #166534; }
+
+        .tickets a {
             color: #1d1d1f;
             text-decoration: none;
-            border-top: 1px solid #f0f0f2;
         }
 
-        .group-list a:hover {
+        .tickets tr:hover td {
             background: #f5f5f7;
+        }
+
+        .tickets a:hover {
             color: #0066cc;
         }
 
-        .group-note {
-            font-size: 13px;
+        .empty {
             color: #6e6e73;
-            padding: 12px 20px;
-            border-top: 1px solid #f0f0f2;
-            background: #fafafa;
+            padding: 24px 16px;
+            text-align: center;
         }
 
-        .group-note ul {
-            margin: 0;
+        .notes {
+            margin-top: 24px;
+            font-size: 13px;
+            color: #6e6e73;
+        }
+
+        .notes h2 {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
+        }
+
+        .notes ul {
             padding-left: 1.1rem;
         }
 
-        .group-note li {
+        .notes li {
             margin: 0.4rem 0;
+        }
+
+        [hidden] {
+            display: none !important;
         }
     </style>
 </head>
@@ -71,38 +194,146 @@
             <p class="page-subtitle">Scoped work, grouped by epic</p>
         </div>
 
-        <div class="group">
-            <div class="group-title">VirApp Admin</div>
-            <ul class="group-list">
-                <li><a href="virapp-admin/new-fields.html">New Fields</a></li>
-                <li><a href="virapp-admin/status-change-history.html">Add Status-Change History</a></li>
-                <li><a href="virapp-admin/tally-ranking-field.html">Tally Ranking Field Change</a></li>
-            </ul>
-        </div>
+        <div class="filters" id="filters" role="group" aria-label="Filter by epic"></div>
 
-        <div class="group">
-            <div class="group-title">Programs Admin</div>
-            <ul class="group-list">
-                <li><a href="programs-admin/status-change-history.html">Track Registration Status Changes</a></li>
-                <li><a href="programs-admin/status-dropdown-and-email.html">Change Registration Status and Email the Kadet</a></li>
-                <li><a href="programs-admin/failed-result-email.html">Handle a Failed Result Email (needs refinement)</a></li>
-            </ul>
-        </div>
+        <table class="tickets">
+            <thead>
+                <tr>
+                    <th data-sort="ticket" aria-sort="none"><button type="button" class="sort">Ticket</button></th>
+                    <th class="type" data-sort="type" aria-sort="none"><button type="button" class="sort">Type</button></th>
+                    <th class="status" data-sort="status" aria-sort="none"><button type="button" class="sort">Status</button></th>
+                    <th class="epic" data-sort="epic" aria-sort="none"><button type="button" class="sort">Epic</button></th>
+                </tr>
+            </thead>
+            <tbody id="rows">
+                <tr data-epic="virapp-admin"><td><a href="virapp-admin/new-fields.html">New Fields</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">VirApp Admin</span></td></tr>
+                <tr data-epic="virapp-admin"><td><a href="virapp-admin/status-change-history.html">Add Status-Change History</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">VirApp Admin</span></td></tr>
+                <tr data-epic="virapp-admin"><td><a href="virapp-admin/tally-ranking-field.html">Tally Ranking Field Change</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">VirApp Admin</span></td></tr>
 
-        <div class="group">
-            <div class="group-title">What's New Banner</div>
-            <ul class="group-list">
-                <li><a href="whats-new-banner/registration-close-date.html">Add registrationCloseDate to Event</a></li>
-                <li><a href="whats-new-banner/banner-component.html">Dismissible What's New Banner</a></li>
+                <tr data-epic="programs-admin"><td><a href="programs-admin/status-change-history.html">Track Registration Status Changes</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">Programs Admin</span></td></tr>
+                <tr data-epic="programs-admin"><td><a href="programs-admin/status-dropdown-and-email.html">Change Registration Status and Email the Kadet</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">Programs Admin</span></td></tr>
+                <tr data-epic="programs-admin"><td><a href="programs-admin/failed-result-email.html">Handle a Failed Result Email</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-refining">In refinement</span></td><td class="epic"><span class="kind">Programs Admin</span></td></tr>
+                <tr data-epic="programs-admin"><td><a href="programs-admin/summary-tiles.html">Show Registration Summary Tiles</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">Programs Admin</span></td></tr>
+                <tr data-epic="programs-admin"><td><a href="programs-admin/confirmation-state.html">Confirm an Approved Seat</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">Programs Admin</span></td></tr>
+                <tr data-epic="programs-admin"><td><a href="programs-admin/design-review.html">Design: Review the Prototype and Design the Event Page</a></td><td class="type"><span class="kind kind-design">Design</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">Programs Admin</span></td></tr>
+
+                <tr data-epic="whats-new-banner"><td><a href="whats-new-banner/registration-close-date.html">Add registrationCloseDate to Event</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">What's New Banner</span></td></tr>
+                <tr data-epic="whats-new-banner"><td><a href="whats-new-banner/banner-component.html">Dismissible What's New Banner</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">What's New Banner</span></td></tr>
+            </tbody>
+        </table>
+        <p class="empty" id="empty" hidden>No tickets for this epic.</p>
+
+        <div class="notes" data-epic="whats-new-banner">
+            <h2>What's New Banner</h2>
+            <ul>
+                <li>Registration cutoff is defined manually in Contentful — already the central place to manage everything else about an event, so this is one more field there, not a new system. Not pulled live from Tally: its only integration in the monorepo is inbound (webhook on form submit), no outbound API to read a form's own accept-cutoff from.</li>
+                <li>Open: PM to check how VirApp's existing Tally form embed behaves once it stops accepting responses — informs what UX to expect when the Events banner CTA lands on a form past its cutoff.</li>
             </ul>
-            <div class="group-note">
-                <ul>
-                    <li>Registration cutoff is defined manually in Contentful — already the central place to manage everything else about an event, so this is one more field there, not a new system. Not pulled live from Tally: its only integration in the monorepo is inbound (webhook on form submit), no outbound API to read a form's own accept-cutoff from.</li>
-                    <li>Open: PM to check how VirApp's existing Tally form embed behaves once it stops accepting responses — informs what UX to expect when the Events banner CTA lands on a form past its cutoff.</li>
-                </ul>
-            </div>
         </div>
     </div>
 
+<script>
+(function () {
+    // Remembers the last epic filter on this device. Storage can throw (private
+    // mode, blocked site data), so every access is guarded and the page works without it.
+    var KEY = 'product-tickets-epic-filter';
+    var rows = Array.prototype.slice.call(document.querySelectorAll('#rows tr'));
+    var notes = Array.prototype.slice.call(document.querySelectorAll('.notes'));
+    var filters = document.getElementById('filters');
+
+    // Epics in the order they first appear in the table.
+    var epics = [];
+    rows.forEach(function (r) {
+        var slug = r.dataset.epic;
+        var epic = epics.filter(function (e) { return e.slug === slug; })[0];
+        if (!epic) {
+            epic = { slug: slug, name: r.querySelector('.epic').textContent, count: 0 };
+            epics.push(epic);
+        }
+        epic.count++;
+    });
+
+    function read() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+    function write(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
+    function valid(v) { return v === 'all' || epics.some(function (e) { return e.slug === v; }); }
+
+    function apply(slug, save) {
+        if (!valid(slug)) slug = 'all';
+        rows.forEach(function (r) { r.hidden = slug !== 'all' && r.dataset.epic !== slug; });
+        notes.forEach(function (n) { n.hidden = slug !== 'all' && n.dataset.epic !== slug; });
+        // Every visible row shares one epic once an epic is picked, so the column adds nothing.
+        document.querySelector('.tickets').classList.toggle('hide-epic', slug !== 'all');
+        if (slug !== 'all' && sort.key === 'epic') { sort = { key: null, dir: 'none' }; applySort(); }
+        document.getElementById('empty').hidden = rows.some(function (r) { return !r.hidden; });
+        Array.prototype.forEach.call(filters.children, function (b) {
+            b.setAttribute('aria-pressed', String(b.dataset.slug === slug));
+        });
+        if (save) write(slug);
+    }
+
+    function chip(slug, name, count) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip';
+        b.dataset.slug = slug;
+        b.textContent = name;
+        var c = document.createElement('span');
+        c.className = 'count';
+        c.textContent = count;
+        b.appendChild(c);
+        b.addEventListener('click', function () { apply(slug, true); });
+        filters.appendChild(b);
+    }
+
+    // Sorting: click a header to cycle original order -> ascending -> descending -> original.
+    var tbody = document.getElementById('rows');
+    var heads = Array.prototype.slice.call(document.querySelectorAll('.tickets th[data-sort]'));
+    var STATUS_ORDER = ['In refinement', 'Ready to start', 'Done'];
+    var sort = { key: null, dir: 'none' };
+    rows.forEach(function (r, i) { r.dataset.order = i; });
+
+    function cell(row, key) {
+        if (key === 'ticket') return row.cells[0].textContent.trim().toLowerCase();
+        if (key === 'type') return row.querySelector('.type').textContent.trim().toLowerCase();
+        if (key === 'epic') return row.querySelector('.epic').textContent.trim().toLowerCase();
+        // Status follows the workflow, not the alphabet.
+        var i = STATUS_ORDER.indexOf(row.querySelector('.status').textContent.trim());
+        return i === -1 ? STATUS_ORDER.length : i;
+    }
+
+    function applySort() {
+        var sorted = rows.slice().sort(function (a, b) {
+            if (sort.dir === 'none') return a.dataset.order - b.dataset.order;
+            var x = cell(a, sort.key), y = cell(b, sort.key);
+            var d = x < y ? -1 : x > y ? 1 : 0;
+            if (sort.dir === 'descending') d = -d;
+            return d || a.dataset.order - b.dataset.order; // ties keep their original order
+        });
+        sorted.forEach(function (r) { tbody.appendChild(r); });
+        heads.forEach(function (h) {
+            h.setAttribute('aria-sort', h.dataset.sort === sort.key ? sort.dir : 'none');
+        });
+    }
+
+    heads.forEach(function (h) {
+        h.querySelector('.sort').addEventListener('click', function () {
+            var key = h.dataset.sort;
+            var next = { none: 'ascending', ascending: 'descending', descending: 'none' };
+            sort = { key: key, dir: sort.key === key ? next[sort.dir] : 'ascending' };
+            applySort();
+        });
+    });
+
+    chip('all', 'All', rows.length);
+    epics.forEach(function (e) { chip(e.slug, e.name, e.count); });
+
+    // A link like tickets/index.html#programs-admin (the breadcrumb) wins over the
+    // saved choice, and becomes the new saved choice.
+    var fromHash = location.hash.replace('#', '');
+    if (fromHash && valid(fromHash)) apply(fromHash, true);
+    else apply(read(), false);
+})();
+</script>
+<script src="../assets/site-nav.js" data-label="Tickets"></script>
 </body>
 </html>

@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Programs admin — Confirm a seat</title>
+<style>
+  body { font: 16px/1.5 -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f0f0f0; margin: 0; }
+  .layout { max-width: 1040px; margin: 2rem auto; padding: 0 1rem; display: flex; gap: 2rem; align-items: flex-start; }
+  nav.toc { flex: 0 0 220px; position: sticky; top: 2rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1rem 1.25rem; }
+  nav.toc h3 { margin: 0 0 0.5rem; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.04em; color: #888; }
+  nav.toc ol { margin: 0; padding-left: 1.1rem; }
+  nav.toc li { margin: 0.5rem 0; }
+  nav.toc a { color: #1a1a1a; text-decoration: none; }
+  nav.toc a:hover { color: #3b82f6; text-decoration: underline; }
+  main { flex: 1 1 auto; min-width: 0; }
+  h2 { margin-top: 0; padding-right: 5rem; scroll-margin-top: 1.5rem; }
+  .pill { display: inline-block; margin-left: 0.4rem; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.5em; font-weight: 600; vertical-align: middle; white-space: nowrap; }
+  .pill-fe { background: #ede9fe; color: #5b21b6; }
+  .pill-be { background: #dcfce7; color: #166534; }
+  .pill-app { background: #e0f2fe; color: #075985; }
+
+  section.card { position: relative; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .copy-btn { position: absolute; top: 1rem; right: 1.25rem; font: inherit; font-size: 0.8em; padding: 0.25rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #444; cursor: pointer; }
+  .copy-btn:hover { background: #f5f5f7; }
+  .copy-btn.copied { color: #16a34a; border-color: #16a34a; }
+  table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #ddd; vertical-align: top; }
+  th { background: #f5f5f5; }
+  code { background: #f0f0f0; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.9em; }
+  td ul { margin: 0; padding-left: 1.1rem; }
+  td li { margin: 0.2rem 0; }
+  td .note { display: block; margin-top: 0.4rem; padding: 0.3rem 0.5rem; background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; font-size: 0.9em; }
+  td .path { display: block; margin-top: 0.15rem; color: #666; }
+  .badge { display: inline-block; margin-bottom: 0.75rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: #fef3c7; color: #92400e; font-size: 0.8em; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<nav class="toc">
+  <h3>On this page</h3>
+  <ol>
+    <li><a href="#backend">Record the confirmation</a></li>
+    <li><a href="#kadet-app">Confirm from the event page</a></li>
+    <li><a href="#admin">Show it to the admin</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section class="card" id="backend">
+  <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+  <h2>Record whether an approved Kadet confirmed their seat <span class="pill pill-be">Backend · monorepo</span></h2>
+
+  <p>After approval, the Kadet confirms or declines their spot. It's stored next to the status, not inside it: the status stays <code>APPROVED</code>, and a new field says awaiting, confirmed or declined. A declined seat is no longer held, so the waitlist can use it later.</p>
+
+  <p>Depends on the status change ticket, which adds the admin status route.</p>
+
+  <h3>Technical solution</h3>
+
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr>
+      <td>Add the confirmation field</td>
+      <td>
+        New enum <code>UserEventConfirmation</code> (<code>AWAITING</code>, <code>CONFIRMED</code>, <code>DECLINED</code>) and an optional <code>confirmation</code> field on <code>UserEvent</code>
+        <span class="path"><code>functions/src/api/events/entities/user-event.entity.ts</code></span>
+        <span class="note">registrations approved before this ships have no value. Treat "no value" as "nobody asked", not as awaiting, so old events don't flood the Awaiting count. No backfill.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Set it to awaiting on approval</td>
+      <td>
+        The service method behind the admin status route
+        <span class="path"><code>functions/src/api/events/events.service.ts</code></span>
+        <span class="note">when the status becomes <code>APPROVED</code>, set <code>confirmation</code> to <code>AWAITING</code>. When the status moves anywhere else, clear it.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Add a route for the Kadet to answer</td>
+      <td>
+        <code>PATCH /users/:uid/events/:eventId/confirmation</code>, next to the existing routes. Already guarded to the owner.
+        <span class="path"><code>functions/src/api/users/users-events.controller.ts</code></span>
+        <span class="note">new DTO accepting only <code>CONFIRMED</code> or <code>DECLINED</code>. Don't reuse <code>UpdateRegistrationDto</code>: it deliberately can't change status, and this must not either.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Enforce the rules</td>
+      <td>
+        New service method behind that route
+        <span class="path"><code>functions/src/api/events/events.service.ts</code></span>
+        <ul>
+          <li>Only when the status is <code>APPROVED</code> and the confirmation is <code>AWAITING</code>, otherwise reject</li>
+          <li>Once answered, it's final for the Kadet. A declined seat may already be given away, and a Kadet whose plans change can email the team. Only an admin can change it</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td>Let the admin set it too</td>
+      <td>
+        Admin route next to the admin status route, same guards: Admin and Program Manager
+        <span class="path"><code>functions/src/api/events/events.controller.ts</code></span>
+        <span class="note">for a Kadet who answered by email or can't use the page. Role-only, no <code>EDIT_SIGNUPS</code>. Calls the same service method without the Kadet-only rules.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Return it</td>
+      <td>
+        Nothing to add. The registrations list and the Kadet's own registration lookup both return the whole <code>UserEvent</code>, so the new field comes through.
+        <span class="note">add <code>confirmation</code> to <code>UserEventWithUserDto</code> so the API contract lists it.</span>
+        <span class="path"><code>functions/src/api/events/dto/user-event-with-user.dto.ts</code></span>
+      </td>
+    </tr>
+    <tr>
+      <td>Link the approval email to the event page</td>
+      <td>
+        The approved template from the status ticket
+        <span class="path"><code>functions/src/core/mail/templates/</code></span>
+        <span class="note">add a "Confirm your spot" button to <code>https://app.kadakareer.com/events/{{eventId}}</code> and pass <code>eventId</code> in the options. Templates already hardcode <code>app.kadakareer.com</code>.</span>
+      </td>
+    </tr>
+  </table>
+
+  <p><strong>Not in this ticket:</strong> freeing the seat for the waitlist. Events have no capacity yet. This ticket only records <code>DECLINED</code>, so the capacity ticket can stop counting it and offer "Fill open spot" to the admin.</p>
+</section>
+
+<section class="card" id="kadet-app">
+  <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+  <h2>Let the Kadet confirm or decline from the event page <span class="pill pill-app">Frontend · app-playground</span></h2>
+
+  <p>The email links to the event page. When the Kadet has a spot to confirm, the button area shows <strong>Confirm my spot</strong> and <strong>Can't make it</strong>. No new page and no new route in the app.</p>
+
+  <p>Depends on the backend card above.</p>
+
+  <h3>Technical solution</h3>
+
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr>
+      <td>Read the confirmation</td>
+      <td>
+        <code>useEvent</code>
+        <span class="path"><code>src/pages/event/event.hooks.jsx</code></span>
+        <span class="note">the hook already loads the registration with <code>GET /api/v2/users/:uid/events/:eventId</code>. Pass its <code>status</code> and <code>confirmation</code> down to the view with the event.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Answer the confirmation</td>
+      <td>
+        A second lazy <code>useApi</code> call in the same hook, <code>PATCH .../confirmation</code>, plus <code>confirmSpot</code> and <code>declineSpot</code> handlers
+        <span class="path"><code>src/pages/event/event.hooks.jsx</code></span>
+        <span class="note">follow <code>createEventRegistration</code>: send the request, then update the page from the response.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Show the right buttons</td>
+      <td>
+        <code>EventButton</code>
+        <span class="path"><code>src/pages/event/components/event-button/event-button.tsx</code></span>
+        <ul>
+          <li>Approved and awaiting: Confirm my spot (primary) and Can't make it (secondary)</li>
+          <li>Confirmed: "Your spot is confirmed". No action</li>
+          <li>Declined: "You gave up this spot", no action</li>
+          <li>No confirmation value: the button works as it does today</li>
+        </ul>
+        <span class="note">the component only knows <code>isRegistered</code> today. Add a <code>confirmation</code> prop and a story for each state in <code>event-button.stories.tsx</code>.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Ask before declining</td>
+      <td>
+        A one-step "Give up your spot?" confirmation on Can't make it
+        <span class="note">because a decline can't be undone by the Kadet.</span>
+      </td>
+    </tr>
+  </table>
+</section>
+
+<section class="card" id="admin">
+  <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+  <h2>Show and set the confirmation in the registrations table <span class="pill pill-fe">Admin · Retool</span></h2>
+
+  <p>Approved rows get a Confirmation column the admin can read and change. A filter narrows the table by confirmation. This is the data the Confirmed and Awaiting tiles count.</p>
+
+  <p>Prototype: <a href="../../prototypes/admin-signups-program.html">Program sign-ups</a>. Retool change: <a href="https://kadakareer.retool.com/app/event/signups?eventId=24HkUfzxlxTEXQlHUjz7L3" target="_blank" rel="noopener">Event signups page</a>. Questions: reach out to Ishi or Ken.</p>
+
+  <p>Depends on the backend card above.</p>
+
+  <h3>Technical solution</h3>
+
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr>
+      <td>Add a Confirmation column</td>
+      <td>
+        Registrations table
+        <span class="note">awaiting, confirmed or declined for approved rows, "—" for everything else, including old approved rows with no value.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Let the admin change it</td>
+      <td>
+        A dropdown in that cell, saving through the new admin route
+        <span class="note">show the new value only after the save succeeds. On failure keep the old value and show an error.</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Add a confirmation filter</td>
+      <td>
+        A second filter next to the status filter: all, awaiting, confirmed, declined
+      </td>
+    </tr>
+  </table>
+</section>
+
+</main>
+</div>
+
+<script>
+function copyCard(btn) {
+  const card = btn.closest('.card');
+  const clone = card.cloneNode(true);
+  clone.querySelectorAll('.copy-btn').forEach(el => el.remove());
+  const text = clone.innerText.trim();
+  const restore = btn.textContent;
+  const onDone = () => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = restore; btn.classList.remove('copied'); }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(onDone).catch(() => fallbackCopy(text, onDone));
+  } else {
+    fallbackCopy(text, onDone);
+  }
+}
+function fallbackCopy(text, onDone) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); onDone(); } catch (e) {}
+  document.body.removeChild(ta);
+}
+</script>
+<script src="../../assets/site-nav.js" data-label="Confirm a seat" data-related="Prototype|../../prototypes/admin-signups-program.html"></script>
+</body>
+</html>

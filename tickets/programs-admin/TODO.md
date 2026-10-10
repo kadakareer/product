@@ -6,6 +6,9 @@ Admin tools for reviewing program signups: approve, reject, waitlist, history, r
 
 - [x] Ticket: change a registration's status (dropdown, confirmation modal, admin route, reason), and email the Kadet on result, CC programs
 - [x] Ticket: track registration status changes, with whether the email was sent
+- [x] Ticket: summary tiles above the registrations table (pending review, waitlisted, approved), plus a blocked card for confirmed and awaiting tiles
+- [x] Ticket: confirm a seat (backend field and routes, Kadet buttons on the event page, admin column and filter)
+- [x] Ticket: design review of the sign-ups prototype, and design of the event page for each registration state
 - [x] Decided: scope is programs, v2 gets the work, both roles can decide
 - [x] Decided: failed result emails are a separate ticket, still to refine
 
@@ -14,7 +17,6 @@ Admin tools for reviewing program signups: approve, reject, waitlist, history, r
 Prototyped but with no ticket yet. Each one needs a backend piece.
 
 - [ ] Refine: failed result email handling (drafted in `failed-result-email.html`)
-- [ ] Confirmation state on approved registrations (awaiting, confirmed, declined)
 - [ ] Capacity: max participants, overflow to waitlist, fill an open spot
 - [ ] Bulk status update across several registrations
 - [ ] Read a registration's history for the detail modal, with the admin's name
@@ -42,8 +44,6 @@ Suggested answers are mine. Overrule freely.
 - [ ] Where does capacity live? Suggest a field on the program in Contentful, like the registration close date.
 - [ ] Who handles overflow: the backend automatically, or an admin prompt as in the prototype? Suggest the prompt first.
 - [ ] In what order is the waitlist promoted? Suggest first in, first out by waitlisted time.
-- [ ] Does a declined confirmation free a seat? Suggest yes.
-- [ ] Is confirmation set by admin only, or by the Kadet through a link?
 
 ### Email
 
@@ -60,6 +60,7 @@ Suggested answers are mine. Overrule freely.
 
 ## Follow up with others
 
+- [ ] Designer: review the prototype and design the event page states (`design-review.html`)
 - [ ] Programs team: email copy for the three result emails
 - [ ] Programs team: confirm who needs to be CC'd, currently the programs address
 - [ ] Engineers: plan the v3 port, since v3 has an automatic waitlist but no admin approve or reject
@@ -76,6 +77,9 @@ Suggested answers are mine. Overrule freely.
 |---|---|
 | Status change and result email ticket | `status-dropdown-and-email.html` in this folder |
 | Failed result email ticket | `failed-result-email.html` in this folder |
+| Summary tiles ticket | `summary-tiles.html` in this folder |
+| Confirm a seat ticket | `confirmation-state.html` in this folder |
+| Design review ticket | `design-review.html` in this folder |
 | Status history ticket | `status-change-history.html` in this folder |
 | Signups prototype | `prototypes/admin-signups-program.html` |
 | Events and registrations context | `context/events.md` |

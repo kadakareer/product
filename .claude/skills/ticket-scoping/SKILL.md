@@ -17,7 +17,7 @@ Once something concrete emerges (a specific field to add, a specific flow to bui
 
 `tickets/<epic-name>/<piece-name>.html` — e.g. `tickets/virapp-admin/new-fields.html`. As more pieces of the same epic crystallize, they become sibling files in the same folder, not sections bolted onto one growing doc. New epics become sibling folders under `tickets/`.
 
-`tickets/index.html` lists every epic and its pieces (mirrors the root `index.html` prototype listing). Add a link there whenever a new epic folder or a new piece file is created — it's hand-maintained, not generated.
+`tickets/index.html` is a table of every piece, filterable by epic. Add a row there whenever a new piece file is created: `<tr data-epic="epic-folder-name"><td><a href="…">Title</a></td><td class="type"><span class="kind kind-engineering">Engineering</span></td><td class="status"><span class="state state-ready">Ready to start</span></td><td class="epic"><span class="kind">Epic Name</span></td></tr>`. The type is Engineering, Design or Discovery (research and requirements work), with a matching `kind-…` class. The status is for the product manager only, so it's coarse: In refinement (`state-refining`), Ready to start (`state-ready`) or Done (`state-done`). Change it by editing that one cell. A new epic needs no other change to get a filter chip. Its tag is grey until you add a colour rule for it (`tr[data-epic="…"] .epic .kind`) in the page's style block. It's hand-maintained, not generated.
 
 ## HTML, not markdown
 
@@ -30,7 +30,7 @@ This is specific to scoped-piece deliverables. Skills, `CLAUDE.md`, and context 
 Copy `template.html` (in this skill's folder) as the starting point for any new ticket file — it has the card layout, the What/Where table, and the reference/note/path patterns already wired up. Don't rebuild this structure from scratch each time.
 
 What each part is for:
-- A "Back to tickets" link (`.back-link`) at the top, pointing to `../index.html` — every piece file links back to the epic index.
+- The shared nav bar: one `<script src="../../assets/site-nav.js" data-label="...">` just before `</body>`. It adds the breadcrumb (Product › Tickets › Epic › Page), a Back button, and optional `data-related="Label|href;..."` links (e.g. to the matching prototype). Don't hand-write a back link.
 - One `<section class="card">` per crystallized piece — each item its own visually separated card, not sections bolted onto one long scroll.
 - A `.copy-btn` in the top-right of every card, copying that card's text to the clipboard — for pasting into Slack/email/a tracker when handing the piece to an engineer. The `copyCard`/`fallbackCopy` script at the end of the template does the work; add the button and rely on the shared script rather than re-implementing it.
 - `<h2>`: the specific change, named plainly (what it does, not a ticket number).
