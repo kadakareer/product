@@ -169,6 +169,87 @@ const participantsData = [
       { status: 'applied', admin: 'diego.fernandez@gmail.com', date: 'Dec 22, 2025', time: '10:15 AM' },
       { status: 'waitlisted', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 22, 2025', time: '03:00 PM' }
     ]
+  },
+  {
+    id: 'r11',
+    name: 'Isabella Reyes',
+    email: 'isabella.reyes@gmail.com',
+    school: 'University of Santo Tomas',
+    course: 'BS Information Systems',
+    location: 'Sampaloc, Manila',
+    status: 'applied',
+    createdAt: { date: 'Dec 14, 2025', time: '09:05 AM' },
+    updatedAt: { date: 'Dec 14, 2025', time: '09:05 AM' },
+    attendance: { single: false, days: [false, false, false, false, false, false, false] },
+    submissions: [false, false, false],
+    history: [
+      { status: 'applied', admin: 'isabella.reyes@gmail.com', date: 'Dec 14, 2025', time: '09:05 AM' }
+    ]
+  },
+  {
+    id: 'r12',
+    name: 'Marco Villanueva',
+    email: 'marco.villanueva@outlook.com',
+    school: 'De La Salle University',
+    course: 'BS Computer Science',
+    location: 'Malate, Manila',
+    status: 'applied',
+    createdAt: { date: 'Dec 14, 2025', time: '01:40 PM' },
+    updatedAt: { date: 'Dec 14, 2025', time: '01:40 PM' },
+    attendance: { single: false, days: [false, false, false, false, false, false, false] },
+    submissions: [false, false, false],
+    history: [
+      { status: 'applied', admin: 'marco.villanueva@outlook.com', date: 'Dec 14, 2025', time: '01:40 PM' }
+    ]
+  },
+  {
+    id: 'r13',
+    name: 'Hannah Cruz',
+    email: 'hannah.cruz@email.com',
+    school: 'University of the Philippines Los Baños',
+    course: 'BS Computer Science',
+    location: 'Los Baños, Laguna',
+    status: 'interested',
+    createdAt: { date: 'Dec 15, 2025', time: '11:10 AM' },
+    updatedAt: { date: 'Dec 15, 2025', time: '11:10 AM' },
+    attendance: { single: false, days: [false, false, false, false, false, false, false] },
+    submissions: [false, false, false]
+  },
+  {
+    id: 'r14',
+    name: 'Paolo Dela Cruz',
+    email: 'paolo.delacruz@gmail.com',
+    school: 'Cebu Institute of Technology University',
+    course: 'BS Information Technology',
+    location: 'Cebu City, Cebu',
+    status: 'approved',
+    commitment: 'awaiting',
+    createdAt: { date: 'Dec 10, 2025', time: '03:25 PM' },
+    updatedAt: { date: 'Dec 11, 2025', time: '10:30 AM' },
+    attendance: { single: true, days: [true, false, true, false, false, false, false] },
+    submissions: [true, false, false],
+    history: [
+      { status: 'applied', admin: 'paolo.delacruz@gmail.com', date: 'Dec 10, 2025', time: '03:25 PM' },
+      { status: 'approved', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 11, 2025', time: '10:30 AM' },
+      { type: 'email', label: 'Acceptance email sent', admin: 'System', date: 'Dec 11, 2025', time: '10:30 AM' }
+    ]
+  },
+  {
+    id: 'r15',
+    name: 'Bianca Ramos',
+    email: 'bianca.ramos@gmail.com',
+    school: 'Ateneo de Davao University',
+    course: 'BS Computer Science',
+    location: 'Davao City, Davao del Sur',
+    status: 'waitlisted',
+    createdAt: { date: 'Dec 23, 2025', time: '08:50 AM' },
+    updatedAt: { date: 'Dec 23, 2025', time: '11:20 AM' },
+    attendance: { single: false, days: [false, false, false, false, false, false, false] },
+    submissions: [false, false, false],
+    history: [
+      { status: 'applied', admin: 'bianca.ramos@gmail.com', date: 'Dec 23, 2025', time: '08:50 AM' },
+      { status: 'waitlisted', admin: 'jonas.reyes@kadakareer.com', date: 'Dec 23, 2025', time: '11:20 AM' }
+    ]
   }
 ];
 
