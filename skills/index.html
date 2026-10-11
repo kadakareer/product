@@ -100,6 +100,10 @@ details.fold > summary::before { content: "▸"; display: inline-block; width: 1
 details.fold[open] > summary::before { content: "▾"; }
 details.fold > summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 details.fold[open] { padding-bottom: 8px; }
+.tip { position: fixed; z-index: 50; max-width: 280px; padding: 8px 10px; border-radius: var(--r-sm); background: var(--text); color: var(--on-primary); font-size: 12px; line-height: 1.4; pointer-events: none; opacity: 0; transition: opacity .1s; }
+.tip.show { opacity: 1; }
+.pill[data-tip] { cursor: help; }
+.pill:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -107,7 +111,6 @@ details.fold[open] { padding-bottom: 8px; }
 
 <header>
   <h1>PM skills</h1>
-  <p class="asof">Repo facts from the GitHub API on 2026-10-11.</p>
 </header>
 
 <h2>Read this first: the one risk that applies to everything</h2>
@@ -143,26 +146,15 @@ details.fold[open] { padding-bottom: 8px; }
   </table>
 </div>
 
-<details class="fold"><summary>What the risk levels mean</summary>
-<div class="table-card"><table class="data-table">
-  <thead><tr><th style="width:110px">Level</th><th>Means</th></tr></thead>
-  <tbody>
-    <tr><td><span class="pill p-low">Low</span></td><td>Markdown only. Established source. Nothing runs. You can read the whole skill in a few minutes.</td></tr>
-    <tr><td><span class="pill p-med">Medium</span></td><td>One or more of: small or single-author source, bundled scripts, reads untrusted text, writes or publishes things, unclear license.</td></tr>
-    <tr><td><span class="pill p-high">Higher</span></td><td>Hooks or install-time code, or an unvetted copy of someone else's work. See "Handle with care".</td></tr>
-  </tbody>
-</table></div>
-</details>
-
 <details class="fold"><summary>Handle with care</summary>
 <div class="table-card"><table class="data-table min">
   <thead><tr><th>Item</th><th>Level</th><th>Why</th><th>Instead</th></tr></thead>
   <tbody>
-    <tr><td class="name-cell"><code>git-guardrails-claude-code</code> (Pocock)</td><td><span class="pill p-high">Higher</span></td><td>Sets up a hook script that runs on commands. It is defensive (blocks risky git commands), but a hook is code that runs automatically.</td><td>Skip unless an engineer reviews the script.</td></tr>
-    <tr><td class="name-cell">Installing the whole <code>alirezarezvani/claude-skills</code> plugin</td><td><span class="pill p-high">Higher</span></td><td>Huge repo (about 750 Python files). Contains hooks (<code>agent-launcher</code> session start/end, <code>playwright-pro</code>). Also keeps duplicate copies for other agents.</td><td>Copy only the one skill folder you need.</td></tr>
-    <tr><td class="name-cell"><code>rileytrottier23/Riley-PM-Skills</code></td><td><span class="pill p-high">Higher</span></td><td>0 stars, created Aug 2026. Bundles other people's collections (Dean Peters, Gene Dai), so it is a copy of copies.</td><td>Use the original sources.</td></tr>
-    <tr><td class="name-cell"><code>RobMitt/grill-me-skill</code></td><td><span class="pill p-med">Medium</span></td><td>A standalone copy of Pocock's skill. Single commit day, no license shown.</td><td>Use Pocock's original.</td></tr>
-    <tr><td class="name-cell"><code>Digidai/product-manager-skills</code></td><td><span class="pill p-med">Medium</span></td><td>185 stars, single author, last push April 2026, license not detected.</td><td>Try Dean Peters' pack first.</td></tr>
+    <tr><td class="name-cell"><code>git-guardrails-claude-code</code> (Pocock)</td><td><span class="pill p-high" tabindex="0" data-tip="Hooks or install-time code, or an unvetted copy of someone else's work.">Higher</span></td><td>Sets up a hook script that runs on commands. It is defensive (blocks risky git commands), but a hook is code that runs automatically.</td><td>Skip unless an engineer reviews the script.</td></tr>
+    <tr><td class="name-cell">Installing the whole <code>alirezarezvani/claude-skills</code> plugin</td><td><span class="pill p-high" tabindex="0" data-tip="Hooks or install-time code, or an unvetted copy of someone else's work.">Higher</span></td><td>Huge repo (about 750 Python files). Contains hooks (<code>agent-launcher</code> session start/end, <code>playwright-pro</code>). Also keeps duplicate copies for other agents.</td><td>Copy only the one skill folder you need.</td></tr>
+    <tr><td class="name-cell"><code>rileytrottier23/Riley-PM-Skills</code></td><td><span class="pill p-high" tabindex="0" data-tip="Hooks or install-time code, or an unvetted copy of someone else's work.">Higher</span></td><td>0 stars, created Aug 2026. Bundles other people's collections (Dean Peters, Gene Dai), so it is a copy of copies.</td><td>Use the original sources.</td></tr>
+    <tr><td class="name-cell"><code>RobMitt/grill-me-skill</code></td><td><span class="pill p-med" tabindex="0" data-tip="One or more of: small or single-author source, bundled scripts, reads untrusted text, writes or publishes things, unclear license.">Medium</span></td><td>A standalone copy of Pocock's skill. Single commit day, no license shown.</td><td>Use Pocock's original.</td></tr>
+    <tr><td class="name-cell"><code>Digidai/product-manager-skills</code></td><td><span class="pill p-med" tabindex="0" data-tip="One or more of: small or single-author source, bundled scripts, reads untrusted text, writes or publishes things, unclear license.">Medium</span></td><td>185 stars, single author, last push April 2026, license not detected.</td><td>Try Dean Peters' pack first.</td></tr>
   </tbody>
 </table></div>
 </details>
@@ -314,6 +306,11 @@ const SKILLS = [
 
 const RISK_ORDER = { low: 0, med: 1, high: 2 };
 const RISK_LABEL = { low: "Low", med: "Medium", high: "Higher" };
+const RISK_TIP = {
+  low: "Markdown only, established source, nothing runs. Readable in a few minutes.",
+  med: "One or more of: small or single-author source, bundled scripts, reads untrusted text, writes or publishes things, unclear license.",
+  high: "Hooks or install-time code, or an unvetted copy of someone else's work."
+};
 SKILLS.forEach((s, i) => { s.i = i; });
 
 const state = { task: -1, risk: "all", q: "", sort: "task", dir: 1 };
@@ -346,7 +343,7 @@ const GROUPS = [
   ["Learn about users", [3, 9]],
   ["Work with code", [6, 7, 8]]
 ];
-state.group = -1;
+state.group = 0;
 const openRows = new Set();
 
 function sortKey(s) {
@@ -403,7 +400,10 @@ function render() {
     tr.appendChild(el("td", "c-task muted", TASKS[s.task]));
     tr.appendChild(el("td", "c-src muted", s.src));
     const risk = el("td");
-    risk.appendChild(el("span", "pill p-" + s.risk, RISK_LABEL[s.risk]));
+    const pill = el("span", "pill p-" + s.risk, RISK_LABEL[s.risk]);
+    pill.tabIndex = 0;
+    pill.dataset.tip = RISK_TIP[s.risk];
+    risk.appendChild(pill);
     tr.appendChild(risk);
     const tg = el("td");
     const btn = el("button", "row-toggle", isOpen ? "▾" : "▸");
@@ -435,9 +435,34 @@ document.querySelectorAll("[data-sort]").forEach((b) => b.addEventListener("clic
 }));
 $("q").addEventListener("input", (e) => { state.q = e.target.value; render(); });
 
-chipRow($("taskChips"), [[-1, "All"]].concat(GROUPS.map((g, i) => [i, g[0]])), (v) => { state.group = Number(v); });
+chipRow($("taskChips"), GROUPS.map((g, i) => [i, g[0]]), (v) => { state.group = Number(v); });
 chipRow($("riskChips"), [["all", "Any"], ["low", "Low"], ["med", "Medium"]], (v) => { state.risk = v; });
 render();
+
+(function () {
+  const tip = document.createElement("div");
+  tip.className = "tip";
+  tip.setAttribute("role", "tooltip");
+  document.body.appendChild(tip);
+  function show(target) {
+    tip.textContent = target.dataset.tip;
+    const r = target.getBoundingClientRect();
+    tip.style.left = "0px"; tip.style.top = "0px";
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    let left = Math.min(Math.max(8, r.left), window.innerWidth - w - 8);
+    let top = r.bottom + 6;
+    if (top + h > window.innerHeight - 8) top = r.top - h - 6;
+    tip.style.left = left + "px"; tip.style.top = top + "px";
+    tip.classList.add("show");
+  }
+  function hide() { tip.classList.remove("show"); }
+  document.addEventListener("mouseover", (e) => { const t = e.target.closest("[data-tip]"); if (t) show(t); });
+  document.addEventListener("mouseout", (e) => { if (e.target.closest("[data-tip]")) hide(); });
+  document.addEventListener("focusin", (e) => { const t = e.target.closest("[data-tip]"); if (t) show(t); });
+  document.addEventListener("focusout", hide);
+  window.addEventListener("scroll", hide, true);
+})();
 </script>
+<script src="../assets/site-nav.js" data-label="PM Skills"></script>
 </body>
 </html>

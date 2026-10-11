@@ -35,6 +35,11 @@
             --tint: #ffedd5;
         }
 
+        .tile-skills {
+            --accent: #16a34a;
+            --tint: #dcfce7;
+        }
+
         .tile:hover {
             transform: translateY(-4px) rotate(-0.6deg);
             border-color: var(--accent);
@@ -82,6 +87,7 @@
 
         .tile-prototypes:hover .move { transform: translate(-10px, -8px) rotate(-6deg); }
         .tile-tickets:hover .move { transform: translate(4px, -6px) rotate(4deg); }
+        .tile-skills:hover .move { transform: translate(6px, -6px) rotate(5deg); }
 
         @media (max-width: 640px) {
             .tiles {
@@ -97,7 +103,8 @@
 
             .tile:hover,
             .tile-prototypes:hover .move,
-            .tile-tickets:hover .move {
+            .tile-tickets:hover .move,
+            .tile-skills:hover .move {
                 transform: none;
             }
         }
@@ -108,7 +115,7 @@
     <div class="container">
         <div class="page-header-content" style="margin-bottom: 32px;">
             <h1 class="page-title">Product</h1>
-            <p class="page-subtitle">Prototypes and tickets</p>
+            <p class="page-subtitle">Prototypes, tickets and PM skills</p>
         </div>
 
         <div class="tiles">
@@ -165,6 +172,29 @@
                 </svg>
                 <h2>Tickets</h2>
                 <p>Scoped work for the team, grouped by epic.</p>
+            </a>
+
+            <a class="tile tile-skills" href="skills/index.html">
+                <!-- A sketched table of skills with risk ticks, and a shield loose on top. -->
+                <svg class="art" viewBox="0 0 240 160" aria-hidden="true" focusable="false">
+                    <path class="fill" d="M22 40 C80 38 160 41 218 39 L219 138 C150 141 80 139 23 140 Z"/>
+                    <path class="solid" d="M20 24 C70 22 150 25 220 23 C222 60 221 100 220 138 C160 141 80 139 21 140 C19 100 21 60 20 24 Z"/>
+                    <path d="M19 23 C70 21 150 24 221 23 C223 60 222 100 221 139 C160 142 80 140 20 141 C18 100 20 60 19 23 Z"/>
+                    <path d="M20 46 C80 44 160 48 221 45"/>
+                    <path class="thin" d="M34 34 L70 34 M96 34 L120 34 M168 34 L196 34"/>
+                    <path d="M34 62 L74 61 M34 86 L66 87 M34 110 L72 109"/>
+                    <path class="thin" d="M92 62 L130 61 M92 86 L124 87 M92 110 L134 109"/>
+                    <path class="accent" d="M166 62 L172 68 L184 54"/>
+                    <path class="accent" d="M166 86 L172 92 L184 78"/>
+                    <path d="M166 106 C170 104 176 106 184 105 M166 114 C172 113 178 115 184 114" class="thin"/>
+                    <path class="thin" d="M20 74 C80 73 160 76 221 74 M20 98 C80 97 160 100 221 98"/>
+                    <g class="move">
+                        <path class="solid" d="M198 92 C206 94 214 93 220 91 C221 104 217 114 209 120 C201 114 197 104 198 92 Z"/>
+                        <path class="accent thin" d="M203 104 L208 109 L215 99"/>
+                    </g>
+                </svg>
+                <h2>PM skills</h2>
+                <p>Skills to try for a task, with what to watch for.</p>
             </a>
         </div>
     </div>
