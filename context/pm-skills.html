@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>PM skills</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #f6f2ea;
+  --bg2: #fffdf7;
+  --bg3: #f1ebdf;
+  --bg4: #e6dece;
+  --border: rgba(52,45,30,0.09);
+  --border2: rgba(52,45,30,0.16);
+  --text: #1f1c16;
+  --muted: #6e6658;
+  --muted2: #a49a87;
+  --primary: #61a300;
+  --on-primary: #fffdf7;
+  --danger: #d00000;
+  --r: 14px;
+  --r-sm: 8px;
+  --font-h: 'Syne', system-ui, sans-serif;
+  --font-b: 'DM Sans', system-ui, sans-serif;
+  --lime: #61a300;   --lime-dim: rgba(97,163,0,0.12);
+  --amber: #b5651d;  --amber-dim: rgba(181,101,29,0.12);
+  --coral: #d00000;  --coral-dim: rgba(208,0,0,0.12);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-b); font-size: 14px; line-height: 1.5; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.88em; background: var(--bg3); padding: 1px 5px; border-radius: 4px; }
+
+.wrap { max-width: 1100px; margin: 0 auto; padding: 28px 14px 64px; }
+h1 { font-family: var(--font-h); font-size: 1.6rem; font-weight: 800; line-height: 1.2; }
+h2 { font-family: var(--font-h); font-size: 1.05rem; font-weight: 700; margin: 36px 0 10px; }
+.asof { margin-top: 8px; font-size: 12px; color: var(--muted); }
+
+/* Callout and plain panels */
+.panel { border: 1px solid var(--border); border-radius: var(--r); background: var(--bg2); padding: 14px 18px; }
+.panel.warn { border-left: 4px solid var(--amber); }
+.panel ul, .panel ol { padding-left: 20px; }
+.panel li { margin: 4px 0; }
+
+/* Filter bar, same shape as the admin one */
+.filter-bar { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px 22px; padding: 10px 0 12px; }
+.tag-group { display: flex; gap: 6px; align-items: flex-start; min-width: 0; }
+.tag-group-label { flex: 0 0 auto; font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted2); padding-top: 6px; min-width: 32px; }
+.tag-group-chips { display: flex; gap: 5px; flex-wrap: wrap; min-width: 0; }
+.tag-chip { padding: 4px 11px; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid var(--border2); background: var(--bg3); color: var(--muted); font-family: inherit; transition: all .12s; white-space: nowrap; }
+.tag-chip:hover { color: var(--text); }
+.tag-chip[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: var(--on-primary); }
+.tag-chip:focus-visible, .search-input:focus-visible, .sort-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.search-input { width: 200px; border: 1px solid var(--border2); border-radius: 20px; padding: 5px 12px; font: inherit; font-size: 12px; background: var(--bg2); color: var(--text); }
+.count { font-size: 12px; color: var(--muted); margin: 2px 0 8px; }
+
+/* Tables, same look as the admin list */
+.table-card { border: 1px solid var(--border); border-radius: var(--r); background: var(--bg2); overflow-x: auto; }
+table.data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+table.fixed { table-layout: fixed; }
+table.min { min-width: 760px; }
+.data-table thead th { background: var(--bg2); text-align: left; padding: 10px 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+.sort-btn { font: inherit; color: inherit; background: none; border: none; padding: 0; cursor: pointer; text-transform: inherit; letter-spacing: inherit; }
+.sort-btn:hover { color: var(--text); }
+.sort-arrow { margin-left: 4px; font-size: 9px; opacity: .4; }
+.sort-arrow.active { opacity: 1; color: var(--primary); }
+.data-table tbody tr { transition: background .1s; }
+.data-table tbody tr:hover { background: var(--bg3); }
+.data-table tbody td { padding: 9px 12px; vertical-align: top; border-bottom: 1px solid var(--border); color: var(--text); }
+.data-table tbody tr:last-child td { border-bottom: none; }
+td.name-cell { font-weight: 600; }
+td.muted { color: var(--muted); }
+.empty-row td { text-align: center; color: var(--muted); padding: 28px 12px; }
+
+/* Pills */
+.pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.p-low { background: var(--lime-dim); color: var(--lime); }
+.p-med { background: var(--amber-dim); color: var(--amber); }
+.p-high { background: var(--coral-dim); color: var(--coral); }
+.flags { display: flex; flex-wrap: wrap; gap: 4px; }
+.flag { font-size: 10.5px; border: 1px solid var(--border2); border-radius: 6px; padding: 0 6px; color: var(--muted); background: var(--bg3); white-space: nowrap; }
+
+@media (max-width: 700px) {
+  col.c-task, th.c-task, td.c-task, col.c-src, th.c-src, td.c-src { display: none; }
+  .search-input { width: 100%; }
+}
+.sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+.main-row { cursor: pointer; }
+.row-toggle { font: inherit; color: var(--muted); background: none; border: none; cursor: pointer; font-size: 11px; padding: 0; }
+.row-toggle:hover { color: var(--text); }
+.row-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.detail-row td { background: var(--bg3); padding: 12px 14px 14px; }
+.detail-row p { max-width: 80ch; margin-bottom: 8px; }
+details.fold { margin-top: 18px; border-top: 1px solid var(--border2); }
+details.fold > summary { font-family: var(--font-h); font-size: 1.05rem; font-weight: 700; cursor: pointer; padding: 14px 0; list-style: none; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::before { content: "▸"; display: inline-block; width: 1.2em; color: var(--muted); }
+details.fold[open] > summary::before { content: "▾"; }
+details.fold > summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+details.fold[open] { padding-bottom: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>PM skills</h1>
+  <p class="asof">Repo facts from the GitHub API on 2026-10-11.</p>
+</header>
+
+<h2>Read this first: the one risk that applies to everything</h2>
+<div class="panel warn">
+  <ul>
+    <li><strong>Prompt injection.</strong> Any skill that reads text someone else wrote (a repo, a pull request, an issue, a web page) can be steered by instructions hidden in that text.</li>
+    <li>A markdown-only skill has no code to run, but it is still exposed through what it reads.</li>
+    <li>Safest habit: keep Claude's permission prompts on, and don't point a skill at an untrusted repo or pull request while it can write, push or publish.</li>
+    <li>The table marks this as <span class="flag">Reads untrusted text</span>.</li>
+  </ul>
+</div>
+
+<h2>Pick by task</h2>
+<div class="filter-bar">
+  <div class="tag-group"><span class="tag-group-label">Task</span><div class="tag-group-chips" id="taskChips" role="group" aria-label="Filter by task group"></div></div>
+  <div class="tag-group"><span class="tag-group-label">Risk</span><div class="tag-group-chips" id="riskChips" role="group" aria-label="Filter by risk"></div></div>
+  <input type="search" class="search-input" id="q" placeholder="Search skills…" aria-label="Search skills">
+</div>
+<p class="count" id="count"></p>
+<div class="table-card">
+  <table class="data-table fixed min" id="skillTable">
+    <colgroup>
+      <col style="width:30%"><col class="c-task" style="width:23%"><col class="c-src" style="width:27%"><col style="width:12%"><col style="width:8%">
+    </colgroup>
+    <thead><tr>
+      <th><button type="button" class="sort-btn" data-sort="name">Skill<span class="sort-arrow" data-arrow="name">↕</span></button></th>
+      <th class="c-task"><button type="button" class="sort-btn" data-sort="task">Task<span class="sort-arrow" data-arrow="task">↕</span></button></th>
+      <th class="c-src"><button type="button" class="sort-btn" data-sort="src">Source<span class="sort-arrow" data-arrow="src">↕</span></button></th>
+      <th><button type="button" class="sort-btn" data-sort="risk">Risk<span class="sort-arrow" data-arrow="risk">↕</span></button></th>
+      <th><span class="sr">Details</span></th>
+    </tr></thead>
+    <tbody id="skills"></tbody>
+  </table>
+</div>
+
+<details class="fold"><summary>What the risk levels mean</summary>
+<div class="table-card"><table class="data-table">
+  <thead><tr><th style="width:110px">Level</th><th>Means</th></tr></thead>
+  <tbody>
+    <tr><td><span class="pill p-low">Low</span></td><td>Markdown only. Established source. Nothing runs. You can read the whole skill in a few minutes.</td></tr>
+    <tr><td><span class="pill p-med">Medium</span></td><td>One or more of: small or single-author source, bundled scripts, reads untrusted text, writes or publishes things, unclear license.</td></tr>
+    <tr><td><span class="pill p-high">Higher</span></td><td>Hooks or install-time code, or an unvetted copy of someone else's work. See "Handle with care".</td></tr>
+  </tbody>
+</table></div>
+</details>
+
+<details class="fold"><summary>Handle with care</summary>
+<div class="table-card"><table class="data-table min">
+  <thead><tr><th>Item</th><th>Level</th><th>Why</th><th>Instead</th></tr></thead>
+  <tbody>
+    <tr><td class="name-cell"><code>git-guardrails-claude-code</code> (Pocock)</td><td><span class="pill p-high">Higher</span></td><td>Sets up a hook script that runs on commands. It is defensive (blocks risky git commands), but a hook is code that runs automatically.</td><td>Skip unless an engineer reviews the script.</td></tr>
+    <tr><td class="name-cell">Installing the whole <code>alirezarezvani/claude-skills</code> plugin</td><td><span class="pill p-high">Higher</span></td><td>Huge repo (about 750 Python files). Contains hooks (<code>agent-launcher</code> session start/end, <code>playwright-pro</code>). Also keeps duplicate copies for other agents.</td><td>Copy only the one skill folder you need.</td></tr>
+    <tr><td class="name-cell"><code>rileytrottier23/Riley-PM-Skills</code></td><td><span class="pill p-high">Higher</span></td><td>0 stars, created Aug 2026. Bundles other people's collections (Dean Peters, Gene Dai), so it is a copy of copies.</td><td>Use the original sources.</td></tr>
+    <tr><td class="name-cell"><code>RobMitt/grill-me-skill</code></td><td><span class="pill p-med">Medium</span></td><td>A standalone copy of Pocock's skill. Single commit day, no license shown.</td><td>Use Pocock's original.</td></tr>
+    <tr><td class="name-cell"><code>Digidai/product-manager-skills</code></td><td><span class="pill p-med">Medium</span></td><td>185 stars, single author, last push April 2026, license not detected.</td><td>Try Dean Peters' pack first.</td></tr>
+  </tbody>
+</table></div>
+</details>
+
+<details class="fold"><summary>The sources</summary>
+<div class="table-card"><table class="data-table min">
+  <thead><tr><th>Repo</th><th>Stars</th><th>Created</th><th>Last push</th><th>License</th><th>Owner</th><th>What's inside</th></tr></thead>
+  <tbody>
+    <tr><td class="name-cell"><code>mattpocock/skills</code></td><td>285,133</td><td>2026-02-03</td><td>2026-10-09</td><td>MIT</td><td>Person</td><td>132 markdown files. 5 shell scripts: two repo tooling, three inside skills (a bug-loop template, a wizard template, the git-guardrails hook).</td></tr>
+    <tr><td class="name-cell"><code>anthropics/skills</code></td><td>180,405</td><td>2025-09-22</td><td>2026-10-09</td><td>Mixed: many Apache 2.0, document skills source-available</td><td>Anthropic</td><td>72 Python files, mostly in the document skills (Word, PDF, slides, sheets).</td></tr>
+    <tr><td class="name-cell"><code>alirezarezvani/claude-skills</code></td><td>27,990</td><td>2025-10-19</td><td>2026-08-30</td><td>MIT</td><td>Person</td><td>3,100+ markdown files, 745 Python files, hooks, and duplicate copies for other agents.</td></tr>
+    <tr><td class="name-cell"><code>deanpeters/Product-Manager-Skills</code></td><td>7,237</td><td>2026-02-05</td><td>2026-09-01</td><td>GitHub shows none detected; README says CC BY-NC-SA 4.0</td><td>Person</td><td>330 markdown files. Most scripts are build tooling; two sit inside skills (market sizing, user story).</td></tr>
+    <tr><td class="name-cell"><code>aakashg/pm-claude-code-setup</code></td><td>160</td><td>2026-02-27</td><td>2026-03-04</td><td>MIT</td><td>Person</td><td>Markdown only: 6 skills, a <code>CLAUDE.md</code>, 4 templates.</td></tr>
+  </tbody>
+</table></div>
+<p class="count" style="margin-top:8px">Star counts are a weak signal; they can be inflated and they say nothing about safety. Age and last push matter more for niche repos.</p>
+</details>
+
+<details class="fold"><summary>Before you install anything</summary>
+<div class="table-card"><table class="data-table min">
+  <thead><tr><th style="width:36px">#</th><th style="width:210px">Check</th><th>What to look for</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td class="name-cell">Where is it from?</td><td>Owner, age, last push. A new, small, single-author repo gets read line by line.</td></tr>
+    <tr><td>2</td><td class="name-cell">Does it run code?</td><td><code>scripts/</code>, <code>hooks/</code>, <code>settings.json</code>, and install steps like <code>npx</code> or <code>curl</code>.</td></tr>
+    <tr><td>3</td><td class="name-cell">Read the <code>SKILL.md</code></td><td>Most are 1 to 12 KB. That is minutes, not hours.</td></tr>
+    <tr><td>4</td><td class="name-cell">What does it read?</td><td>Repo files, pull requests, issues and web pages are all places injected instructions can hide.</td></tr>
+    <tr><td>5</td><td class="name-cell">What can it change?</td><td>Writing files, git actions, publishing to a tracker. Prefer skills that only produce text for you to review.</td></tr>
+    <tr><td>6</td><td class="name-cell">Does the license fit?</td><td>Dean Peters' pack is non-commercial share-alike. Ask before using it for org work you redistribute.</td></tr>
+    <tr><td>7</td><td class="name-cell">Copy the folder, don't plugin-install</td><td>A plugin can follow the upstream repo, so later edits change what you run. A copied folder stays as you reviewed it.</td></tr>
+  </tbody>
+</table></div>
+</details>
+
+<details class="fold"><summary>Try one safely</summary>
+<div class="panel">
+  <ul>
+    <li>Use a scratch repo with no secrets and no push access.</li>
+    <li>Copy one skill folder into that repo's <code>.claude/skills/</code>. For <code>grill-me</code>, also copy <code>grilling</code>, since it calls it.</li>
+    <li>Run it on one real task from your week. Keep it only if it earned its place.</li>
+  </ul>
+</div>
+</details>
+
+<details class="fold"><summary>Not checked</summary>
+<div class="panel">
+  <ul>
+    <li>I did not run any skill or script.</li>
+    <li>I read most listed <code>SKILL.md</code> files only partly, and not the bundled scripts in full. A simple search of <code>code-to-prd</code>'s two scripts found no network or subprocess calls, which is not a code review.</li>
+    <li>Install commands come from READMEs and are untested.</li>
+    <li>Repos change. Recheck last push and contents before relying on any of this.</li>
+  </ul>
+</div>
+</details>
+</div>
+
+<script>
+const TASKS = [
+  "Stress-test a plan",
+  "Write a PRD or spec",
+  "Break work into tickets",
+  "Discovery and user research",
+  "Prioritize and plan",
+  "Define metrics and launch",
+  "Understand a codebase",
+  "Review a change or PR",
+  "Make an idea tangible",
+  "Research a question",
+  "Hand off or document"
+];
+
+const MD = "Markdown only";
+const SC = "Bundled scripts";
+const RU = "Reads untrusted text";
+const WR = "Writes or publishes";
+const NI = "Small or niche source";
+const LI = "License restricted";
+
+const SKILLS = [
+  { task: 0, name: "grill-me (+ grilling)", src: "mattpocock/skills", risk: "low", flags: [MD, "Reads your repo"],
+    why: "Interviews you on a plan until each branch is settled; answers itself from the codebase when it can. Tiny file. Calls the grilling skill, so copy both. Only runs when you ask for it." },
+  { task: 0, name: "grill-with-docs", src: "mattpocock/skills", risk: "med", flags: [MD, WR, "Reads your repo"],
+    why: "Same interview, but also updates a glossary and decision records. Useful, but it edits files, so review the diff." },
+
+  { task: 1, name: "to-spec", src: "mattpocock/skills", risk: "med", flags: [MD, WR],
+    why: "Turns the current conversation into a spec and publishes it to your project's issue tracker. Check which tracker it is pointed at before the first run." },
+  { task: 1, name: "prd-development", src: "deanpeters/Product-Manager-Skills", risk: "med", flags: [MD, LI],
+    why: "Long, structured PRD workflow (about 25 KB). No code. Non-commercial share-alike license; ask before redistributing." },
+  { task: 1, name: "prd-writer", src: "aakashg/pm-claude-code-setup", risk: "med", flags: [MD, NI],
+    why: "Asks clarifying questions, then writes a structured PRD. Markdown only and MIT, but one author, 160 stars, last push March 2026." },
+
+  { task: 2, name: "to-tickets", src: "mattpocock/skills", risk: "med", flags: [MD, WR],
+    why: "Breaks a plan into small tickets with blocking order, published to the configured tracker (or as local files). Check which before the first run." },
+  { task: 2, name: "wayfinder", src: "mattpocock/skills", risk: "med", flags: [MD, WR],
+    why: "Plans large work as a map of decision tickets on your issue tracker. Big skill (about 12 KB); read it before use." },
+  { task: 2, name: "user-story / epic-hypothesis", src: "deanpeters/Product-Manager-Skills", risk: "med", flags: [MD, SC, LI],
+    why: "Story and epic templates. The user-story folder includes a small Python template script; read it before allowing it to run." },
+
+  { task: 3, name: "discovery-interview-prep", src: "deanpeters/Product-Manager-Skills", risk: "med", flags: [MD, LI],
+    why: "Prepares a customer discovery interview. Markdown only. License as above." },
+  { task: 3, name: "opportunity-solution-tree", src: "deanpeters/Product-Manager-Skills", risk: "med", flags: [MD, LI],
+    why: "Maps outcomes, opportunities and solutions so you test assumptions, not just ideas." },
+  { task: 3, name: "problem-framing-canvas", src: "deanpeters/Product-Manager-Skills", risk: "med", flags: [MD, LI],
+    why: "Frames the problem before you jump to solutions." },
+  { task: 3, name: "user-research", src: "aakashg/pm-claude-code-setup", risk: "med", flags: [MD, NI],
+    why: "Synthesizes research notes into findings ranked by strength of evidence." },
+  { task: 3, name: "ux-researcher-designer", src: "alirezarezvani/claude-skills", risk: "med", flags: [SC, "Huge repo"],
+    why: "UX research and design help. Includes a persona generator script. Take the single folder, not the plugin." },
+  { task: 3, name: "product-manager-toolkit", src: "alirezarezvani/claude-skills", risk: "med", flags: [SC, "Huge repo"],
+    why: "PM toolkit with an interview analyzer and a RICE scoring script. Read the scripts before running." },
+
+  { task: 4, name: "prioritization-advisor", src: "deanpeters/Product-Manager-Skills", risk: "med", flags: [MD, LI],
+    why: "Helps pick a prioritization method and apply it." },
+  { task: 4, name: "roadmap-planning", src: "deanpeters/Product-Manager-Skills", risk: "med", flags: [MD, LI],
+    why: "Builds a roadmap around outcomes instead of a feature list." },
+  { task: 4, name: "sprint-planner", src: "aakashg/pm-claude-code-setup", risk: "med", flags: [MD, NI],
+    why: "Capacity-checked sprint plan with risk flags." },
+
+  { task: 5, name: "metrics-definer", src: "aakashg/pm-claude-code-setup", risk: "med", flags: [MD, NI],
+    why: "Defines a primary metric, guardrails and anti-metrics for a feature." },
+  { task: 5, name: "launch-checklist / competitive-analysis", src: "aakashg/pm-claude-code-setup", risk: "med", flags: [MD, NI],
+    why: "Risk-scaled launch plan, and a smart / weak / implications competitor view." },
+
+  { task: 6, name: "improve-codebase-architecture", src: "mattpocock/skills", risk: "low", flags: [MD, "Reads your repo", RU],
+    why: "Scans a repo for places the design could be simpler and returns a visual report. Good for judging code health as a PM." },
+  { task: 6, name: "code-to-prd", src: "alirezarezvani/claude-skills", risk: "med", flags: [SC, RU, "Huge repo"],
+    why: "Derives requirements from an existing codebase. Has two analysis scripts (a simple search found no network or subprocess calls; not a review). Reads every file, so comments and READMEs are an injection surface." },
+  { task: 6, name: "domain-modeling", src: "mattpocock/skills", risk: "med", flags: [MD, WR, "Reads your repo"],
+    why: "Builds a project glossary of domain terms. Writes a glossary file." },
+
+  { task: 7, name: "code-review", src: "mattpocock/skills", risk: "low", flags: [MD, RU, "Parallel sub-agents"],
+    why: "Two reviews at once: one against standards, one against the spec. Uses more tokens. Reads the code under review." },
+  { task: 7, name: "pr", src: "mattpocock/skills", risk: "med", flags: [MD, WR, RU],
+    why: "Writes the pull request body with evidence and a merge-danger call. Useful for judging risk." },
+  { task: 7, name: "pr-review-expert", src: "alirezarezvani/claude-skills", risk: "med", flags: [RU, "Huge repo"],
+    why: "Looks at blast radius, security and coverage. Pull request text is untrusted input. Scripts not inspected." },
+
+  { task: 8, name: "prototype", src: "mattpocock/skills", risk: "low", flags: [MD, WR],
+    why: "Builds a throwaway HTML mock to answer a design question. Writes a prototype file." },
+
+  { task: 9, name: "research", src: "mattpocock/skills", risk: "med", flags: [MD, RU, WR, "Background agent"],
+    why: "Hands a question to a background agent that reads primary sources and writes findings with citations to a markdown file. Web pages are untrusted input." },
+
+  { task: 10, name: "handoff", src: "mattpocock/skills", risk: "low", flags: [MD, WR],
+    why: "Compacts a conversation into a handoff doc for another agent. Short." },
+  { task: 10, name: "docx, pdf, pptx, xlsx", src: "anthropics/skills", risk: "med", flags: [SC, LI],
+    why: "Official skills for Word, PDF, slides and sheets. From Anthropic, but they bundle Python scripts and are source-available, not open source." }
+];
+
+
+const RISK_ORDER = { low: 0, med: 1, high: 2 };
+const RISK_LABEL = { low: "Low", med: "Medium", high: "Higher" };
+SKILLS.forEach((s, i) => { s.i = i; });
+
+const state = { task: -1, risk: "all", q: "", sort: "task", dir: 1 };
+const $ = (id) => document.getElementById(id);
+
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+
+function chipRow(box, items, onPick) {
+  items.forEach(([value, label], idx) => {
+    const b = el("button", "tag-chip", label);
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(idx === 0));
+    b.addEventListener("click", () => {
+      [...box.children].forEach((c) => c.setAttribute("aria-pressed", String(c === b)));
+      onPick(value);
+      render();
+    });
+    box.appendChild(b);
+  });
+}
+
+const GROUPS = [
+  ["Plan and decide", [0, 4, 5]],
+  ["Write and ticket", [1, 2, 10]],
+  ["Learn about users", [3, 9]],
+  ["Work with code", [6, 7, 8]]
+];
+state.group = -1;
+const openRows = new Set();
+
+function sortKey(s) {
+  if (state.sort === "task") return [s.task, s.i];
+  if (state.sort === "risk") return [RISK_ORDER[s.risk], s.task, s.i];
+  if (state.sort === "src") return [s.src.toLowerCase(), s.task, s.i];
+  return [s.name.toLowerCase(), s.i];
+}
+
+function cmp(a, b) {
+  const ka = sortKey(a), kb = sortKey(b);
+  for (let n = 0; n < ka.length; n++) {
+    if (ka[n] < kb[n]) return -1 * state.dir;
+    if (ka[n] > kb[n]) return 1 * state.dir;
+  }
+  return 0;
+}
+
+function toggleRow(s) {
+  if (openRows.has(s.i)) openRows.delete(s.i); else openRows.add(s.i);
+  render();
+}
+
+function render() {
+  const q = state.q.trim().toLowerCase();
+  const rows = SKILLS.filter((s) =>
+    (state.group === -1 || GROUPS[state.group][1].includes(s.task)) &&
+    (state.risk === "all" || s.risk === state.risk) &&
+    (!q || (s.name + " " + s.src + " " + TASKS[s.task] + " " + s.why + " " + s.flags.join(" ")).toLowerCase().includes(q))
+  ).sort(cmp);
+
+  $("count").textContent = rows.length + " of " + SKILLS.length + " skills. Click a row for details.";
+  document.querySelectorAll("[data-arrow]").forEach((a) => {
+    const on = a.dataset.arrow === state.sort;
+    a.classList.toggle("active", on);
+    a.textContent = on ? (state.dir === 1 ? "↑" : "↓") : "↕";
+  });
+
+  const body = $("skills");
+  body.replaceChildren();
+  if (!rows.length) {
+    const tr = el("tr", "empty-row");
+    const td = el("td", null, "No skill matches. Clear a filter.");
+    td.colSpan = 5;
+    tr.appendChild(td);
+    body.appendChild(tr);
+    return;
+  }
+  rows.forEach((s) => {
+    const isOpen = openRows.has(s.i);
+    const tr = el("tr", "main-row");
+    tr.addEventListener("click", () => toggleRow(s));
+    tr.appendChild(el("td", "name-cell", s.name));
+    tr.appendChild(el("td", "c-task muted", TASKS[s.task]));
+    tr.appendChild(el("td", "c-src muted", s.src));
+    const risk = el("td");
+    risk.appendChild(el("span", "pill p-" + s.risk, RISK_LABEL[s.risk]));
+    tr.appendChild(risk);
+    const tg = el("td");
+    const btn = el("button", "row-toggle", isOpen ? "▾" : "▸");
+    btn.type = "button";
+    btn.setAttribute("aria-expanded", String(isOpen));
+    btn.setAttribute("aria-label", (isOpen ? "Hide" : "Show") + " details for " + s.name);
+    btn.addEventListener("click", (e) => { e.stopPropagation(); toggleRow(s); });
+    tg.appendChild(btn);
+    tr.appendChild(tg);
+    body.appendChild(tr);
+    if (isOpen) {
+      const dr = el("tr", "detail-row");
+      const dt = el("td");
+      dt.colSpan = 5;
+      dt.appendChild(el("p", null, s.why));
+      const wrap = el("div", "flags");
+      s.flags.forEach((f) => wrap.appendChild(el("span", "flag", f)));
+      dt.appendChild(wrap);
+      dr.appendChild(dt);
+      body.appendChild(dr);
+    }
+  });
+}
+
+document.querySelectorAll("[data-sort]").forEach((b) => b.addEventListener("click", () => {
+  const key = b.dataset.sort;
+  if (state.sort === key) state.dir = -state.dir; else { state.sort = key; state.dir = 1; }
+  render();
+}));
+$("q").addEventListener("input", (e) => { state.q = e.target.value; render(); });
+
+chipRow($("taskChips"), [[-1, "All"]].concat(GROUPS.map((g, i) => [i, g[0]])), (v) => { state.group = Number(v); });
+chipRow($("riskChips"), [["all", "Any"], ["low", "Low"], ["med", "Medium"]], (v) => { state.risk = v; });
+render();
+</script>
+</body>
+</html>
