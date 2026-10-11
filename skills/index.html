@@ -152,9 +152,6 @@ details.fold[open] { padding-bottom: 8px; }
   <tbody>
     <tr><td class="name-cell"><code>git-guardrails-claude-code</code> (Pocock)</td><td><span class="pill p-high" tabindex="0" data-tip="Hooks or install-time code, or an unvetted copy of someone else's work.">Higher</span></td><td>Sets up a hook script that runs on commands. It is defensive (blocks risky git commands), but a hook is code that runs automatically.</td><td>Skip unless an engineer reviews the script.</td></tr>
     <tr><td class="name-cell">Installing the whole <code>alirezarezvani/claude-skills</code> plugin</td><td><span class="pill p-high" tabindex="0" data-tip="Hooks or install-time code, or an unvetted copy of someone else's work.">Higher</span></td><td>Huge repo (about 750 Python files). Contains hooks (<code>agent-launcher</code> session start/end, <code>playwright-pro</code>). Also keeps duplicate copies for other agents.</td><td>Copy only the one skill folder you need.</td></tr>
-    <tr><td class="name-cell"><code>rileytrottier23/Riley-PM-Skills</code></td><td><span class="pill p-high" tabindex="0" data-tip="Hooks or install-time code, or an unvetted copy of someone else's work.">Higher</span></td><td>0 stars, created Aug 2026. Bundles other people's collections (Dean Peters, Gene Dai), so it is a copy of copies.</td><td>Use the original sources.</td></tr>
-    <tr><td class="name-cell"><code>RobMitt/grill-me-skill</code></td><td><span class="pill p-med" tabindex="0" data-tip="One or more of: small or single-author source, bundled scripts, reads untrusted text, writes or publishes things, unclear license.">Medium</span></td><td>A standalone copy of Pocock's skill. Single commit day, no license shown.</td><td>Use Pocock's original.</td></tr>
-    <tr><td class="name-cell"><code>Digidai/product-manager-skills</code></td><td><span class="pill p-med" tabindex="0" data-tip="One or more of: small or single-author source, bundled scripts, reads untrusted text, writes or publishes things, unclear license.">Medium</span></td><td>185 stars, single author, last push April 2026, license not detected.</td><td>Try Dean Peters' pack first.</td></tr>
   </tbody>
 </table></div>
 </details>
@@ -167,7 +164,6 @@ details.fold[open] { padding-bottom: 8px; }
     <tr><td class="name-cell"><code>anthropics/skills</code></td><td>180,405</td><td>2025-09-22</td><td>2026-10-09</td><td>Mixed: many Apache 2.0, document skills source-available</td><td>Anthropic</td><td>72 Python files, mostly in the document skills (Word, PDF, slides, sheets).</td></tr>
     <tr><td class="name-cell"><code>alirezarezvani/claude-skills</code></td><td>27,990</td><td>2025-10-19</td><td>2026-08-30</td><td>MIT</td><td>Person</td><td>3,100+ markdown files, 745 Python files, hooks, and duplicate copies for other agents.</td></tr>
     <tr><td class="name-cell"><code>deanpeters/Product-Manager-Skills</code></td><td>7,237</td><td>2026-02-05</td><td>2026-09-01</td><td>GitHub shows none detected; README says CC BY-NC-SA 4.0</td><td>Person</td><td>330 markdown files. Most scripts are build tooling; two sit inside skills (market sizing, user story).</td></tr>
-    <tr><td class="name-cell"><code>aakashg/pm-claude-code-setup</code></td><td>160</td><td>2026-02-27</td><td>2026-03-04</td><td>MIT</td><td>Person</td><td>Markdown only: 6 skills, a <code>CLAUDE.md</code>, 4 templates.</td></tr>
   </tbody>
 </table></div>
 <p class="count" style="margin-top:8px">Star counts are a weak signal; they can be inflated and they say nothing about safety. Age and last push matter more for niche repos.</p>
@@ -217,7 +213,7 @@ const TASKS = [
   "Break work into tickets",
   "Discovery and user research",
   "Prioritize and plan",
-  "Define metrics and launch",
+  "Metrics and competition",
   "Understand a codebase",
   "Review a change or PR",
   "Make an idea tangible",
@@ -229,7 +225,6 @@ const MD = "Markdown only";
 const SC = "Bundled scripts";
 const RU = "Reads untrusted text";
 const WR = "Writes or publishes";
-const NI = "Small or niche source";
 const LI = "License restricted";
 
 const SKILLS = [
@@ -242,9 +237,6 @@ const SKILLS = [
     why: "Turns the current conversation into a spec and publishes it to your project's issue tracker. Check which tracker it is pointed at before the first run." },
   { task: 1, name: "prd-development", src: "deanpeters/Product-Manager-Skills", risk: "med", flags: [MD, LI],
     why: "Long, structured PRD workflow (about 25 KB). No code. Non-commercial share-alike license; ask before redistributing." },
-  { task: 1, name: "prd-writer", src: "aakashg/pm-claude-code-setup", risk: "med", flags: [MD, NI],
-    why: "Asks clarifying questions, then writes a structured PRD. Markdown only and MIT, but one author, 160 stars, last push March 2026." },
-
   { task: 2, name: "to-tickets", src: "mattpocock/skills", risk: "med", flags: [MD, WR],
     why: "Breaks a plan into small tickets with blocking order, published to the configured tracker (or as local files). Check which before the first run." },
   { task: 2, name: "wayfinder", src: "mattpocock/skills", risk: "med", flags: [MD, WR],
@@ -258,8 +250,6 @@ const SKILLS = [
     why: "Maps outcomes, opportunities and solutions so you test assumptions, not just ideas." },
   { task: 3, name: "problem-framing-canvas", src: "deanpeters/Product-Manager-Skills", risk: "med", flags: [MD, LI],
     why: "Frames the problem before you jump to solutions." },
-  { task: 3, name: "user-research", src: "aakashg/pm-claude-code-setup", risk: "med", flags: [MD, NI],
-    why: "Synthesizes research notes into findings ranked by strength of evidence." },
   { task: 3, name: "ux-researcher-designer", src: "alirezarezvani/claude-skills", risk: "med", flags: [SC, "Huge repo"],
     why: "UX research and design help. Includes a persona generator script. Take the single folder, not the plugin." },
   { task: 3, name: "product-manager-toolkit", src: "alirezarezvani/claude-skills", risk: "med", flags: [SC, "Huge repo"],
@@ -269,13 +259,14 @@ const SKILLS = [
     why: "Helps pick a prioritization method and apply it." },
   { task: 4, name: "roadmap-planning", src: "deanpeters/Product-Manager-Skills", risk: "med", flags: [MD, LI],
     why: "Builds a roadmap around outcomes instead of a feature list." },
-  { task: 4, name: "sprint-planner", src: "aakashg/pm-claude-code-setup", risk: "med", flags: [MD, NI],
-    why: "Capacity-checked sprint plan with risk flags." },
-
-  { task: 5, name: "metrics-definer", src: "aakashg/pm-claude-code-setup", risk: "med", flags: [MD, NI],
-    why: "Defines a primary metric, guardrails and anti-metrics for a feature." },
-  { task: 5, name: "launch-checklist / competitive-analysis", src: "aakashg/pm-claude-code-setup", risk: "med", flags: [MD, NI],
-    why: "Risk-scaled launch plan, and a smart / weak / implications competitor view." },
+  { task: 4, name: "agile-product-owner", src: "alirezarezvani/claude-skills", risk: "med", flags: [SC, "Huge repo"],
+    why: "Backlog and sprint help for a product owner. Includes a user-story generator script; read it before it runs. Take the single folder, not the plugin." },
+  { task: 5, name: "product-analytics", src: "alirezarezvani/claude-skills", risk: "med", flags: [SC, "Huge repo"],
+    why: "Defines product KPIs and dashboards, and runs cohort and retention analysis. Includes a metrics calculator script." },
+  { task: 5, name: "competitive-analysis-process", src: "deanpeters/Product-Manager-Skills", risk: "med", flags: [MD, LI],
+    why: "Six-step competitive analysis, from landscape to strategic direction. Markdown only; license as above." },
+  { task: 5, name: "competitive-teardown", src: "alirezarezvani/claude-skills", risk: "med", flags: [SC, RU, "Huge repo"],
+    why: "Studies competitors through pricing pages, app store reviews, job posts and social media, then builds a comparison matrix. Reads web pages, which are untrusted input." },
 
   { task: 6, name: "improve-codebase-architecture", src: "mattpocock/skills", risk: "low", flags: [MD, "Reads your repo", RU],
     why: "Scans a repo for places the design could be simpler and returns a visual report. Good for judging code health as a PM." },
