@@ -4,120 +4,85 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
+<link rel="stylesheet" href="../prototypes/assets/admin-common.css">
 <title>PM skills</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
-
-:root {
-  --bg: #f6f2ea;
-  --bg2: #fffdf7;
-  --bg3: #f1ebdf;
-  --bg4: #e6dece;
-  --border: rgba(52,45,30,0.09);
-  --border2: rgba(52,45,30,0.16);
-  --text: #1f1c16;
-  --muted: #6e6658;
-  --muted2: #a49a87;
-  --primary: #61a300;
-  --on-primary: #fffdf7;
-  --danger: #d00000;
-  --r: 14px;
-  --r-sm: 8px;
-  --font-h: 'Syne', system-ui, sans-serif;
-  --font-b: 'DM Sans', system-ui, sans-serif;
-  --lime: #61a300;   --lime-dim: rgba(97,163,0,0.12);
-  --amber: #b5651d;  --amber-dim: rgba(181,101,29,0.12);
-  --coral: #d00000;  --coral-dim: rgba(208,0,0,0.12);
-}
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); font-family: var(--font-b); font-size: 14px; line-height: 1.5; }
-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.88em; background: var(--bg3); padding: 1px 5px; border-radius: 4px; }
-
-.wrap { max-width: 1100px; margin: 0 auto; padding: 28px 14px 64px; }
-h1 { font-family: var(--font-h); font-size: 1.6rem; font-weight: 800; line-height: 1.2; }
-h2 { font-family: var(--font-h); font-size: 1.05rem; font-weight: 700; margin: 36px 0 10px; }
-.asof { margin-top: 8px; font-size: 12px; color: var(--muted); }
+.container { max-width: 1040px; font-size: 14px; line-height: 1.5; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.88em; background: #f0f0f2; padding: 1px 5px; border-radius: 4px; }
+h2 { font-size: 18px; font-weight: 600; margin: 36px 0 12px; }
 
 /* Callout and plain panels */
-.panel { border: 1px solid var(--border); border-radius: var(--r); background: var(--bg2); padding: 14px 18px; }
-.panel.warn { border-left: 4px solid var(--amber); }
+.panel { border: 1px solid #d2d2d7; border-radius: 12px; background: white; padding: 14px 18px; }
+.panel.warn { border-left: 4px solid #f59e0b; }
 .panel ul, .panel ol { padding-left: 20px; }
 .panel li { margin: 4px 0; }
 
-/* Filter bar, same shape as the admin one */
-.filter-bar { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px 22px; padding: 10px 0 12px; }
-.tag-group { display: flex; gap: 6px; align-items: flex-start; min-width: 0; }
-.tag-group-label { flex: 0 0 auto; font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted2); padding-top: 6px; min-width: 32px; }
-.tag-group-chips { display: flex; gap: 5px; flex-wrap: wrap; min-width: 0; }
-.tag-chip { padding: 4px 11px; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid var(--border2); background: var(--bg3); color: var(--muted); font-family: inherit; transition: all .12s; white-space: nowrap; }
-.tag-chip:hover { color: var(--text); }
-.tag-chip[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: var(--on-primary); }
-.tag-chip:focus-visible, .search-input:focus-visible, .sort-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-.search-input { width: 200px; border: 1px solid var(--border2); border-radius: 20px; padding: 5px 12px; font: inherit; font-size: 12px; background: var(--bg2); color: var(--text); }
-.count { font-size: 12px; color: var(--muted); margin: 2px 0 8px; }
+/* Filters: same chip as the tickets and prototypes pages */
+.filter-bar { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px 24px; margin-bottom: 12px; }
+.tag-group { display: flex; gap: 8px; align-items: flex-start; min-width: 0; }
+.tag-group-label { flex: 0 0 auto; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #6e6e73; padding-top: 7px; }
+.tag-group-chips { display: flex; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.tag-chip { font: inherit; font-size: 13px; padding: 6px 12px; border: 1px solid #d2d2d7; border-radius: 999px; background: white; color: #1d1d1f; cursor: pointer; white-space: nowrap; }
+.tag-chip:hover { border-color: #0066cc; }
+.tag-chip[aria-pressed="true"] { background: #1d1d1f; border-color: #1d1d1f; color: white; }
+.tag-chip:focus-visible, .search-input:focus-visible, .sort-btn:focus-visible, .row-toggle:focus-visible, .pill:focus-visible, details.fold > summary:focus-visible { outline: 2px solid #0066cc; outline-offset: 2px; }
+.search-input { width: 220px; border: 1px solid #d2d2d7; border-radius: 8px; padding: 6px 12px; font: inherit; font-size: 13px; background: white; color: #1d1d1f; }
+.search-input:hover { border-color: #0066cc; }
+.count { font-size: 13px; color: #6e6e73; margin: 0 0 12px; }
 
-/* Tables, same look as the admin list */
-.table-card { border: 1px solid var(--border); border-radius: var(--r); background: var(--bg2); overflow-x: auto; }
-table.data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+/* Tables: same look as the tickets list */
+.table-card { background: white; border: 1px solid #d2d2d7; border-radius: 12px; overflow-x: auto; }
+table.data-table { width: 100%; border-collapse: collapse; }
 table.fixed { table-layout: fixed; }
 table.min { min-width: 760px; }
-.data-table thead th { background: var(--bg2); text-align: left; padding: 10px 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+.data-table thead th { text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #6e6e73; background: #fafafa; padding: 10px 16px; }
 .sort-btn { font: inherit; color: inherit; background: none; border: none; padding: 0; cursor: pointer; text-transform: inherit; letter-spacing: inherit; }
-.sort-btn:hover { color: var(--text); }
-.sort-arrow { margin-left: 4px; font-size: 9px; opacity: .4; }
-.sort-arrow.active { opacity: 1; color: var(--primary); }
-.data-table tbody tr { transition: background .1s; }
-.data-table tbody tr:hover { background: var(--bg3); }
-.data-table tbody td { padding: 9px 12px; vertical-align: top; border-bottom: 1px solid var(--border); color: var(--text); }
-.data-table tbody tr:last-child td { border-bottom: none; }
+.sort-btn:hover { color: #1d1d1f; }
+.sort-arrow { margin-left: 4px; font-size: 9px; opacity: 0.4; }
+.sort-arrow.active { opacity: 1; color: #0066cc; }
+.data-table tbody td { padding: 12px 16px; vertical-align: top; border-top: 1px solid #f0f0f2; border-bottom: none; }
+.data-table tbody tr:hover td { background: #f5f5f7; }
 td.name-cell { font-weight: 600; }
-td.muted { color: var(--muted); }
-.empty-row td { text-align: center; color: var(--muted); padding: 28px 12px; }
+td.muted { color: #6e6e73; }
+.empty-row td { text-align: center; color: #6e6e73; padding: 24px 16px; }
 
-/* Pills */
-.pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
-.p-low { background: var(--lime-dim); color: var(--lime); }
-.p-med { background: var(--amber-dim); color: var(--amber); }
-.p-high { background: var(--coral-dim); color: var(--coral); }
+/* Pills: same filled tag as Type and Epic on the tickets page */
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.p-low { background: #dcfce7; color: #166534; }
+.p-med { background: #ffedd5; color: #9a3412; }
+.p-high { background: #fee2e2; color: #991b1b; }
 .flags { display: flex; flex-wrap: wrap; gap: 4px; }
-.flag { font-size: 10.5px; border: 1px solid var(--border2); border-radius: 6px; padding: 0 6px; color: var(--muted); background: var(--bg3); white-space: nowrap; }
+.flag { font-size: 12px; border: 1px solid #d2d2d7; border-radius: 999px; padding: 0 8px; color: #6e6e73; background: #f5f5f7; white-space: nowrap; }
 
 @media (max-width: 700px) {
   col.c-task, th.c-task, td.c-task, col.c-src, th.c-src, td.c-src { display: none; }
   .search-input { width: 100%; }
 }
-.sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .main-row { cursor: pointer; }
-.row-toggle { font: inherit; color: var(--muted); background: none; border: none; cursor: pointer; font-size: 11px; padding: 0; }
-.row-toggle:hover { color: var(--text); }
-.row-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-.detail-row td { background: var(--bg3); padding: 12px 14px 14px; }
+.row-toggle { font: inherit; color: #6e6e73; background: none; border: none; cursor: pointer; font-size: 11px; padding: 0; }
+.row-toggle:hover { color: #1d1d1f; }
+.data-table tbody .detail-row td, .data-table tbody .detail-row:hover td { background: #fafafa; padding: 12px 16px 14px; }
 .detail-row p { max-width: 80ch; margin-bottom: 8px; }
-details.fold { margin-top: 18px; border-top: 1px solid var(--border2); }
-details.fold > summary { font-family: var(--font-h); font-size: 1.05rem; font-weight: 700; cursor: pointer; padding: 14px 0; list-style: none; }
+details.fold { margin-top: 18px; border-top: 1px solid #d2d2d7; }
+details.fold > summary { font-size: 16px; font-weight: 600; cursor: pointer; padding: 14px 0; list-style: none; }
 details.fold > summary::-webkit-details-marker { display: none; }
-details.fold > summary::before { content: "▸"; display: inline-block; width: 1.2em; color: var(--muted); }
+details.fold > summary::before { content: "▸"; display: inline-block; width: 1.2em; color: #6e6e73; }
 details.fold[open] > summary::before { content: "▾"; }
-details.fold > summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 details.fold[open] { padding-bottom: 8px; }
-.tip { position: fixed; z-index: 50; max-width: 280px; padding: 8px 10px; border-radius: var(--r-sm); background: var(--text); color: var(--on-primary); font-size: 12px; line-height: 1.4; pointer-events: none; opacity: 0; transition: opacity .1s; }
+.tip { position: fixed; z-index: 50; max-width: 280px; padding: 8px 10px; border-radius: 8px; background: #1d1d1f; color: white; font-size: 12px; line-height: 1.4; pointer-events: none; opacity: 0; transition: opacity 0.1s; }
 .tip.show { opacity: 1; }
 .pill[data-tip] { cursor: help; }
-.pill:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-.vet-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 10px; }
-.vet-input { flex: 1 1 280px; width: auto; border-radius: var(--r-sm); }
-.vet-link { font-size: 12px; color: var(--muted); }
-.vet-link:hover { color: var(--text); }
+.vet-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
+.vet-input { flex: 1 1 280px; width: auto; }
+.vet-link { font-size: 13px; color: #0066cc; }
+.vet-link:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="container">
 
-<header>
-  <h1>PM skills</h1>
-</header>
-
-<h2>Read this first: the one risk that applies to everything</h2>
+<h2 style="margin-top: 0;">Read this first: the one risk that applies to everything</h2>
 <div class="panel warn">
   <ul>
     <li><strong>Prompt injection.</strong> Any skill that reads text someone else wrote (a repo, a pull request, an issue, a web page) can be steered by instructions hidden in that text.</li>
