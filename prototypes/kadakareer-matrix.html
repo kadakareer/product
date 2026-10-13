@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KadaKareer — Program Matrix</title>
+<script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #F7F6F3;
+  --surface: #FFFFFF;
+  --surface2:#F2F1EE;
+  --text:    #0b0b0b;
+  --sec:     #52514E;
+  --muted:   #898781;
+  --border:  #E0DED9;
+  --accent:  #185FA5;
+  --radius:  8px;
+
+  --live-bg: #0b0b0b; --live-tc: #FFFFFF;
+  --yes-bg:  #E1F5EE; --yes-tc:  #085041;
+  --opt-bg:  #FAEEDA; --opt-tc:  #633806;
+  --na-bg:   #EDEDEB; --na-tc:   #5F5E5A;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:#141413; --surface:#1e1e1c; --surface2:#252523;
+    --text:#F0EDE8; --sec:#C3C2B7; --muted:#898781; --border:#2e2e2c;
+    --live-bg:#F0EDE8; --live-tc:#0b0b0b;
+    --yes-bg:#04342C; --yes-tc:#9FE1CB;
+    --opt-bg:#412402; --opt-tc:#FAC775;
+    --na-bg:#2c2c2a;  --na-tc:#888780;
+  }
+}
+
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); font-size:14px; line-height:1.5; min-height:100vh; display:flex; flex-direction:column; }
+
+/* ── Footer actions ── */
+.toolbar { display:flex; gap:8px; align-items:center; padding:12px 20px; flex-wrap:wrap; border-top:1px solid var(--border); background:var(--surface); position:sticky; bottom:0; margin-top:auto; z-index:10; }
+.tb-sep { width:1px; height:18px; background:var(--border); flex-shrink:0; }
+button {
+  font-size:12px; font-weight:500; padding:5px 11px; border-radius:var(--radius);
+  border:1px solid var(--border); background:var(--surface); color:var(--text);
+  cursor:pointer; white-space:nowrap; transition:background .1s;
+}
+button:hover { background:var(--surface2); }
+button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+button.primary:hover { opacity:.88; }
+button.danger { color:#a32d2d; }
+button.danger:hover { background:#FCEBEB; border-color:#f09595; }
+
+/* ── Table wrap ── */
+.table-wrap { overflow-x:auto; padding:24px 20px 16px; }
+
+table { border-collapse:collapse; font-size:13px; }
+
+/* ── Header ── */
+thead th {
+  text-align:center;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:0;
+  vertical-align:top;
+}
+thead th:first-child { text-align:left; }
+thead th:last-child { width:52px; }
+
+.th-label {
+  font-size:10px; font-weight:600; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--muted); padding:8px 10px 4px; white-space:nowrap; display:block;
+}
+thead th:first-child .th-label { padding-left:12px; }
+
+.th-controls {
+  display:flex; justify-content:center; gap:2px;
+  padding:0 6px 6px;
+  visibility:hidden;
+  min-height:20px;
+}
+thead th:hover .th-controls { visibility:visible; }
+thead th:first-child .th-controls { justify-content:flex-start; padding-left:12px; }
+
+.ch-btn {
+  font-size:9px; padding:1px 4px; border-radius:3px;
+  border:1px solid var(--border); background:var(--surface);
+  color:var(--muted); cursor:pointer; line-height:1.5;
+}
+.ch-btn:hover { color:var(--text); background:var(--surface2); }
+.ch-btn.del:hover { color:#a32d2d; border-color:#f09595; background:#FCEBEB; }
+
+/* ── Body ── */
+tbody tr { border-bottom:1px solid var(--border); }
+tbody tr:last-child { border-bottom:none; }
+
+tbody td {
+  padding:10px 10px; text-align:center;
+  background:var(--surface); vertical-align:middle;
+}
+tbody td:first-child { text-align:left; padding-left:12px; min-width:150px; }
+tbody td:last-child { text-align:right; padding-right:8px; white-space:nowrap; }
+
+.pname { font-weight:600; font-size:13px; }
+.psub  { font-size:11px; color:var(--muted); margin-top:1px; }
+
+.row-btns { display:inline-flex; gap:3px; visibility:hidden; }
+tbody tr:hover .row-btns { visibility:visible; }
+.row-btn {
+  font-size:10px; padding:2px 6px; border-radius:3px;
+  border:1px solid var(--border); background:var(--surface);
+  color:var(--muted); cursor:pointer;
+}
+.row-btn:hover { color:var(--text); background:var(--surface2); }
+.row-btn.del:hover { color:#a32d2d; border-color:#f09595; background:#FCEBEB; }
+
+/* ── Cell badges ── */
+.badge {
+  display:inline-flex; align-items:center; justify-content:center;
+  cursor:pointer; user-select:none; transition:opacity .1s;
+}
+.badge:hover { opacity:.72; }
+.badge.live {
+  width:22px; height:22px; border-radius:50%;
+  background:var(--live-bg); color:var(--live-tc);
+  font-size:12px; font-weight:700;
+}
+.badge.yes {
+  width:22px; height:22px; border-radius:50%;
+  background:var(--yes-bg); color:var(--yes-tc);
+  font-size:12px; font-weight:700;
+}
+.badge.optional {
+  font-size:10px; font-weight:600; padding:2px 7px; border-radius:4px;
+  background:var(--opt-bg); color:var(--opt-tc);
+}
+.badge.na {
+  font-size:10px; font-weight:600; padding:2px 7px; border-radius:4px;
+  background:var(--na-bg); color:var(--na-tc);
+}
+
+/* ── Legend ── */
+.legend { display:flex; gap:16px; flex-wrap:wrap; padding:12px 20px 32px; font-size:12px; color:var(--sec); }
+.legend-item { display:flex; align-items:center; gap:7px; }
+
+/* ── Note ── */
+.note { font-size:11px; color:var(--muted); padding:0 20px 24px; line-height:1.6; }
+
+/* ── Modals ── */
+.backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:100; align-items:center; justify-content:center; }
+.backdrop.open { display:flex; }
+.modal { background:var(--surface); border-radius:12px; border:1px solid var(--border); padding:22px; width:90%; max-width:380px; }
+.modal h2 { font-size:14px; font-weight:600; margin-bottom:14px; }
+.modal label { display:block; font-size:12px; color:var(--sec); margin:10px 0 4px; }
+.modal input { width:100%; padding:7px 10px; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:13px; font-family:inherit; }
+.modal input:focus { outline:none; border-color:var(--accent); }
+.modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+
+/* ── Toast ── */
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#0b0b0b; color:#fff; font-size:12px; padding:7px 16px; border-radius:20px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:200; }
+.toast.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<div class="table-wrap">
+  <table id="tbl"><thead id="thead"></thead><tbody id="tbody"></tbody></table>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="badge live" style="cursor:default">✓</span> Live in app</div>
+  <div class="legend-item"><span class="badge yes" style="cursor:default">✓</span> Applicable — not yet built</div>
+  <div class="legend-item"><span class="badge optional" style="cursor:default">optional</span> Conditional / organiser's choice</div>
+  <div class="legend-item"><span class="badge na" style="cursor:default">n/a</span> Not applicable</div>
+</div>
+
+<p class="note">Feedback sits between Submissions and Judging — the only module that creates a loop, enabling resubmission before completion.</p>
+
+<div class="toolbar">
+  <button onclick="openAddRow()">+ Row</button>
+  <button onclick="openAddCol()">+ Column</button>
+  <div class="tb-sep"></div>
+  <button onclick="exportData()">Export JSON</button>
+  <button onclick="document.getElementById('imp').click()">Import JSON</button>
+  <input type="file" id="imp" accept=".json" style="display:none" onchange="importData(event)">
+  <div class="tb-sep"></div>
+  <button class="danger" onclick="confirmReset()">Reset</button>
+</div>
+
+<!-- Add Row -->
+<div class="backdrop" id="m-addrow">
+  <div class="modal">
+    <h2>Add row</h2>
+    <label>Program name</label><input id="ar-name" placeholder="e.g. Mentorship">
+    <label>Description</label><input id="ar-desc" placeholder="e.g. 6 wks · 1-on-1">
+    <div class="modal-actions">
+      <button onclick="closeModal('m-addrow')">Cancel</button>
+      <button class="primary" onclick="addRow()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Col -->
+<div class="backdrop" id="m-addcol">
+  <div class="modal">
+    <h2>Add column</h2>
+    <label>Module name</label><input id="ac-name" placeholder="e.g. Mentorship">
+    <div class="modal-actions">
+      <button onclick="closeModal('m-addcol')">Cancel</button>
+      <button class="primary" onclick="addCol()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Row -->
+<div class="backdrop" id="m-editrow">
+  <div class="modal">
+    <h2>Edit row</h2>
+    <label>Program name</label><input id="er-name">
+    <label>Description</label><input id="er-desc">
+    <div class="modal-actions">
+      <button onclick="closeModal('m-editrow')">Cancel</button>
+      <button class="primary" onclick="saveEditRow()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rename Col -->
+<div class="backdrop" id="m-renamecol">
+  <div class="modal">
+    <h2>Rename column</h2>
+    <label>Module name</label><input id="rc-name">
+    <div class="modal-actions">
+      <button onclick="closeModal('m-renamecol')">Cancel</button>
+      <button class="primary" onclick="saveRenameCol()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const db = new Dexie('kk_matrix4');
+db.version(1).stores({ rows:'++id', cols:'++id' });
+
+const CYCLE = ['live','yes','optional','na'];
+
+const DEFAULT_COLS = ['Registration','Teams','Submissions','Feedback','Judging','Progress tracking','Certificates'];
+const DEFAULT_ROWS = [
+  { name:'VirApp',     desc:'~5 wks · extended hackathon',      order:0,
+    cells:{ Registration:'live', Teams:'live', Submissions:'live', Feedback:'yes', Judging:'yes', 'Progress tracking':'yes', Certificates:'yes' } },
+  { name:'Hackada',    desc:'~2 days · competitive sprint',     order:1,
+    cells:{ Registration:'yes', Teams:'yes', Submissions:'yes', Feedback:'optional', Judging:'yes', 'Progress tracking':'na', Certificates:'yes' } },
+  { name:'Workshops',  desc:'1 day or series · skill sessions', order:2,
+    cells:{ Registration:'yes', Teams:'na', Submissions:'optional', Feedback:'na', Judging:'na', 'Progress tracking':'optional', Certificates:'yes' } },
+  { name:'KadaKamp',   desc:'5 wks · cohort + capstone',        order:3,
+    cells:{ Registration:'yes', Teams:'yes', Submissions:'yes', Feedback:'yes', Judging:'na', 'Progress tracking':'yes', Certificates:'yes' } },
+  { name:'Hub events', desc:'varies · province-organised',      order:4,
+    cells:{ Registration:'yes', Teams:'na', Submissions:'na', Feedback:'na', Judging:'na', 'Progress tracking':'optional', Certificates:'na' } },
+];
+
+let rows = [], cols = [];
+let editRowId = null, editColId = null;
+
+async function init() {
+  if (await db.rows.count() === 0) await seed();
+  await load(); render();
+}
+
+async function seed() {
+  const ids = await db.cols.bulkAdd(DEFAULT_COLS.map((name,i) => ({name, order:i})), {allKeys:true});
+  const nameToId = {};
+  DEFAULT_COLS.forEach((n,i) => nameToId[n] = ids[i]);
+  for (const r of DEFAULT_ROWS) {
+    const cells = {};
+    for (const [k,v] of Object.entries(r.cells)) cells[nameToId[k]] = v;
+    await db.rows.add({name:r.name, desc:r.desc, cells, order:r.order});
+  }
+}
+
+async function load() {
+  cols = (await db.cols.toArray()).sort((a,b)=>a.order-b.order);
+  rows = (await db.rows.toArray()).sort((a,b)=>a.order-b.order);
+}
+
+function render() { renderHead(); renderBody(); }
+
+function renderHead() {
+  const tr = document.createElement('tr');
+
+  const th0 = document.createElement('th');
+  th0.innerHTML = `<span class="th-label">Program</span><div class="th-controls"></div>`;
+  tr.appendChild(th0);
+
+  cols.forEach(col => {
+    const th = document.createElement('th');
+    th.innerHTML = `
+      <span class="th-label">${esc(col.name)}</span>
+      <div class="th-controls">
+        <button class="ch-btn" onclick="openRenameCol(${col.id})" title="Rename">✎</button>
+        <button class="ch-btn" onclick="moveCol(${col.id},-1)" title="Left">←</button>
+        <button class="ch-btn" onclick="moveCol(${col.id},1)" title="Right">→</button>
+        <button class="ch-btn del" onclick="deleteCol(${col.id})" title="Delete">✕</button>
+      </div>`;
+    tr.appendChild(th);
+  });
+
+  const thA = document.createElement('th');
+  thA.innerHTML = `<span class="th-label"></span><div class="th-controls"></div>`;
+  tr.appendChild(thA);
+
+  document.getElementById('thead').innerHTML = '';
+  document.getElementById('thead').appendChild(tr);
+}
+
+function renderBody() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+
+    const td0 = document.createElement('td');
+    td0.innerHTML = `<div class="pname">${esc(row.name)}</div><div class="psub">${esc(row.desc||'')}</div>`;
+    tr.appendChild(td0);
+
+    cols.forEach(col => {
+      const td = document.createElement('td');
+      const val = row.cells?.[col.id] || 'na';
+      td.innerHTML = badgeHtml(val, row.id, col.id);
+      tr.appendChild(td);
+    });
+
+    const tdA = document.createElement('td');
+    tdA.innerHTML = `
+      <span class="row-btns">
+        <button class="row-btn" onclick="openEditRow(${row.id})">Edit</button>
+        <button class="row-btn" onclick="moveRow(${row.id},-1)">↑</button>
+        <button class="row-btn" onclick="moveRow(${row.id},1)">↓</button>
+        <button class="row-btn del" onclick="deleteRow(${row.id})">✕</button>
+      </span>`;
+    tr.appendChild(tdA);
+
+    tbody.appendChild(tr);
+  });
+}
+
+function badgeHtml(val, rowId, colId) {
+  const labels = { live:'✓', yes:'✓', optional:'optional', na:'n/a' };
+  return `<span class="badge ${val}" onclick="cycleCell(${rowId},${colId})" title="Click to cycle">${labels[val]||val}</span>`;
+}
+
+async function cycleCell(rowId, colId) {
+  const row = rows.find(r=>r.id===rowId); if (!row) return;
+  const cur = row.cells?.[colId] || 'na';
+  const next = CYCLE[(CYCLE.indexOf(cur)+1) % CYCLE.length];
+  row.cells = {...row.cells, [colId]:next};
+  await db.rows.update(rowId, {cells:row.cells});
+  render();
+}
+
+function openAddRow() {
+  document.getElementById('ar-name').value = '';
+  document.getElementById('ar-desc').value = '';
+  openModal('m-addrow');
+  setTimeout(()=>document.getElementById('ar-name').focus(),50);
+}
+function openAddCol() {
+  document.getElementById('ac-name').value = '';
+  openModal('m-addcol');
+  setTimeout(()=>document.getElementById('ac-name').focus(),50);
+}
+
+async function addRow() {
+  const name = document.getElementById('ar-name').value.trim(); if (!name) return;
+  const desc = document.getElementById('ar-desc').value.trim();
+  const cells = {}; cols.forEach(c => cells[c.id]='na');
+  const maxOrd = rows.length ? Math.max(...rows.map(r=>r.order)) : -1;
+  await db.rows.add({name, desc, cells, order:maxOrd+1});
+  closeModal('m-addrow'); await load(); render(); toast('Row added');
+}
+
+async function addCol() {
+  const name = document.getElementById('ac-name').value.trim(); if (!name) return;
+  const maxOrd = cols.length ? Math.max(...cols.map(c=>c.order)) : -1;
+  const id = await db.cols.add({name, order:maxOrd+1});
+  for (const row of rows) {
+    row.cells = {...row.cells, [id]:'na'};
+    await db.rows.update(row.id, {cells:row.cells});
+  }
+  closeModal('m-addcol'); await load(); render(); toast('Column added');
+}
+
+function openEditRow(id) {
+  const row = rows.find(r=>r.id===id); if (!row) return;
+  editRowId = id;
+  document.getElementById('er-name').value = row.name;
+  document.getElementById('er-desc').value = row.desc||'';
+  openModal('m-editrow');
+  setTimeout(()=>document.getElementById('er-name').focus(),50);
+}
+async function saveEditRow() {
+  const name = document.getElementById('er-name').value.trim(); if (!name) return;
+  const desc = document.getElementById('er-desc').value.trim();
+  await db.rows.update(editRowId, {name, desc});
+  closeModal('m-editrow'); await load(); render(); toast('Row updated');
+}
+
+function openRenameCol(id) {
+  const col = cols.find(c=>c.id===id); if (!col) return;
+  editColId = id;
+  document.getElementById('rc-name').value = col.name;
+  openModal('m-renamecol');
+  setTimeout(()=>document.getElementById('rc-name').focus(),50);
+}
+async function saveRenameCol() {
+  const name = document.getElementById('rc-name').value.trim(); if (!name) return;
+  await db.cols.update(editColId, {name});
+  closeModal('m-renamecol'); await load(); render(); toast('Column renamed');
+}
+
+async function moveRow(id, dir) {
+  const idx = rows.findIndex(r=>r.id===id);
+  const si = idx+dir; if (si<0||si>=rows.length) return;
+  await db.rows.update(rows[idx].id, {order:rows[si].order});
+  await db.rows.update(rows[si].id, {order:rows[idx].order});
+  await load(); render();
+}
+async function moveCol(id, dir) {
+  const idx = cols.findIndex(c=>c.id===id);
+  const si = idx+dir; if (si<0||si>=cols.length) return;
+  await db.cols.update(cols[idx].id, {order:cols[si].order});
+  await db.cols.update(cols[si].id, {order:cols[idx].order});
+  await load(); render();
+}
+
+async function deleteRow(id) {
+  if (!confirm('Delete this row?')) return;
+  await db.rows.delete(id); await load(); render(); toast('Row deleted');
+}
+async function deleteCol(id) {
+  if (!confirm('Delete this column?')) return;
+  await db.cols.delete(id);
+  for (const row of rows) {
+    const cells = {...row.cells}; delete cells[id];
+    await db.rows.update(row.id, {cells});
+  }
+  await load(); render(); toast('Column deleted');
+}
+
+async function exportData() {
+  await load();
+  const data = {
+    cols: cols.map(c=>({id:c.id,name:c.name,order:c.order})),
+    rows: rows.map(r=>({id:r.id,name:r.name,desc:r.desc,cells:r.cells,order:r.order}))
+  };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  a.download = 'kadakareer-matrix.json'; a.click();
+  toast('Exported');
+}
+async function importData(e) {
+  const file = e.target.files[0]; if (!file) return;
+  let data; try { data = JSON.parse(await file.text()); } catch { alert('Invalid JSON'); return; }
+  if (!data.cols||!data.rows) { alert('Unrecognised format'); return; }
+  if (!confirm('Replace all data?')) return;
+  await db.cols.clear(); await db.rows.clear();
+  await db.cols.bulkAdd(data.cols); await db.rows.bulkAdd(data.rows);
+  await load(); render(); toast('Imported'); e.target.value='';
+}
+async function confirmReset() {
+  if (!confirm('Reset to defaults?')) return;
+  await db.cols.clear(); await db.rows.clear();
+  await seed(); await load(); render(); toast('Reset');
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.backdrop').forEach(el =>
+  el.addEventListener('click', e => { if (e.target===el) el.classList.remove('open'); })
+);
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') document.querySelectorAll('.backdrop.open').forEach(el=>el.classList.remove('open'));
+  if (e.key==='Enter') {
+    if (document.getElementById('m-addrow').classList.contains('open')) addRow();
+    else if (document.getElementById('m-addcol').classList.contains('open')) addCol();
+    else if (document.getElementById('m-editrow').classList.contains('open')) saveEditRow();
+    else if (document.getElementById('m-renamecol').classList.contains('open')) saveRenameCol();
+  }
+});
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 1800);
+}
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+init();
+</script>
+<script src="../assets/site-nav.js" data-label="Program Matrix"></script>
+</body>
+</html>
