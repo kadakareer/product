@@ -7,12 +7,12 @@
     <title>Home Page</title>
     <style>
         .container {
-            max-width: 1100px;
+            max-width: 1300px;
         }
 
         .tiles {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 24px;
         }
 
@@ -38,6 +38,11 @@
         .tile-skills {
             --accent: #16a34a;
             --tint: #dcfce7;
+        }
+
+        .tile-emails {
+            --accent: #7c3aed;
+            --tint: #ede9fe;
         }
 
         .tile:hover {
@@ -88,6 +93,13 @@
         .tile-prototypes:hover .move { transform: translate(-10px, -8px) rotate(-6deg); }
         .tile-tickets:hover .move { transform: translate(4px, -6px) rotate(4deg); }
         .tile-skills:hover .move { transform: translate(6px, -6px) rotate(5deg); }
+        .tile-emails:hover .move { transform: translate(6px, -8px) rotate(6deg); }
+
+        @media (max-width: 1000px) {
+            .tiles {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
 
         @media (max-width: 760px) {
             .tiles {
@@ -104,7 +116,8 @@
             .tile:hover,
             .tile-prototypes:hover .move,
             .tile-tickets:hover .move,
-            .tile-skills:hover .move {
+            .tile-skills:hover .move,
+            .tile-emails:hover .move {
                 transform: none;
             }
         }
@@ -115,7 +128,7 @@
     <div class="container">
         <div class="page-header-content" style="margin-bottom: 32px;">
             <h1 class="page-title">Product</h1>
-            <p class="page-subtitle">Prototypes, tickets and PM skills</p>
+            <p class="page-subtitle">Prototypes, tickets, PM skills and emails</p>
         </div>
 
         <div class="tiles">
@@ -195,6 +208,24 @@
                 </svg>
                 <h2>PM skills</h2>
                 <p>Skills to try for a task, with what to watch for.</p>
+            </a>
+
+            <a class="tile tile-emails" href="emails/index.html">
+                <!-- A sketched envelope with a loose check badge. -->
+                <svg class="art" viewBox="0 0 240 160" aria-hidden="true" focusable="false">
+                    <path class="fill" d="M22 46 C80 44 160 47 220 45 L221 138 C150 141 80 139 23 140 Z"/>
+                    <path class="solid" d="M20 34 C80 32 160 35 220 33 C222 70 221 105 220 132 C160 135 80 133 21 134 C19 100 21 65 20 34 Z"/>
+                    <path d="M19 33 C80 31 160 34 221 33 C223 70 222 105 221 133 C160 136 80 134 20 135 C18 100 20 65 19 33 Z"/>
+                    <path d="M20 34 C60 62 90 84 120 86 C150 84 180 62 220 34"/>
+                    <path class="thin" d="M21 133 C55 105 75 92 96 80 M220 132 C185 105 165 92 144 80"/>
+                    <path class="thin" d="M40 116 L70 116 M40 124 L60 124"/>
+                    <g class="move">
+                        <path class="solid" d="M176 100 C184 96 200 97 208 102 C210 112 207 122 199 126 C189 127 180 124 175 116 C173 110 174 104 176 100 Z"/>
+                        <path class="accent" d="M184 112 L192 119 L202 105"/>
+                    </g>
+                </svg>
+                <h2>Emails</h2>
+                <p>Current emails as users receive them.</p>
             </a>
         </div>
     </div>

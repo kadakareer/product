@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../prototypes/assets/admin-common.css">
+    <title>Email Templates</title>
+    <style>
+        .container { max-width: 1400px; }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr);
+            gap: 16px;
+            align-items: start;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* Template list */
+        .list { max-height: calc(100vh - 160px); overflow-y: auto; }
+        /* Groups are shaded bands with the items indented beneath, so they read as separate sections. */
+        .group-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #3a3a3c;
+            background: #f0f0f2;
+            border-top: 1px solid #d2d2d7;
+            border-bottom: 1px solid #e5e5ea;
+            padding: 8px 16px;
+        }
+        .group-label:first-child { border-top: 0; }
+        .group-label .n { font-weight: 400; color: #6e6e73; }
+        .list { padding-bottom: 8px; }
+        .item {
+            display: block;
+            width: 100%;
+            text-align: left;
+            font: inherit;
+            font-size: 14px;
+            padding: 8px 16px 8px 28px;
+            background: none;
+            border: 0;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            color: #1d1d1f;
+        }
+        .item:hover { background: #f5f5f7; }
+        .item[aria-current="true"] { background: #f0f6ff; border-left-color: #0066cc; font-weight: 600; }
+
+        /* Preview */
+        .bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            border-bottom: 1px solid #f0f0f2;
+            flex-wrap: wrap;
+        }
+        .subject { font-size: 14px; min-width: 0; }
+        .subject .k { color: #6e6e73; margin-right: 6px; }
+        .toggle { display: flex; gap: 6px; }
+        .chip {
+            font: inherit;
+            font-size: 13px;
+            padding: 5px 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 999px;
+            background: white;
+            color: #1d1d1f;
+            cursor: pointer;
+        }
+        .chip:hover { border-color: #0066cc; }
+        .chip[aria-pressed="true"] { background: #1d1d1f; border-color: #1d1d1f; color: white; }
+        .note {
+            font-size: 13px;
+            color: #6e6e73;
+            background: #fafafa;
+            padding: 8px 16px;
+            border-bottom: 1px solid #f0f0f2;
+        }
+        .stage { background: #e9e9ed; padding: 16px; display: flex; justify-content: center; }
+        iframe {
+            width: 100%;
+            height: calc(100vh - 260px);
+            min-height: 480px;
+            border: 0;
+            background: white;
+            transition: width 0.15s;
+        }
+        .stage.mobile iframe { width: 390px; max-width: 100%; }
+
+        /* Sample values */
+        .values-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f2;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .reset {
+            font: inherit;
+            font-size: 13px;
+            font-weight: 400;
+            color: #0066cc;
+            background: none;
+            border: 0;
+            cursor: pointer;
+        }
+        .reset:disabled { color: #9c9a94; cursor: default; }
+        .tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .values { border-bottom: 1px solid #f0f0f2; background: #fafafa; }
+        .fields { padding: 12px 16px; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+        .field label { display: block; font-size: 12px; color: #6e6e73; margin-bottom: 4px; font-family: ui-monospace, Menlo, monospace; }
+        .field input, .field textarea {
+            width: 100%;
+            font: inherit;
+            font-size: 13px;
+            padding: 6px 8px;
+            border: 1px solid #d2d2d7;
+            border-radius: 6px;
+        }
+        .field textarea { resize: vertical; min-height: 60px; }
+        .field input:focus, .field textarea:focus { outline: 2px solid #0066cc33; border-color: #0066cc; }
+        .field.edited input, .field.edited textarea { background: #fffbe6; border-color: #e0c200; }
+        .hint { font-size: 12px; color: #6e6e73; padding: 0 16px 14px; }
+        .empty { color: #6e6e73; font-size: 13px; padding: 12px 16px; }
+
+        @media (max-width: 1000px) {
+            .layout { grid-template-columns: 1fr; }
+            .list { max-height: 240px; }
+            iframe { height: 520px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="layout">
+        <nav class="card list" id="list" aria-label="Email templates"></nav>
+
+        <div class="card">
+            <div class="bar">
+                <div class="subject"><span class="k">Subject</span><span id="subject"></span></div>
+                <div class="tools">
+                    <button type="button" class="chip" id="values-toggle" aria-expanded="false" aria-controls="values"></button>
+                    <div class="toggle" role="group" aria-label="Preview width">
+                        <button type="button" class="chip" data-mode="desktop" aria-pressed="true">Desktop</button>
+                        <button type="button" class="chip" data-mode="mobile" aria-pressed="false">Mobile</button>
+                    </div>
+                </div>
+            </div>
+            <div class="values" id="values" hidden>
+                <div class="values-head">
+                    <span>Sample values</span>
+                    <button type="button" class="reset" id="reset">Reset all</button>
+                </div>
+                <div class="fields" id="fields"></div>
+                <p class="hint">Edits only change this preview and are lost on reload. Values are shared across templates.</p>
+                <p class="hint" id="synced"></p>
+            </div>
+            <div class="note" id="note" hidden></div>
+            <div class="stage" id="stage">
+                <iframe id="frame" title="Email preview" sandbox=""></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="email-templates-data.js"></script>
+<script>
+(function () {
+    var templates = window.EMAIL_TEMPLATES;
+
+    // Defaults for every placeholder used by the templates. Add a line when a template gains a new one.
+    var DEFAULTS = {
+        kadetName: 'Juan',
+        inviteeName: 'Maria',
+        inviterName: 'Juan',
+        applicantName: 'Juan Dela Cruz',
+        usernameSender: 'Juan',
+        usernameReceiver: 'Maria',
+        email: 'applicant@example.com',
+        virappChallengeName: 'Virtual Apprenticeship Program: Marketing',
+        challengeName: 'Marketing Virtual Apprenticeship',
+        challengeCompanyName: 'Acme Corp',
+        challengeStartDate: 'November 17, 2026',
+        challengeEndDate: 'December 15, 2026',
+        challengeDeadlineDate: 'November 14, 2026',
+        challengeLink: 'https://example.com/challenge/123',
+        signupLink: 'https://example.com/signup',
+        signupInviteLink: 'https://example.com/signup?invite=abc',
+        link: 'https://example.com/reset-password?token=abc',
+        title: 'Resume Workshop',
+        startTime: 'Saturday, November 21, 2026, 2:00 PM',
+        description: 'Learn how to write a resume that gets noticed.',
+        webinarLink: 'https://example.com/webinar/123456789'
+    };
+    var LONG = { description: true };
+
+    // Session-only edits. Never written to storage.
+    var values = Object.assign({}, DEFAULTS);
+    var current = templates[0];
+    var mode = 'desktop';
+
+    var $ = function (id) { return document.getElementById(id); };
+
+    function esc(s) {
+        return String(s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    // Mirrors the backend: {{ x }} is HTML-escaped, {{ x|safe }} is not.
+    function render(html) {
+        return html.replace(/\{\{\s*(\w+)(\s*\|\s*safe)?\s*\}\}/g, function (m, name, safe) {
+            var v = name in values ? values[name] : '';
+            return safe ? v : esc(v);
+        });
+    }
+
+    function renderSubject(s) {
+        return s.replace(/\{\{\s*(\w+)\s*\}\}/g, function (m, name) { return values[name] || ''; });
+    }
+
+    function buildList() {
+        var list = $('list');
+        var lastGroup = null;
+        templates.forEach(function (t) {
+            if (t.group !== lastGroup) {
+                var g = document.createElement('div');
+                g.className = 'group-label';
+                var name = document.createElement('span');
+                name.textContent = t.group;
+                var n = document.createElement('span');
+                n.className = 'n';
+                n.textContent = templates.filter(function (x) { return x.group === t.group; }).length;
+                g.appendChild(name);
+                g.appendChild(n);
+                list.appendChild(g);
+                lastGroup = t.group;
+            }
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'item';
+            b.dataset.id = t.id;
+            b.textContent = t.name;
+            b.addEventListener('click', function () { select(t); });
+            list.appendChild(b);
+        });
+    }
+
+    function buildFields() {
+        var box = $('fields');
+        box.textContent = '';
+        if (!current.vars.length) {
+            var p = document.createElement('p');
+            p.className = 'empty';
+            p.textContent = 'This template has no placeholders.';
+            box.appendChild(p);
+            return;
+        }
+        current.vars.forEach(function (name) {
+            var wrap = document.createElement('div');
+            wrap.className = 'field';
+            wrap.dataset.name = name;
+            var label = document.createElement('label');
+            label.textContent = name;
+            label.htmlFor = 'f-' + name;
+            var input = document.createElement(LONG[name] ? 'textarea' : 'input');
+            input.id = 'f-' + name;
+            input.value = values[name] || '';
+            input.addEventListener('input', function () {
+                values[name] = input.value;
+                markEdited();
+                draw();
+            });
+            wrap.appendChild(label);
+            wrap.appendChild(input);
+            box.appendChild(wrap);
+        });
+        markEdited();
+    }
+
+    function markEdited() {
+        Array.prototype.forEach.call($('fields').querySelectorAll('.field'), function (f) {
+            f.classList.toggle('edited', values[f.dataset.name] !== DEFAULTS[f.dataset.name]);
+        });
+        $('reset').disabled = Object.keys(DEFAULTS).every(function (k) { return values[k] === DEFAULTS[k]; });
+        updateToggle();
+    }
+
+    // Panel is collapsed by default; the button shows how many values this template has and whether any are edited.
+    var panelOpen = false;
+    function updateToggle() {
+        var edited = current.vars.some(function (k) { return values[k] !== DEFAULTS[k]; });
+        var btn = $('values-toggle');
+        btn.textContent = 'Sample values (' + current.vars.length + ')' + (edited ? ' · edited' : '');
+        btn.setAttribute('aria-expanded', String(panelOpen));
+        $('values').hidden = !panelOpen;
+    }
+
+    $('values-toggle').addEventListener('click', function () {
+        panelOpen = !panelOpen;
+        updateToggle();
+    });
+
+    function draw() {
+        $('frame').srcdoc = render(current.html);
+        $('subject').textContent = renderSubject(current.subject);
+        var note = $('note');
+        note.hidden = !current.note;
+        note.textContent = current.note;
+    }
+
+    function select(t) {
+        current = t;
+        Array.prototype.forEach.call(document.querySelectorAll('.item'), function (b) {
+            b.setAttribute('aria-current', String(b.dataset.id === t.id));
+        });
+        buildFields();
+        updateToggle();
+        draw();
+        try { history.replaceState(null, '', '#' + t.id); } catch (e) {}
+    }
+
+    document.querySelectorAll('.toggle .chip').forEach(function (b) {
+        b.addEventListener('click', function () {
+            mode = b.dataset.mode;
+            $('stage').classList.toggle('mobile', mode === 'mobile');
+            document.querySelectorAll('.toggle .chip').forEach(function (x) {
+                x.setAttribute('aria-pressed', String(x.dataset.mode === mode));
+            });
+        });
+    });
+
+    $('reset').addEventListener('click', function () {
+        values = Object.assign({}, DEFAULTS);
+        buildFields();
+        draw();
+    });
+
+    $('synced').textContent = 'Templates copied from the monorepo on ' + window.EMAIL_TEMPLATES_SYNCED + '.';
+    buildList();
+    var fromHash = templates.filter(function (t) { return '#' + t.id === location.hash; })[0];
+    select(fromHash || templates[0]);
+})();
+</script>
+<script src="../assets/site-nav.js" data-label="Email Templates"></script>
+</body>
+</html>
