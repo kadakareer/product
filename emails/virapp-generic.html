@@ -54,17 +54,6 @@
         .hint { font-size: 12px; color: #6e6e73; text-align: center; margin-top: 10px; }
         kbd { font: inherit; font-size: 11px; border: 1px solid #d2d2d7; border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: #fafafa; }
 
-        .note {
-            font-size: 13px;
-            color: #4a3b00;
-            background: #fff8db;
-            border: 1px solid #ecd98a;
-            border-radius: 12px;
-            padding: 8px 16px;
-            margin-bottom: 12px;
-        }
-        .note p + p { margin-top: 4px; }
-
         /* Split view */
         .split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
         .pane-head { padding: 10px 16px; border-bottom: 1px solid #f0f0f2; min-height: 62px; }
@@ -111,8 +100,6 @@
             <button type="button" class="pill" id="hl" aria-pressed="true">Highlight differences</button>
         </div>
     </div>
-
-    <div class="note" id="note" hidden></div>
 
     <div class="split" id="split">
         <section class="card">
@@ -207,8 +194,7 @@
                 INQUIRY
             ],
             subject: [[P('for the Virtual Apprenticeship Program'), 'for the {{programName}}']],
-            groupWord: true,
-            note: 'The "How it works" dates paragraph is commented out in the original, so the generic leaves it out too. Coaching, Discord and handbook links are still VirApp\'s and need a per-program decision.'
+            groupWord: true
         },
         'virapp-enrollment': {
             body: [
@@ -225,26 +211,22 @@
                 INQUIRY
             ],
             subject: [[P('with the Virtual Apprenticeship Program'), 'with the {{programName}}']],
-            groupWord: true,
-            note: 'Same structure as Registration; the two emails share most of their body. Coaching, Discord and handbook links are still VirApp\'s and need a per-program decision.'
+            groupWord: true
         },
         'virapp-rejected': {
             body: [
                 [P('regarding your Virtual Apprenticeship Application.'), 'regarding your {{programName}} Application.'],
                 INQUIRY
             ],
-            subject: [[P('Your Virtual Apprenticeship Application'), 'Your {{programName}} Application']],
-            note: 'Overlaps with "Application rejected". Both exist in the backend; consider keeping one.'
+            subject: [[P('Your Virtual Apprenticeship Application'), 'Your {{programName}} Application']]
         },
         'virapp-application-accepted': {
             body: [[P('• insert steps'), '• {{ nextSteps }}']],
-            subject: [[P('Your Virtual Apprenticeship Application'), 'Your {{programName}} Application']],
-            note: 'The original ships the literal text "insert steps". Already program-agnostic apart from the placeholder name.'
+            subject: [[P('Your Virtual Apprenticeship Application'), 'Your {{programName}} Application']]
         },
         'virapp-application-rejected': {
             body: [],
-            subject: [[P('Your Virtual Apprenticeship Application'), 'Your {{programName}} Application']],
-            note: 'Overlaps with "Rejection". Already program-agnostic apart from the placeholder name.'
+            subject: [[P('Your Virtual Apprenticeship Application'), 'Your {{programName}} Application']]
         },
         'virapp-invitation': {
             body: [
@@ -256,8 +238,7 @@
                 INQUIRY
             ],
             subject: [[P('Join a Virtual Apprenticeship Group Now!'), 'Join a {{programShortName}} {{groupNoun}} Now!']],
-            groupWord: true,
-            needsTeams: true
+            groupWord: true
         },
         'virapp-acceptance': {
             body: [
@@ -267,8 +248,7 @@
                 INQUIRY
             ],
             subject: [[P('Your Virtual Apprenticeship group is growing'), 'Your {{programShortName}} {{groupNoun}} is growing']],
-            groupWord: true,
-            needsTeams: true
+            groupWord: true
         },
         'virapp-decline': {
             body: [
@@ -279,8 +259,7 @@
                 INQUIRY
             ],
             subject: [[P('Your Virtual Apprenticeship Group Invitation'), 'Your {{programShortName}} {{groupNoun}} Invitation']],
-            groupWord: true,
-            needsTeams: true
+            groupWord: true
         }
     };
     // The original's placeholder names, renamed to program-neutral ones.
@@ -479,13 +458,6 @@
         $('split').classList.toggle('off', !highlight);
         $('brand-tag').textContent = brand.label;
 
-        var notes = [];
-        var rule = RULES[current.id] || {};
-        if (rule.note) notes.push(rule.note);
-        if (rule.needsTeams && !brand.teams) notes.push(brand.label + ' has no teams in the Program Matrix, so this email would not be sent for it.');
-        var note = $('note');
-        note.hidden = !notes.length;
-        note.innerHTML = notes.map(function (n) { return '<p>' + esc(n) + '</p>'; }).join('');
     }
 
     function mark() {
