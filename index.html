@@ -30,6 +30,30 @@
             transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
+        .tile[hidden] { display: none; }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 24px;
+        }
+
+        .tab {
+            font: inherit;
+            font-size: 13px;
+            padding: 6px 16px;
+            border: 1px solid #d2d2d7;
+            border-radius: 999px;
+            background: white;
+            color: #1d1d1f;
+            cursor: pointer;
+        }
+
+        .tab:hover { border-color: #0066cc; }
+        .tab[aria-pressed="true"] { background: #1d1d1f; border-color: #1d1d1f; color: white; }
+        .tab:focus-visible { outline: 2px solid #0066cc; outline-offset: 2px; }
+
         .tile-tickets {
             --accent: #ea580c;
             --tint: #ffedd5;
@@ -128,11 +152,16 @@
     <div class="container">
         <div class="page-header-content" style="margin-bottom: 32px;">
             <h1 class="page-title">Product</h1>
-            <p class="page-subtitle">Prototypes, tickets, PM skills and emails</p>
+            <p class="page-subtitle">Prototypes, tickets and emails</p>
+        </div>
+
+        <div class="tabs" role="group" aria-label="Sections">
+            <button type="button" class="tab" data-tab="main" aria-pressed="true">Workspace</button>
+            <button type="button" class="tab" data-tab="tools" aria-pressed="false">PM tools</button>
         </div>
 
         <div class="tiles">
-            <a class="tile tile-prototypes" href="prototypes/index.html">
+            <a class="tile tile-prototypes" data-tab="main" href="prototypes/index.html">
                 <!-- A sketched app window: sidebar, cards, and a cursor. -->
                 <svg class="art" viewBox="0 0 240 160" aria-hidden="true" focusable="false">
                     <path class="fill" d="M16 46 C70 44 160 47 224 45 L225 138 C150 141 80 139 17 140 Z"/>
@@ -157,7 +186,7 @@
                 <p>Clickable mockups of key screens.</p>
             </a>
 
-            <a class="tile tile-tickets" href="tickets/index.html">
+            <a class="tile tile-tickets" data-tab="main" href="tickets/index.html">
                 <!-- Three sticky notes with check marks, one tilted loose. -->
                 <svg class="art" viewBox="0 0 240 160" aria-hidden="true" focusable="false">
                     <g transform="rotate(-6 70 85)">
@@ -187,7 +216,7 @@
                 <p>Scoped work for the team, grouped by epic.</p>
             </a>
 
-            <a class="tile tile-skills" href="skills/index.html">
+            <a class="tile tile-skills" data-tab="tools" hidden href="skills/index.html">
                 <!-- A sketched table of skills with risk ticks, and a shield loose on top. -->
                 <svg class="art" viewBox="0 0 240 160" aria-hidden="true" focusable="false">
                     <path class="fill" d="M22 40 C80 38 160 41 218 39 L219 138 C150 141 80 139 23 140 Z"/>
@@ -210,7 +239,7 @@
                 <p>Skills to try for a task, with what to watch for.</p>
             </a>
 
-            <a class="tile tile-emails" href="emails/index.html">
+            <a class="tile tile-emails" data-tab="main" href="emails/index.html">
                 <!-- A sketched envelope with a loose check badge. -->
                 <svg class="art" viewBox="0 0 240 160" aria-hidden="true" focusable="false">
                     <path class="fill" d="M22 46 C80 44 160 47 220 45 L221 138 C150 141 80 139 23 140 Z"/>
@@ -229,6 +258,18 @@
             </a>
         </div>
     </div>
+
+    <script>
+        (function () {
+            var tabs = document.querySelectorAll('.tab');
+            var tiles = document.querySelectorAll('.tile');
+            function show(name) {
+                tabs.forEach(function (t) { t.setAttribute('aria-pressed', String(t.dataset.tab === name)); });
+                tiles.forEach(function (t) { t.hidden = t.dataset.tab !== name; });
+            }
+            tabs.forEach(function (t) { t.addEventListener('click', function () { show(t.dataset.tab); }); });
+        })();
+    </script>
 
 </body>
 </html>

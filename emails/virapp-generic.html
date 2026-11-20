@@ -148,7 +148,7 @@
         } },
         { key: 'hackada', label: 'Hackada', teams: true, values: {
             programName: 'Hackada', programShortName: 'Hackada', programTitle: 'Fintech Hackada',
-            groupNoun: 'team', partnerClause: '', programGuidance: '[Program-specific pacing and expectations]'
+            groupNoun: 'group', partnerClause: '', programGuidance: '[Program-specific pacing and expectations]'
         } },
         { key: 'workshops', label: 'Workshops', teams: false, values: {
             programName: 'Workshop', programShortName: 'Workshop', programTitle: 'Resume Workshop',
@@ -156,7 +156,7 @@
         } },
         { key: 'kadakamp', label: 'KadaKamp', teams: true, values: {
             programName: 'KadaKamp', programShortName: 'KadaKamp', programTitle: 'KadaKamp: Data Track',
-            groupNoun: 'team', partnerClause: '', programGuidance: '[Program-specific pacing and expectations]'
+            groupNoun: 'group', partnerClause: '', programGuidance: '[Program-specific pacing and expectations]'
         } },
         { key: 'hubs', label: 'Hub events', teams: false, values: {
             programName: 'Hub Event', programShortName: 'Hub', programTitle: 'Cebu Hub Meetup',
@@ -185,7 +185,11 @@
     // Wording shared by most VirApp emails.
     var INQUIRY = [P('regarding the Virtual Apprenticeship Program not included in the FAQs section in the VirApp platform and VirApp Handbook'),
         'regarding the {{programName}} not included in the FAQs section in the {{programShortName}} platform and {{programShortName}} Handbook'];
-    var JOURNEY = [P('thrive in your virtual apprenticeship journey'), 'thrive in your {{programName}} journey'];
+    // "Koach Konnector" is now called Career Coaching.
+    var COACHING = [[/and use the(?=\s*<a href="https:\/\/app\.kadakareer\.com\/coaches">Koach Konnector)/, 'and use'],
+        [P('Koach Konnector</a>'), 'Career Coaching</a>'],
+        [P('schedule koaching sessions'), 'schedule coaching sessions']];
+    var JOURNEY =[P('thrive in your virtual apprenticeship journey'), 'thrive in your {{programName}} journey'];
 
     var RULES = {
         'virapp-registration': {
@@ -199,6 +203,7 @@
                 [P('Everything you should know about VirApp can be found here!'), 'Everything you should know about {{programShortName}} can be found here!'],
                 [P('Connect with your challenge-mates over Discord! Introduce yourself in your assigned Challenge channel,'), 'Connect with your fellow participants over Discord! Introduce yourself in your assigned program channel,'],
                 [/\s+by helping\s+\{\{partnerName\}\}\s+with their Challenge!/, '{{ partnerClause }}!'],
+                COACHING[0], COACHING[1], COACHING[2],
                 INQUIRY
             ],
             subject: [[P('for the Virtual Apprenticeship Program'), 'for the {{programName}}']],
@@ -216,6 +221,7 @@
                 [P('Everything you should know about VirApp can be found here!'), 'Everything you should know about {{programShortName}} can be found here!'],
                 [P('Connect with your challenge-mates over Discord! Introduce yourself in your assigned Challenge channel,'), 'Connect with your fellow participants over Discord! Introduce yourself in your assigned program channel,'],
                 [/\s+by helping\s+\{\{partnerName\}\}\s+with their Challenge!/, '{{ partnerClause }}!'],
+                COACHING[0], COACHING[1], COACHING[2],
                 INQUIRY
             ],
             subject: [[P('with the Virtual Apprenticeship Program'), 'with the {{programName}}']],
