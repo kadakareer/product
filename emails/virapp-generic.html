@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../prototypes/assets/admin-common.css">
+    <title>VirApp Emails, Original vs Generic</title>
+    <style>
+        .container { max-width: 1800px; padding-top: 24px; }
+
+        .card {
+            background: white;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* Toolbar */
+        .toolbar { padding: 12px 16px; display: grid; gap: 10px; margin-bottom: 12px; }
+        .row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .lbl { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #6e6e73; white-space: nowrap; }
+        .pills { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px; }
+        .pill {
+            font: inherit;
+            font-size: 13px;
+            padding: 6px 14px;
+            border: 1px solid #d2d2d7;
+            border-radius: 999px;
+            background: white;
+            color: #1d1d1f;
+            cursor: pointer;
+            white-space: nowrap;
+            flex: none;
+        }
+        .pill:hover { border-color: #0066cc; }
+        .pill[aria-current="true"], .pill[aria-pressed="true"] { background: #1d1d1f; border-color: #1d1d1f; color: white; }
+        .pill:focus-visible { outline: 2px solid #0066cc; outline-offset: 2px; }
+        .brands .pill { font-size: 12px; padding: 4px 12px; }
+        .brands .pill[aria-pressed="true"] { background: #0066cc; border-color: #0066cc; }
+        .arrow {
+            flex: none;
+            width: 28px; height: 28px;
+            border: 1px solid #d2d2d7; border-radius: 50%;
+            background: white; cursor: pointer; font-size: 16px; line-height: 1; color: #1d1d1f;
+        }
+        .arrow:hover { border-color: #0066cc; }
+        .count { font-size: 12px; color: #6e6e73; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .grow { flex: 1; }
+        .changes { font-size: 13px; color: #3a3a3c; white-space: nowrap; }
+        .legend { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6e6e73; white-space: nowrap; }
+        .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+        .sw.del { background: #ffd4d4; border: 1px solid #f0a3a3; }
+        .sw.add { background: #c8f3d2; border: 1px solid #8fd3a2; margin-left: 6px; }
+        .hint { font-size: 12px; color: #6e6e73; text-align: center; margin-top: 10px; }
+        kbd { font: inherit; font-size: 11px; border: 1px solid #d2d2d7; border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: #fafafa; }
+
+        .note {
+            font-size: 13px;
+            color: #4a3b00;
+            background: #fff8db;
+            border: 1px solid #ecd98a;
+            border-radius: 12px;
+            padding: 8px 16px;
+            margin-bottom: 12px;
+        }
+        .note p + p { margin-top: 4px; }
+
+        /* Split view */
+        .split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+        .pane-head { padding: 10px 16px; border-bottom: 1px solid #f0f0f2; min-height: 62px; }
+        .pane-title { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .tag { font-size: 11px; font-weight: 500; color: #6e6e73; background: #f0f0f2; border-radius: 999px; padding: 1px 8px; }
+        .subject { font-size: 14px; margin-top: 4px; }
+        .subject .k { color: #6e6e73; margin-right: 6px; }
+        .sub-add { background: #c8f3d2; border-radius: 2px; }
+        .sub-del { background: #ffd4d4; text-decoration: line-through; text-decoration-color: #d33; border-radius: 2px; }
+        .off .sub-add, .off .sub-del { background: none; text-decoration: none; }
+        .stage { background: #e9e9ed; padding: 12px; }
+        iframe {
+            display: block;
+            width: 100%;
+            height: calc(100vh - 330px);
+            min-height: 480px;
+            border: 0;
+            background: white;
+        }
+
+        @media (max-width: 1000px) {
+            .split { grid-template-columns: 1fr; }
+            iframe { height: 520px; }
+            .row.brands { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card toolbar">
+        <div class="row">
+            <button type="button" class="arrow" id="prev" aria-label="Previous email">&#8249;</button>
+            <div class="pills" id="emails" role="group" aria-label="VirApp emails"></div>
+            <button type="button" class="arrow" id="next" aria-label="Next email">&#8250;</button>
+            <span class="count" id="count"></span>
+        </div>
+        <div class="row brands">
+            <span class="lbl">Generic version for</span>
+            <div class="pills" id="brands" role="group" aria-label="Program type"></div>
+            <span class="grow"></span>
+            <span class="changes" id="changes"></span>
+            <span class="legend"><i class="sw del"></i>Removed<i class="sw add"></i>Added</span>
+            <button type="button" class="pill" id="hl" aria-pressed="true">Highlight differences</button>
+        </div>
+    </div>
+
+    <div class="note" id="note" hidden></div>
+
+    <div class="split" id="split">
+        <section class="card">
+            <div class="pane-head">
+                <div class="pane-title">Original <span class="tag">VirApp, as sent today</span></div>
+                <div class="subject"><span class="k">Subject</span><span id="subject-a"></span></div>
+            </div>
+            <div class="stage"><iframe id="frame-a" title="Original email" sandbox="allow-same-origin"></iframe></div>
+        </section>
+        <section class="card">
+            <div class="pane-head">
+                <div class="pane-title">Generic <span class="tag" id="brand-tag"></span></div>
+                <div class="subject"><span class="k">Subject</span><span id="subject-b"></span></div>
+            </div>
+            <div class="stage"><iframe id="frame-b" title="Generic email" sandbox="allow-same-origin"></iframe></div>
+        </section>
+    </div>
+
+    <p class="hint"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> switch email &nbsp;·&nbsp; <kbd>1</kbd>–<kbd>5</kbd> switch program type &nbsp;·&nbsp; Scrolling is linked. Brand values are samples, not from the backend.</p>
+</div>
+
+<script src="email-templates-data.js"></script>
+<script>
+(function () {
+    /* ENGINE: pure functions, no DOM. Tested in node by extracting this block. */
+
+    // The five brands from the Program Matrix. Values are illustrative samples.
+    var BRANDS = [
+        { key: 'virapp', label: 'VirApp', teams: true, values: {
+            programName: 'Virtual Apprenticeship Program', programShortName: 'VirApp', programTitle: 'Marketing Virtual Apprenticeship',
+            groupNoun: 'group', partnerClause: ' by helping Acme Corp with their Challenge',
+            programGuidance: 'There will be 2 challenges to complete the program — while you will have access to all of the challenges starting today, we recommend that <b>you complete 1 challenge per week</b> to allow you to learn as much as possible and space out your work evenly throughout the program.'
+        } },
+        { key: 'hackada', label: 'Hackada', teams: true, values: {
+            programName: 'Hackada', programShortName: 'Hackada', programTitle: 'Fintech Hackada',
+            groupNoun: 'team', partnerClause: '', programGuidance: '[Program-specific pacing and expectations]'
+        } },
+        { key: 'workshops', label: 'Workshops', teams: false, values: {
+            programName: 'Workshop', programShortName: 'Workshop', programTitle: 'Resume Workshop',
+            groupNoun: 'group', partnerClause: '', programGuidance: '[Program-specific pacing and expectations]'
+        } },
+        { key: 'kadakamp', label: 'KadaKamp', teams: true, values: {
+            programName: 'KadaKamp', programShortName: 'KadaKamp', programTitle: 'KadaKamp: Data Track',
+            groupNoun: 'team', partnerClause: '', programGuidance: '[Program-specific pacing and expectations]'
+        } },
+        { key: 'hubs', label: 'Hub events', teams: false, values: {
+            programName: 'Hub Event', programShortName: 'Hub', programTitle: 'Cebu Hub Meetup',
+            groupNoun: 'group', partnerClause: '', programGuidance: '[Program-specific pacing and expectations]'
+        } }
+    ];
+
+    // Sample values shared by both panes.
+    var BASE = {
+        kadetName: 'Juan', inviteeName: 'Maria', inviterName: 'Juan', applicantName: 'Juan Dela Cruz',
+        nextSteps: '[Program-specific next steps]'
+    };
+    // Sample values for the original's own placeholder names.
+    var ORIGINAL_VALUES = Object.assign({}, BASE, {
+        challengeName: 'Marketing Virtual Apprenticeship',
+        virappChallengeName: 'Virtual Apprenticeship Program: Marketing',
+        challengeCompanyName: 'Acme Corp',
+        challengeStartDate: 'November 17, 2026', challengeEndDate: 'December 15, 2026', challengeDeadlineDate: 'November 14, 2026'
+    });
+
+    // Whitespace-tolerant phrase matcher: the sources wrap lines mid-sentence.
+    function P(phrase) {
+        return new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+'), 'g');
+    }
+
+    // Wording shared by most VirApp emails.
+    var INQUIRY = [P('regarding the Virtual Apprenticeship Program not included in the FAQs section in the VirApp platform and VirApp Handbook'),
+        'regarding the {{programName}} not included in the FAQs section in the {{programShortName}} platform and {{programShortName}} Handbook'];
+    var JOURNEY = [P('thrive in your virtual apprenticeship journey'), 'thrive in your {{programName}} journey'];
+
+    var RULES = {
+        'virapp-registration': {
+            body: [
+                [P('registering KadaKareer\'s SELF-PACED VIRTUAL APPRENTICESHIP PROGRAM!'), 'registering for KadaKareer\'s {{programName}}!'],
+                [P('through your Challenge.'), 'through this experience.'],
+                [P('</b> Challenge for this program.'), '</b>.'],
+                [P('to launch your Asynchronous Virtual Apprenticeship on the right foot.'), 'to launch your {{programName}} on the right foot.'],
+                [/There will be 2 challenges[\s\S]*?throughout the\s+program\./, '{{ programGuidance|safe }}'],
+                [P('the VirApp Handbook:'), 'the {{programShortName}} Handbook:'],
+                [P('Everything you should know about VirApp can be found here!'), 'Everything you should know about {{programShortName}} can be found here!'],
+                [P('Connect with your challenge-mates over Discord! Introduce yourself in your assigned Challenge channel,'), 'Connect with your fellow participants over Discord! Introduce yourself in your assigned program channel,'],
+                [/\s+by helping\s+\{\{partnerName\}\}\s+with their Challenge!/, '{{ partnerClause }}!'],
+                INQUIRY
+            ],
+            subject: [[P('for the Virtual Apprenticeship Program'), 'for the {{programName}}']],
+            groupWord: true,
+            note: 'The "How it works" dates paragraph is commented out in the original, so the generic leaves it out too. Coaching, Discord and handbook links are still VirApp\'s and need a per-program decision.'
+        },
+        'virapp-enrollment': {
+            body: [
+                [P('Congratulations on joining KadaKareer\'s SELF-PACED VIRTUAL APPRENTICESHIP PROGRAM!'), 'Congratulations on joining KadaKareer\'s {{programName}}!'],
+                [P('through your Challenge.'), 'through this experience.'],
+                [P('Your assigned Challenge for this program is the'), 'You have been assigned to'],
+                [P('to launch your Asynchronous Virtual Apprenticeship on the right foot.'), 'to launch your {{programName}} on the right foot.'],
+                [/There will be 2 challenges[\s\S]*?throughout the\s+program\./, '{{ programGuidance|safe }}'],
+                [P('the VirApp Handbook:'), 'the {{programShortName}} Handbook:'],
+                [P('Everything you should know about VirApp can be found here!'), 'Everything you should know about {{programShortName}} can be found here!'],
+                [P('Connect with your challenge-mates over Discord! Introduce yourself in your assigned Challenge channel,'), 'Connect with your fellow participants over Discord! Introduce yourself in your assigned program channel,'],
+                [/\s+by helping\s+\{\{partnerName\}\}\s+with their Challenge!/, '{{ partnerClause }}!'],
+                INQUIRY
+            ],
+            subject: [[P('with the Virtual Apprenticeship Program'), 'with the {{programName}}']],
+            groupWord: true,
+            note: 'Same structure as Registration; the two emails share most of their body. Coaching, Discord and handbook links are still VirApp\'s and need a per-program decision.'
+        },
+        'virapp-rejected': {
+            body: [
+                [P('regarding your Virtual Apprenticeship Application.'), 'regarding your {{programName}} Application.'],
+                INQUIRY
+            ],
+            subject: [[P('Your Virtual Apprenticeship Application'), 'Your {{programName}} Application']],
+            note: 'Overlaps with "Application rejected". Both exist in the backend; consider keeping one.'
+        },
+        'virapp-application-accepted': {
+            body: [[P('• insert steps'), '• {{ nextSteps }}']],
+            subject: [[P('Your Virtual Apprenticeship Application'), 'Your {{programName}} Application']],
+            note: 'The original ships the literal text "insert steps". Already program-agnostic apart from the placeholder name.'
+        },
+        'virapp-application-rejected': {
+            body: [],
+            subject: [[P('Your Virtual Apprenticeship Application'), 'Your {{programName}} Application']],
+            note: 'Overlaps with "Rejection". Already program-agnostic apart from the placeholder name.'
+        },
+        'virapp-invitation': {
+            body: [
+                [P('their VirApp group on our platform'), 'their {{programShortName}} {{groupNoun}} on our platform'],
+                [P('fellow apprentices'), 'fellow participants'],
+                [P('Go to the VirApp Challenge.'), 'Go to the {{programTitle}} page.'],
+                [P('the invite for the apprenticeship group.'), 'the invite for the group.'],
+                JOURNEY,
+                INQUIRY
+            ],
+            subject: [[P('Join a Virtual Apprenticeship Group Now!'), 'Join a {{programShortName}} {{groupNoun}} Now!']],
+            groupWord: true,
+            needsTeams: true
+        },
+        'virapp-acceptance': {
+            body: [
+                [P('join your Virtual Apprenticeship Group has been accepted.'), 'join your {{programShortName}} {{groupNoun}} has been accepted.'],
+                [P('enriching apprenticeship experience'), 'enriching {{programName}} experience'],
+                JOURNEY,
+                INQUIRY
+            ],
+            subject: [[P('Your Virtual Apprenticeship group is growing'), 'Your {{programShortName}} {{groupNoun}} is growing']],
+            groupWord: true,
+            needsTeams: true
+        },
+        'virapp-decline': {
+            body: [
+                [P('regarding the Virtual Apprenticeship Group invitation'), 'regarding the {{programShortName}} {{groupNoun}} invitation'],
+                [P('stay go through the challenge individually'), 'go through the program individually'],
+                [P('like-minded apprentices'), 'like-minded participants'],
+                [P('invite other apprentices'), 'invite other participants'],
+                INQUIRY
+            ],
+            subject: [[P('Your Virtual Apprenticeship Group Invitation'), 'Your {{programShortName}} {{groupNoun}} Invitation']],
+            groupWord: true,
+            needsTeams: true
+        }
+    };
+    // The original's placeholder names, renamed to program-neutral ones.
+    var RENAMES = [
+        [/\{\{\s*challengeName\s*\}\}/g, '{{programTitle}}'],
+        [/\{\{\s*virappChallengeName\s*\}\}/g, '{{programTitle}}'],
+        [/\{\{\s*challengeCompanyName\s*\}\}/g, '{{partnerName}}'],
+        [/\{\{\s*challengeStartDate\s*\}\}/g, '{{programStartDate}}'],
+        [/\{\{\s*challengeEndDate\s*\}\}/g, '{{programEndDate}}'],
+        [/\{\{\s*challengeDeadlineDate\s*\}\}/g, '{{submissionDeadline}}']
+    ];
+
+    var MARKUP = /(<!--[\s\S]*?-->|<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>|<[^>]+>)/i;
+    var TOKEN = /\s+|\{\{[^}]*\}\}|[^\s{]+|\{/g;
+
+    // Splits an email into the head (never diffed) and body parts. Odd parts are markup, even parts are text.
+    function split(html) {
+        var i = html.search(/<body[\s>]/i);
+        return { head: i < 0 ? '' : html.slice(0, i), parts: (i < 0 ? html : html.slice(i)).split(MARKUP) };
+    }
+    function join(sp) { return sp.head + sp.parts.join(''); }
+
+    function applyRules(str, rules, name, misses) {
+        rules.forEach(function (r) {
+            var hit = false;
+            str = str.replace(r[0], function () { hit = true; return r[1]; });
+            if (!hit) misses.push(name + ': ' + r[0]);
+        });
+        return str;
+    }
+
+    // Builds the generic version of one template. Returns { html, subject, misses }.
+    function makeGeneric(t) {
+        var rule = RULES[t.id] || { body: [], subject: [] };
+        var misses = [];
+        var html = t.html.replace(/\r/g, '');
+        RENAMES.forEach(function (r) { html = html.replace(r[0], r[1]); });
+        html = applyRules(html, rule.body, t.id, misses);
+        if (rule.groupWord) {
+            var sp = split(html);
+            sp.parts = sp.parts.map(function (p, i) { return i % 2 ? p : p.replace(/\bgroup\b/g, '{{groupNoun}}'); });
+            html = join(sp);
+        }
+        var subject = applyRules(t.subject, rule.subject, t.id + ' subject', misses);
+        return { html: html, subject: subject, misses: misses };
+    }
+
+    function words(sp) {
+        var out = [];
+        sp.parts.forEach(function (p, i) {
+            if (i % 2) return;
+            (p.match(TOKEN) || []).forEach(function (t) { if (!/^\s+$/.test(t)) out.push(t.replace(/\s+/g, '')); });
+        });
+        return out;
+    }
+
+    // Longest-common-subsequence word diff. Returns which words differ on each side and how many hunks there are.
+    function diff(a, b) {
+        var n = a.length, m = b.length, w = m + 1, L = new Uint16Array((n + 1) * w), i, j;
+        for (i = n - 1; i >= 0; i--) for (j = m - 1; j >= 0; j--) {
+            L[i * w + j] = a[i] === b[j] ? L[(i + 1) * w + j + 1] + 1 : Math.max(L[(i + 1) * w + j], L[i * w + j + 1]);
+        }
+        var fa = new Array(n).fill(false), fb = new Array(m).fill(false), hunks = 0, inHunk = false;
+        i = 0; j = 0;
+        while (i < n || j < m) {
+            if (i < n && j < m && a[i] === b[j]) { inHunk = false; i++; j++; continue; }
+            if (!inHunk) { hunks++; inHunk = true; }
+            if (j >= m || (i < n && L[(i + 1) * w + j] >= L[i * w + j + 1])) fa[i++] = true; else fb[j++] = true;
+        }
+        return { fa: fa, fb: fb, hunks: hunks };
+    }
+
+    // Wraps flagged words in <span class="cls">, merging neighbours so a changed phrase reads as one block.
+    function annotate(sp, flags, cls) {
+        var wi = 0, out = [sp.head];
+        sp.parts.forEach(function (p, i) {
+            if (i % 2) { out.push(p); return; }
+            var ws = '', open = false;
+            (p.match(TOKEN) || []).forEach(function (t) {
+                if (/^\s+$/.test(t)) { ws += t; return; }
+                if (flags[wi++]) {
+                    if (open) out.push(ws + t); else { out.push(ws + '<span class="' + cls + '">' + t); open = true; }
+                } else {
+                    if (open) { out.push('</span>'); open = false; }
+                    out.push(ws + t);
+                }
+                ws = '';
+            });
+            if (open) out.push('</span>');
+            out.push(ws);
+        });
+        return out.join('');
+    }
+
+    // Compare two emails (and subjects). Returns annotated html for both sides and the hunk count.
+    function compare(origHtml, genHtml, origSubject, genSubject) {
+        var A = split(origHtml.replace(/\r/g, '')), B = split(genHtml);
+        var d = diff(words(A), words(B));
+        var s = diff(origSubject.split(/\s+/), genSubject.split(/\s+/));
+        return {
+            a: annotate(A, d.fa, 'kk-del'), b: annotate(B, d.fb, 'kk-add'),
+            subjA: s.fa, subjB: s.fb, hunks: d.hunks + s.hunks
+        };
+    }
+    /* END ENGINE */
+
+    if (typeof window.EMAIL_TEMPLATES === 'undefined') return;
+    var templates = window.EMAIL_TEMPLATES.filter(function (t) { return t.group === 'VirApp'; });
+    var generic = {};
+    templates.forEach(function (t) {
+        generic[t.id] = makeGeneric(t);
+        if (generic[t.id].misses.length && window.console) console.warn('Generic rule did not match (the original changed?):', generic[t.id].misses);
+    });
+
+    var current = templates[0];
+    var brand = BRANDS[0];
+    var highlight = true;
+
+    var $ = function (id) { return document.getElementById(id); };
+    function esc(s) {
+        return String(s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+    // Mirrors the backend: {{ x }} is HTML-escaped, {{ x|safe }} is not.
+    function render(html, values) {
+        return html.replace(/\{\{\s*(\w+)(\s*\|\s*safe)?\s*\}\}/g, function (m, name, safe) {
+            var v = name in values ? values[name] : '';
+            return safe ? v : esc(v);
+        });
+    }
+    function genericValues() { return Object.assign({}, BASE, brand.values); }
+
+    var FRAME_CSS = '<style>.kk-add,.kk-del{color:#111 !important;border-radius:2px}' +
+        '.kk-add{background:#c8f3d2;box-shadow:0 0 0 2px #c8f3d2}' +
+        '.kk-del{background:#ffd4d4;box-shadow:0 0 0 2px #ffd4d4;text-decoration:line-through;text-decoration-color:#d33}</style>';
+
+    function subjectHtml(subject, flags, values, cls) {
+        var toks = subject.split(/\s+/), out = [], open = false;
+        toks.forEach(function (t, i) {
+            var text = esc(t.replace(/\{\{\s*(\w+)\s*\}\}/g, function (m, n) { return values[n] || ''; }));
+            var on = highlight && flags[i];
+            if (on && !open) { out.push((i ? ' ' : '') + '<span class="' + cls + '">' + text); open = true; }
+            else if (on) out.push(' ' + text);
+            else { if (open) { out.push('</span>'); open = false; } out.push((i ? ' ' : '') + text); }
+        });
+        if (open) out.push('</span>');
+        return out.join('');
+    }
+
+    var syncing = false;
+    function wire(frame, other) {
+        frame.addEventListener('load', function () {
+            try {
+                var doc = frame.contentDocument, win = frame.contentWindow;
+                doc.addEventListener('keydown', onKey);
+                win.addEventListener('scroll', function () {
+                    if (syncing) return;
+                    var o = other().contentDocument.documentElement, me = doc.documentElement;
+                    var max = me.scrollHeight - me.clientHeight;
+                    var ratio = max > 0 ? me.scrollTop / max : 0;
+                    syncing = true;
+                    other().contentWindow.scrollTo(0, ratio * (o.scrollHeight - o.clientHeight));
+                    requestAnimationFrame(function () { syncing = false; });
+                });
+            } catch (e) { /* cross-origin preview: linked scroll and arrow keys inside the email are unavailable */ }
+        });
+    }
+    wire($('frame-a'), function () { return $('frame-b'); });
+    wire($('frame-b'), function () { return $('frame-a'); });
+
+    function draw() {
+        var g = generic[current.id];
+        var c = compare(current.html, g.html, current.subject, g.subject);
+        var gv = genericValues();
+        $('frame-a').srcdoc = render(highlight ? c.a.replace('</head>', FRAME_CSS + '</head>') : current.html, ORIGINAL_VALUES);
+        $('frame-b').srcdoc = render(highlight ? c.b.replace('</head>', FRAME_CSS + '</head>') : g.html, gv);
+        $('subject-a').innerHTML = subjectHtml(current.subject, c.subjA, ORIGINAL_VALUES, 'sub-del');
+        $('subject-b').innerHTML = subjectHtml(g.subject, c.subjB, gv, 'sub-add');
+        $('changes').textContent = c.hunks + (c.hunks === 1 ? ' change' : ' changes');
+        $('split').classList.toggle('off', !highlight);
+        $('brand-tag').textContent = brand.label;
+
+        var notes = [];
+        var rule = RULES[current.id] || {};
+        if (rule.note) notes.push(rule.note);
+        if (rule.needsTeams && !brand.teams) notes.push(brand.label + ' has no teams in the Program Matrix, so this email would not be sent for it.');
+        var note = $('note');
+        note.hidden = !notes.length;
+        note.innerHTML = notes.map(function (n) { return '<p>' + esc(n) + '</p>'; }).join('');
+    }
+
+    function mark() {
+        var idx = templates.indexOf(current);
+        Array.prototype.forEach.call(document.querySelectorAll('#emails .pill'), function (b, i) {
+            b.setAttribute('aria-current', String(i === idx));
+        });
+        Array.prototype.forEach.call(document.querySelectorAll('#brands .pill'), function (b) {
+            b.setAttribute('aria-pressed', String(b.dataset.key === brand.key));
+        });
+        $('count').textContent = (idx + 1) + ' / ' + templates.length;
+        try { history.replaceState(null, '', '#' + current.id + ':' + brand.key); } catch (e) {}
+    }
+
+    function selectEmail(t) { current = t; mark(); draw(); }
+    function selectBrand(b) { brand = b; mark(); draw(); }
+    function step(d) {
+        var i = (templates.indexOf(current) + d + templates.length) % templates.length;
+        selectEmail(templates[i]);
+    }
+
+    function onKey(e) {
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        var tag = e.target && e.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+        else if (/^[1-9]$/.test(e.key) && BRANDS[+e.key - 1]) selectBrand(BRANDS[+e.key - 1]);
+    }
+    document.addEventListener('keydown', onKey);
+
+    templates.forEach(function (t) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pill';
+        b.textContent = t.name;
+        b.addEventListener('click', function () { selectEmail(t); b.blur(); });
+        $('emails').appendChild(b);
+    });
+    BRANDS.forEach(function (br, i) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pill';
+        b.dataset.key = br.key;
+        b.textContent = br.label;
+        b.title = 'Key ' + (i + 1);
+        b.addEventListener('click', function () { selectBrand(br); b.blur(); });
+        $('brands').appendChild(b);
+    });
+    $('prev').addEventListener('click', function () { step(-1); });
+    $('next').addEventListener('click', function () { step(1); });
+    $('hl').addEventListener('click', function () {
+        highlight = !highlight;
+        $('hl').setAttribute('aria-pressed', String(highlight));
+        draw();
+    });
+
+    var h = location.hash.slice(1).split(':');
+    current = templates.filter(function (t) { return t.id === h[0]; })[0] || templates[0];
+    brand = BRANDS.filter(function (b) { return b.key === h[1]; })[0] || BRANDS[0];
+    mark();
+    draw();
+})();
+</script>
+<script src="../assets/site-nav.js" data-label="VirApp Emails"></script>
+</body>
+</html>
