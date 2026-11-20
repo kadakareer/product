@@ -131,7 +131,7 @@
         </section>
     </div>
 
-    <p class="hint"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> switch email &nbsp;·&nbsp; <kbd>1</kbd>–<kbd>5</kbd> switch program type &nbsp;·&nbsp; Scrolling is linked. Brand values are samples, not from the backend.</p>
+    <p class="hint"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> switch program type &nbsp;·&nbsp; <kbd>Shift</kbd> + <kbd>&larr;</kbd> <kbd>&rarr;</kbd> switch email &nbsp;·&nbsp; <kbd>1</kbd>–<kbd>5</kbd> jump to program type &nbsp;·&nbsp; Scrolling is linked. Brand values are samples, not from the backend.</p>
 </div>
 
 <script src="email-templates-data.js"></script>
@@ -426,10 +426,17 @@
     }
 
     var syncing = false;
+    var pendingTop = {};   // scroll positions to restore after a redraw of the same email
     function wire(frame, other) {
         frame.addEventListener('load', function () {
             try {
                 var doc = frame.contentDocument, win = frame.contentWindow;
+                if (pendingTop[frame.id] != null) {
+                    syncing = true;
+                    win.scrollTo(0, pendingTop[frame.id]);
+                    delete pendingTop[frame.id];
+                    requestAnimationFrame(function () { syncing = false; });
+                }
                 doc.addEventListener('keydown', onKey);
                 win.addEventListener('scroll', function () {
                     if (syncing) return;
@@ -446,7 +453,15 @@
     wire($('frame-a'), function () { return $('frame-b'); });
     wire($('frame-b'), function () { return $('frame-a'); });
 
-    function draw() {
+    function draw(keepScroll) {
+        pendingTop = {};
+        if (keepScroll) {
+            try {
+                ['frame-a', 'frame-b'].forEach(function (id) {
+                    pendingTop[id] = $(id).contentDocument.documentElement.scrollTop;
+                });
+            } catch (e) { pendingTop = {}; }
+        }
         var g = generic[current.id];
         var c = compare(current.html, g.html, current.subject, g.subject);
         var gv = genericValues();
@@ -480,7 +495,7 @@
     }
 
     function selectEmail(t) { current = t; mark(); draw(); }
-    function selectBrand(b) { brand = b; mark(); draw(); }
+    function selectBrand(b) { brand = b; mark(); draw(true); }
     function step(d) {
         var i = (templates.indexOf(current) + d + templates.length) % templates.length;
         selectEmail(templates[i]);
@@ -490,8 +505,12 @@
         if (e.metaKey || e.ctrlKey || e.altKey) return;
         var tag = e.target && e.target.tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-        if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
-        else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+        var dir = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
+        if (dir) {
+            e.preventDefault();
+            if (e.shiftKey) step(dir);
+            else selectBrand(BRANDS[(BRANDS.indexOf(brand) + dir + BRANDS.length) % BRANDS.length]);
+        }
         else if (/^[1-9]$/.test(e.key) && BRANDS[+e.key - 1]) selectBrand(BRANDS[+e.key - 1]);
     }
     document.addEventListener('keydown', onKey);
@@ -519,7 +538,7 @@
     $('hl').addEventListener('click', function () {
         highlight = !highlight;
         $('hl').setAttribute('aria-pressed', String(highlight));
-        draw();
+        draw(true);
     });
 
     var h = location.hash.slice(1).split(':');
